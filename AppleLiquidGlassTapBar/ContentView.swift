@@ -203,10 +203,13 @@ struct ContentView: View {
         .onAppear {
             // Initialize player when ContentView appears
             player = AVPlayer(url: videoURL)
+            //player?.allowsExternalPlayback = false
         }
+    
         // Video Player Presentation
         .fullScreenCover(isPresented: $showVideoPlayer) {
             if let player = player {
+                
                 VideoPlayer(player: player)
                     .ignoresSafeArea()
                     .onAppear {
@@ -217,6 +220,7 @@ struct ContentView: View {
                         // Pause when video player disappears
                         player.pause()
                     }
+                
             }
         }
     }
@@ -237,21 +241,27 @@ struct HomeView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
-                // Card appears below navigation title when showCard is true
-                if showCard {
-                    VideoCardView(onPlayTapped: {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                            showCard = false
-                            showVideoPlayer = true
-                        }
-                    })
-                    .transition(.move(edge: .top).combined(with: .opacity))
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Card appears below navigation title when showCard is true
+                    if showCard {
+                        VideoCardView(onPlayTapped: {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                showCard = false
+                                showVideoPlayer = true
+                            }
+                        })
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+                    
+                    // Browse Collections Section
+                    BrowseCollectionsSection()
+                        .padding(.horizontal, 16)
+                    
+                    Spacer(minLength: 100)
                 }
-                
-                Spacer()
+                .padding(.top, 20)
             }
-            .padding(.top, 20)
             .navigationTitle("Home")
             .navigationBarTitleDisplayMode(.large)
         }
@@ -878,7 +888,7 @@ struct VideoCardView: View {
             
             // Content section
             VStack(alignment: .leading, spacing: 4) {
-                Text("Title")
+                Text("CardTitle")
                     .font(.headline)
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
@@ -888,7 +898,7 @@ struct VideoCardView: View {
                     .foregroundColor(.secondary)
                     .lineLimit(2)
             }
-            .padding(.vertical, 24)
+            .padding(.vertical, 16)
         }
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
         .overlay(
@@ -896,7 +906,8 @@ struct VideoCardView: View {
                 .stroke(.separator, lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 32)
+        .cornerRadius(12)
     }
 }
 
@@ -949,6 +960,199 @@ struct FeatureRow: View {
     }
 }
 
+// MARK: - Browse Collections Section
+struct BrowseCollectionsSection: View {
+    let collections = [
+        CollectionItem(
+            badge: "New",
+            title: "Nature Escapes",
+            description: "Discover breathtaking landscapes and serene natural beauty",
+            imageName: "forest",
+            color: .green
+        ),
+        CollectionItem(
+            badge: "Popular",
+            title: "Urban Adventures",
+            description: "Explore vibrant cityscapes and modern architecture",
+            imageName: "building.2",
+            color: .blue
+        ),
+        CollectionItem(
+            badge: "Featured",
+            title: "Ocean Views",
+            description: "Immerse yourself in stunning coastal and marine scenes",
+            imageName: "water.waves",
+            color: .cyan
+        ),
+        CollectionItem(
+            badge: "Trending",
+            title: "Mountain Peaks",
+            description: "Experience majestic mountain ranges and alpine vistas",
+            imageName: "mountain.2",
+            color: .orange
+        ),
+        CollectionItem(
+            badge: "Editor's Pick",
+            title: "Desert Landscapes",
+            description: "Journey through vast deserts and golden dunes",
+            imageName: "sun.max",
+            color: .yellow
+        )
+    ]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Section Header
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Browse Collections")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+                
+                Text("Discover curated collections of stunning visuals and experiences")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
+            .padding(16)
+            
+            // Vertical Collection Cards
+            VStack(spacing: 16) {
+                ForEach(collections, id: \.title) { collection in
+                    CollectionCard(collection: collection)
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+    }
+}
+
+struct CollectionCard: View {
+    let collection: CollectionItem
+    
+    var body: some View {
+        ZStack {
+            // Background image/content area
+            if collection.title == "Nature Escapes" {
+                // Use AsyncImage for Nature Escapes
+                AsyncImage(url: URL(string: "https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?q=80&w=2748&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .clipped()
+                } placeholder: {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    collection.color.opacity(0.4),
+                                    collection.color.opacity(0.8)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                }
+                .frame(height: 280)
+            } else {
+                // Use gradient for other cards
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                collection.color.opacity(0.4),
+                                collection.color.opacity(0.8)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(height: 280)
+                
+                // SF Symbol as subtle background decoration
+                Image(systemName: collection.imageName)
+                    .font(.system(size: 80, weight: .ultraLight))
+                    .foregroundColor(.white.opacity(0.15))
+                    .offset(x: 15, y: -10)
+            }
+            
+            VStack(spacing: 0) {
+                // Top section with badge
+                HStack {
+                    // Badge
+                    Text(collection.badge)
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(.black.opacity(0.5))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .stroke(.white.opacity(0.3), lineWidth: 0.5)
+                                )
+                        )
+                        .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                    
+                    Spacer()
+                }
+                .padding(.top, 16)
+                .padding(.horizontal, 16)
+                
+                Spacer()
+                
+                // Bottom overlay with content
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(collection.title)
+                        .font(.headline)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                        .shadow(color: .black.opacity(0.6), radius: 3, x: 0, y: 1)
+                    
+                    Text(collection.description)
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.95))
+                        .lineLimit(3)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 20)
+                .background(
+                    LinearGradient(
+                        colors: [
+                            .clear,
+                            .black.opacity(0.4),
+                            .black.opacity(0.7)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.15), radius: 12, x: 0, y: 6)
+        .onTapGesture {
+            // Handle card tap
+        }
+    }
+}
+
+struct CollectionItem {
+    let badge: String
+    let title: String
+    let description: String
+    let imageName: String
+    let color: Color
+}
+
 #Preview {
     ContentView()
 }
+
