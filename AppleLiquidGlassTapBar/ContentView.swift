@@ -126,15 +126,15 @@ struct ContentView: View {
             HomeView(showCard: $showCard, showWelcomeModal: $showWelcomeModal, showVideoPlayer: $showVideoPlayer, isTabBarMinimized: $isTabBarMinimized, scrollOffset: $scrollOffset)
         }
 
-                Tab("Trips", systemImage: "airplane") {
+                Tab("Trips", systemImage: "road.lanes") {
                     TripsView()
                 }
 
-                Tab("Plan", systemImage: "calendar") {
+                Tab("Plan", systemImage: "heart") {
                     PlanView()
                 }
 
-                Tab("Profile", systemImage: "person.circle") {
+                Tab("Messages", systemImage: "message") {
                     ProfileView()
                 }
 
