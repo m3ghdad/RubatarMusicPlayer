@@ -13,11 +13,13 @@ A modern iOS app showcasing Apple's Liquid Glass design language with a beautifu
 - **Adaptive Theming**: Light and dark mode support
 - **Liquid Glass Effects**: Translucent materials with proper blur and shadows
 
-#### **Welcome Modal**
+#### **Welcome Modal & Video Experience**
 - **Full-Screen Video Experience**: Immersive background with scenic content
-- **Apple Liquid Glass Play Button**: Authentic translucent play controller
-- **Dynamic Content**: Customizable title, description, and CTA
-- **Smooth Animations**: Native iOS presentation and dismissal
+- **Apple Liquid Glass Play Button**: Authentic translucent play controller with `.glassEffect()`
+- **Smart Dismissal**: Drag-to-dismiss transforms into mini player
+- **Mini Player**: Persistent floating player above tab bar with liquid glass background
+- **Video Card**: Expandable card in Home tab with rounded corners and play functionality
+- **Smooth Animations**: Native iOS transitions with spring animations
 - **Responsive Design**: Optimized for all iPhone sizes
 
 #### **Background Customization**
@@ -33,8 +35,19 @@ A modern iOS app showcasing Apple's Liquid Glass design language with a beautifu
 // Authentic Apple Liquid Glass Material
 .ultraThinMaterial
 .background(.ultraThinMaterial, in: Circle())
+.glassEffect(in: Circle()) // Official Apple Glass Effect
 .shadow(color: .black.opacity(0.2), radius: 12, x: 0, y: 6)
 .shadow(color: .white.opacity(0.15), radius: 2, x: 0, y: -1)
+
+// Video Card with Selective Corner Radius
+.clipShape(
+    .rect(
+        topLeadingRadius: 12,
+        bottomLeadingRadius: 0,
+        bottomTrailingRadius: 0,
+        topTrailingRadius: 12
+    )
+)
 ```
 
 #### **Color Palette**
@@ -77,10 +90,13 @@ TabView(selection: $selectedTab) {
 ### 📱 User Experience
 
 #### **Navigation Flow**
-1. **App Launch**: Welcome modal appears automatically
-2. **Tab Navigation**: Seamless switching between sections
-3. **Theme Selection**: Profile tab for customization
-4. **Search Integration**: Native iOS search functionality
+1. **App Launch**: Welcome modal appears automatically with video content
+2. **Modal Interaction**: Tap play button to engage, drag down to minimize
+3. **Mini Player**: Persistent player above tab bar with play/dismiss controls
+4. **Video Card**: Dismissing mini player creates expandable card in Home tab
+5. **Tab Navigation**: Seamless switching between sections
+6. **Theme Selection**: Profile tab for customization
+7. **Search Integration**: Native iOS search functionality
 
 #### **Accessibility**
 - **VoiceOver Support**: Full accessibility compliance
@@ -111,11 +127,13 @@ open AppleLiquidGlassTapBar.xcodeproj
 
 ### 🎯 Key Features Showcase
 
-#### **Liquid Glass Play Button**
-- **Translucent Material**: `.ultraThinMaterial` for authentic Apple effect
-- **Layered Shadows**: Depth and dimension
-- **High Contrast Icons**: White icons for visibility
-- **Touch Feedback**: Responsive interaction
+#### **Advanced Video Experience**
+- **Liquid Glass Play Button**: Official `.glassEffect()` for authentic Apple material
+- **Multi-State Player**: Full modal → Mini player → Video card transitions
+- **Smart Positioning**: Mini player floats above tab bar with 8px spacing
+- **Gesture Recognition**: Drag-to-dismiss with smooth snap animations
+- **Touch Optimization**: 44pt minimum tap targets for accessibility
+- **Visual Hierarchy**: Selective corner radius and proper content padding
 
 #### **Dynamic Theming**
 - **System Integration**: Respects user's system theme
@@ -123,11 +141,13 @@ open AppleLiquidGlassTapBar.xcodeproj
 - **Persistent Storage**: Settings saved across app launches
 - **Real-Time Updates**: Immediate visual feedback
 
-#### **Modal Experience**
-- **Full-Width Video**: Immersive content display
-- **Smooth Animations**: Native iOS transitions
-- **Gesture Support**: Swipe to dismiss
-- **Content Flexibility**: Easy text and image updates
+#### **Interactive Modal System**
+- **Full-Width Video**: Immersive content display with AsyncImage loading
+- **Three-State Design**: Modal → Mini Player → Video Card workflow
+- **Gesture Intelligence**: Distinguishes between drag-dismiss and button actions
+- **Persistent State**: Mini player maintains position during navigation
+- **Content Flexibility**: Easy text and image updates across all states
+- **Spring Animations**: Smooth transitions with proper easing curves
 
 ### 🔧 Customization
 
@@ -157,6 +177,48 @@ let customColors = [
 Text("Your Custom Title")
 Text("Your custom description text...")
 Button("Your CTA Text") { /* action */ }
+```
+
+#### **Video Card Implementation**
+```swift
+// VideoCardView with selective corner radius
+struct VideoCardView: View {
+    let onPlayTapped: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Video thumbnail with top-only corner radius
+            AsyncImage(url: URL(string: "your-image-url")) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Rectangle().fill(.quaternary)
+            }
+            .frame(height: 180)
+            .clipShape(.rect(
+                topLeadingRadius: 12,
+                bottomLeadingRadius: 0,
+                bottomTrailingRadius: 0,
+                topTrailingRadius: 12
+            ))
+            
+            // Content with 24px vertical padding
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Title")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                
+                Text("Description text...")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
+            .padding(.vertical, 24)
+        }
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+}
 ```
 
 ### 📸 Screenshots
