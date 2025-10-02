@@ -75,6 +75,9 @@ struct ContentView: View {
     @AppStorage("isDarkMode") private var isDarkMode = false
     @AppStorage("selectedBackgroundColor") private var selectedBackgroundColor = 0 // Default to Ocean
     @State private var showWelcomeModal = true
+    @State private var showMiniPlayer = false // Track mini player visibility
+    @State private var showCard = false // Track card visibility
+    @State private var dismissedByDrag = false // Track if dismissed by drag vs button
     @StateObject private var backgroundManager = BackgroundColorManager.shared
 
     init() {
@@ -103,7 +106,7 @@ struct ContentView: View {
             
             TabView {
                 Tab("Home", systemImage: "house") {
-                    HomeView()
+                    HomeView(showCard: $showCard, showWelcomeModal: $showWelcomeModal)
                 }
 
                 Tab("Trips", systemImage: "airplane") {
@@ -130,14 +133,65 @@ struct ContentView: View {
             .onAppear {
                 showWelcomeModal = true
             }
-            .sheet(isPresented: $showWelcomeModal) {
-                WelcomeModalView(isDarkMode: isDarkMode) {
-                    showWelcomeModal = false
+            .sheet(isPresented: $showWelcomeModal, onDismiss: {
+                // This is called when sheet is dismissed by drag or swipe
+                if dismissedByDrag {
+                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0)) {
+                        showMiniPlayer = true
+                    }
                 }
+                dismissedByDrag = false // Reset flag
+            }) {
+                WelcomeModalView(isDarkMode: isDarkMode, onButtonDismiss: {
+                    // This is called when "Learn more" button is tapped
+                    dismissedByDrag = false
+                    showWelcomeModal = false
+                    // Don't show mini player when dismissed via button
+                })
                 .presentationDetents([.fraction(0.75)])
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(16)
                 .interactiveDismissDisabled(false)
+                .onAppear {
+                    showMiniPlayer = false // Hide mini player when modal appears
+                    showCard = false // Hide card when modal appears
+                    dismissedByDrag = true // Assume drag dismissal unless button is pressed
+                }
+            }
+            
+            // Mini Player - positioned above tab bar with fixed positioning
+            if showMiniPlayer {
+        VStack {
+                    Spacer()
+                    MiniPlayerView(isDarkMode: isDarkMode, onTap: {
+                        // When mini player play button is tapped, hide it and show full modal
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                            showMiniPlayer = false
+                        }
+                        showWelcomeModal = true
+                    }, onClose: {
+                        // When close button is tapped, show card
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                            showMiniPlayer = false
+                            showCard = true
+                        }
+                    })
+                    .padding(.horizontal, 16) // Match tab bar horizontal padding
+                    .padding(.bottom, 64) // 4px above tab bar (84px tab bar height + 4px spacing)
+                    .scaleEffect(showMiniPlayer ? 1.0 : 0.8)
+                    .opacity(showMiniPlayer ? 1.0 : 0.0)
+                }
+                .transition(
+                    .asymmetric(
+                        insertion: .move(edge: .bottom)
+                            .combined(with: .scale(scale: 0.8))
+                            .combined(with: .opacity),
+                        removal: .move(edge: .bottom)
+                            .combined(with: .opacity)
+                    )
+                )
+                .allowsHitTesting(showMiniPlayer) // Only allow interaction when visible
+                .zIndex(1000) // Keep above other content during scroll
             }
         }
     }
@@ -146,6 +200,8 @@ struct ContentView: View {
 // MARK: - Individual Views
 struct HomeView: View {
     @AppStorage("selectedBackgroundColor") private var selectedBackgroundColor = 0
+    @Binding var showCard: Bool
+    @Binding var showWelcomeModal: Bool
     
     @StateObject private var backgroundManager = BackgroundColorManager.shared
     
@@ -155,44 +211,23 @@ struct HomeView: View {
     
     var body: some View {
         NavigationView {
-                VStack(spacing: 20) {
-                    // Liquid glass card
-                    VStack(spacing: 16) {
-                        Image(systemName: "house.fill")
-                            .font(.system(size: 50))
-                            .foregroundStyle(.blue)
-                        Text("Home")
-                            .font(.title)
-                            .fontWeight(.semibold)
-                        Text("Welcome to your home screen")
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                        
-                        Text("Background: \(backgroundColors[selectedBackgroundColor].name)")
-                            .font(.caption)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.black.opacity(0.7))
-                            .cornerRadius(8)
-                    }
-                    .padding(24)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(.regularMaterial)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                            )
-                            .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-                    )
-                    .padding(.horizontal, 20)
-                    
-                    Spacer()
+            VStack(spacing: 20) {
+                // Card appears below navigation title when showCard is true
+                if showCard {
+                    VideoCardView(onPlayTapped: {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                            showCard = false
+                            showWelcomeModal = true
+                        }
+                    })
+                    .transition(.move(edge: .top).combined(with: .opacity))
                 }
-                .padding(.top, 20)
-                .navigationTitle("Home")
-                .navigationBarTitleDisplayMode(.large)
+                
+                Spacer()
+            }
+            .padding(.top, 20)
+            .navigationTitle("Home")
+            .navigationBarTitleDisplayMode(.large)
         }
     }
 }
@@ -556,7 +591,7 @@ struct ColorOptionView: View {
                     .foregroundColor(isSelected ? .primary : .secondary)
             }
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
         .scaleEffect(isSelected ? 1.05 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: isSelected)
     }
@@ -601,10 +636,79 @@ struct SearchTabContent: View {
     }
 }
 
+// MARK: - Mini Player
+struct MiniPlayerView: View {
+    let isDarkMode: Bool
+    let onTap: () -> Void
+    let onClose: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Album artwork / video thumbnail
+            AsyncImage(url: URL(string: "https://plus.unsplash.com/premium_photo-1752782188828-6bff4fe86c4e?q=80&w=2664&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Rectangle()
+                    .fill(.quaternary)
+            }
+            .frame(width: 50, height: 50)
+            .cornerRadius(8)
+            .clipped()
+            
+            // Content info
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Title")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+                
+                Text("Subtitle")
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+            }
+            
+            Spacer()
+            
+            // Control buttons
+            HStack(spacing: 16) {
+                // Play/Pause button with larger tap area
+                Button(action: onTap) {
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.primary)
+                        .frame(width: 44, height: 44) // Minimum Apple recommended tap target
+                        .contentShape(Rectangle()) // Ensure entire frame is tappable
+                }
+                .buttonStyle(.plain)
+                
+                // Close button with larger tap area
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .frame(width: 44, height: 44) // Minimum Apple recommended tap target
+                        .contentShape(Rectangle()) // Ensure entire frame is tappable
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.clear)
+                .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+        )
+    }
+}
+
 // MARK: - Welcome Modal
 struct WelcomeModalView: View {
     let isDarkMode: Bool
-    let onDismiss: () -> Void
+    let onButtonDismiss: () -> Void
     
     var body: some View {
         NavigationView {
@@ -623,20 +727,14 @@ struct WelcomeModalView: View {
                     .frame(height: 200)
                     .clipped()
                     
-                    // Play button with authentic Apple Liquid Glass effect
+                    // Play button with Apple's official Glass Effect
                     Button(action: {}) {
                         ZStack {
-                            // Liquid Glass material with proper translucency
+                            // Base circle with glass effect
                             Circle()
-                                .fill(.ultraThinMaterial)
+                                .fill(.clear)
                                 .frame(width: 80, height: 80)
-                                .background(.ultraThinMaterial, in: Circle())
-                                .overlay(
-                                    Circle()
-                                        .stroke(.white.opacity(0.2), lineWidth: 0.5)
-                                )
-                                .shadow(color: .black.opacity(0.2), radius: 12, x: 0, y: 6)
-                                .shadow(color: .white.opacity(0.15), radius: 2, x: 0, y: -1)
+                                .glassEffect(in: Circle())
                             
                             // Play icon with high contrast white
                             Image(systemName: "play.fill")
@@ -687,7 +785,7 @@ struct WelcomeModalView: View {
                 VStack(spacing: 0) {
                     Divider()
                     
-                    Button(action: onDismiss) {
+                    Button(action: onButtonDismiss) {
                         Text("CTA")
                             .font(.headline)
                             .foregroundColor(.white)
@@ -703,6 +801,75 @@ struct WelcomeModalView: View {
             .navigationBarHidden(true)
         }
         .navigationViewStyle(StackNavigationViewStyle())
+    }
+}
+
+// MARK: - Video Card View
+struct VideoCardView: View {
+    let onPlayTapped: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Video thumbnail with play button
+            ZStack {
+                // Background image
+                AsyncImage(url: URL(string: "https://plus.unsplash.com/premium_photo-1752782188828-6bff4fe86c4e?q=80&w=2664&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    Rectangle()
+                        .fill(.quaternary)
+                }
+                .frame(height: 180)
+                .clipShape(
+                    .rect(
+                        topLeadingRadius: 12,
+                        bottomLeadingRadius: 0,
+                        bottomTrailingRadius: 0,
+                        topTrailingRadius: 12
+                    )
+                )
+                
+                // Play button with Apple's official Glass Effect
+                Button(action: onPlayTapped) {
+                    ZStack {
+                        // Base circle with glass effect
+                        Circle()
+                            .fill(.clear)
+                            .frame(width: 60, height: 60)
+                            .glassEffect(in: Circle())
+                        
+                        // Play icon with high contrast white
+                        Image(systemName: "play.fill")
+                            .font(.system(size: 20, weight: .medium))
+                            .foregroundColor(.white)
+                            .offset(x: 1)
+                    }
+                }
+            }
+            
+            // Content section
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Title")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                
+                Text("Aenean pharetra, erat id malesuada iaculis, mauris tortor dictum ligula.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
+            .padding(.vertical, 24)
+        }
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(.separator, lineWidth: 0.5)
+        )
+        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+        .padding(.horizontal, 16)
     }
 }
 
