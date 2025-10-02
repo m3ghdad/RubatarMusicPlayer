@@ -951,7 +951,7 @@ struct VideoCardView: View {
                 .stroke(.separator, lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-        .padding(.horizontal, 32)
+        .padding(.horizontal, 16)
         .cornerRadius(12)
     }
 }
