@@ -227,6 +227,45 @@ struct ContentView: View {
     }
 }
 
+// Reusable avatar button view
+struct AvatarButtonView: View {
+    var body: some View {
+        Button(action: {
+            // TODO: Handle avatar tap (e.g., navigate to profile)
+        }) {
+            // Profile image avatar; replace the URL with your user's avatar
+            AsyncImage(url: URL(string: "https://i.ibb.co/TDWzY83h/IMG-3079.jpgformat&fit=crop")) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure(_):
+                    Image(systemName: "person.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .padding(6)
+                        .foregroundColor(.secondary)
+                        .background(Color.secondary.opacity(0.15))
+                case .empty:
+                    ZStack {
+                        Color.secondary.opacity(0.1)
+                        ProgressView()
+                    }
+                @unknown default:
+                    Color.secondary.opacity(0.1)
+                }
+            }
+            .frame(width: 34, height: 34)
+            .clipShape(Circle())
+            .overlay(Circle().stroke(Color.white.opacity(0.3), lineWidth: 0.5))
+            .shadow(color: .black.opacity(0.08), radius: 2, x: 0, y: 1)
+            .accessibilityLabel("Profile")
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 // MARK: - Individual Views
 struct HomeView: View {
     @AppStorage("selectedBackgroundColor") private var selectedBackgroundColor = 0
@@ -235,6 +274,8 @@ struct HomeView: View {
     @Binding var showVideoPlayer: Bool
     @Binding var isTabBarMinimized: Bool
     @Binding var scrollOffset: CGFloat
+    
+    @State private var lastScrollOffset: CGFloat = 0
     
     @StateObject private var backgroundManager = BackgroundColorManager.shared
     
@@ -246,7 +287,14 @@ struct HomeView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
-                    // Card appears below navigation title when showCard is true
+                    HStack {
+                        Text("Home")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                        Spacer()
+                        AvatarButtonView()
+                    }
+                    .padding(.horizontal, 16)
                     if showCard {
                         VideoCardView(onPlayTapped: {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
@@ -259,29 +307,40 @@ struct HomeView: View {
                     
                     // Browse Collections Section
                     BrowseCollectionsSection()
-                        .padding(.horizontal, 16)
+                    // Removed .padding(.horizontal, 16) here
                     
                     Spacer(minLength: 100)
                 }
                 .padding(.top, 20)
+                .padding(.horizontal, 16)
                 .background(
                     GeometryReader { geometry in
                         Color.clear
-                            .preference(key: ScrollOffsetPreferenceKey.self, value: geometry.frame(in: .named("scroll")).minY)
+                            .preference(key: ScrollOffsetPreferenceKey.self, value: geometry.frame(in: .global).minY)
                     }
                 )
             }
             .scrollIndicators(.hidden)
-            .coordinateSpace(name: "scroll")
             .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+                let delta = value - lastScrollOffset
                 scrollOffset = value
-                // Update tab bar minimize state based on scroll direction
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    isTabBarMinimized = value < -20 // Hide dismiss button when scrolled down more than 20 points
+
+                // Small changes are noise; ignore them to avoid flicker
+                if abs(delta) <= 2 { return }
+
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    if delta < 0 {
+                        // Scrolling down -> minimize tab bar
+                        isTabBarMinimized = true
+                    } else {
+                        // Scrolling up -> expand tab bar
+                        isTabBarMinimized = false
+                    }
                 }
+
+                lastScrollOffset = value
             }
-            .navigationTitle("Home")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarHidden(true)
         }
     }
 }
@@ -340,6 +399,15 @@ struct TripsView: View {
             
             NavigationView {
                 VStack(spacing: 20) {
+                    HStack {
+                        Text("Trips")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                        Spacer()
+                        AvatarButtonView()
+                    }
+                    .padding(.horizontal, 20)
+                    
                     // Liquid glass card
                     VStack(spacing: 16) {
                         Image(systemName: "airplane")
@@ -367,8 +435,7 @@ struct TripsView: View {
                     Spacer()
                 }
                 .padding(.top, 20)
-                .navigationTitle("Trips")
-                .navigationBarTitleDisplayMode(.large)
+                .navigationBarHidden(true)
             }
         }
     }
@@ -391,6 +458,15 @@ struct PlanView: View {
             
             NavigationView {
                 VStack(spacing: 20) {
+                    HStack {
+                        Text("Plan")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                        Spacer()
+                        AvatarButtonView()
+                    }
+                    .padding(.horizontal, 20)
+                    
                     // Liquid glass card
                     VStack(spacing: 16) {
                         Image(systemName: "calendar")
@@ -418,8 +494,7 @@ struct PlanView: View {
                     Spacer()
                 }
                 .padding(.top, 20)
-                .navigationTitle("Plan")
-                .navigationBarTitleDisplayMode(.large)
+                .navigationBarHidden(true)
             }
         }
     }
@@ -439,30 +514,15 @@ struct ProfileView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
-                    // Profile info card
-                    VStack(spacing: 16) {
-                        Image(systemName: "person.circle.fill")
-                            .font(.system(size: 50))
-                            .foregroundStyle(.pink)
-                        Text("Profile")
-                            .font(.title)
-                            .fontWeight(.semibold)
-                        Text("Your personal space")
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding(24)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(.regularMaterial)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                            )
-                            .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-                    )
-                    .padding(.horizontal, 20)
-                    
+                HStack {
+                    Text("Profile")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                    Spacer()
+                    AvatarButtonView()
+                }
+                .padding(.horizontal, 20)
+                
                     // Settings card
                     VStack(spacing: 16) {
                         HStack {
@@ -498,55 +558,6 @@ struct ProfileView: View {
                     )
                     .padding(.horizontal, 20)
                     
-                    // Background color picker card
-                    VStack(spacing: 16) {
-                        HStack {
-                            Image(systemName: "paintpalette.fill")
-                                .foregroundStyle(.green)
-                                .font(.title2)
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Background Theme")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
-                                Text("Choose your favorite color")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            Spacer()
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 16)
-                        
-                        // Color picker grid
-                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 12) {
-                            ForEach(0..<backgroundColors.count, id: \.self) { index in
-                                ColorOptionView(
-                                    name: backgroundColors[index].name,
-                                    gradient: backgroundColors[index].gradient,
-                                    isSelected: selectedBackgroundColor == index,
-                                    action: {
-                                        withAnimation(.easeInOut(duration: 0.3)) {
-                                            selectedBackgroundColor = index
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 16)
-                    }
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(.regularMaterial)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                            )
-                            .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-                    )
-                    .padding(.horizontal, 20)
                     
                     // Additional settings cards
                     VStack(spacing: 12) {
@@ -559,8 +570,7 @@ struct ProfileView: View {
                     Spacer()
                 }
                 .padding(.top, 20)
-                .navigationTitle("Profile")
-                .navigationBarTitleDisplayMode(.large)
+                .navigationBarHidden(true)
                 .preferredColorScheme(isDarkMode ? .dark : .light)
         }
     }
@@ -661,6 +671,8 @@ struct SearchTabContent: View {
         backgroundManager.getBackgroundColors()
     }
 
+    @Environment(\.isSearching) private var isSearching
+
     var body: some View {
         ZStack {
             // Apply selected background color
@@ -668,6 +680,17 @@ struct SearchTabContent: View {
                 .ignoresSafeArea()
             
             List {
+                if !isSearching {
+                    HStack {
+                        Text("Search")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                        Spacer()
+                        AvatarButtonView()
+                    }
+                    .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 8, trailing: 16))
+                    .listRowBackground(Color.clear)
+                }
                 if searchText.isEmpty {
                     Section("Quick Actions") {
                         Label("Explore destinations", systemImage: "globe")
@@ -684,8 +707,6 @@ struct SearchTabContent: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .navigationTitle("Search")
-            .navigationBarTitleDisplayMode(.large)
         }
     }
 }
@@ -1179,4 +1200,3 @@ struct CollectionItem {
 #Preview {
     ContentView()
 }
-
