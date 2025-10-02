@@ -7,6 +7,15 @@
 
 import SwiftUI
 import AVKit
+
+// MARK: - Scroll Offset Preference Key
+struct ScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
 import Combine
 #if canImport(UIKit)
 import UIKit
@@ -80,6 +89,8 @@ struct ContentView: View {
     @State private var showCard = false // Track card visibility
     @State private var dismissedByDrag = false // Track if dismissed by drag vs button
     @State private var showVideoPlayer = false // Track video player presentation
+    @State private var isTabBarMinimized = false // Track tab bar minimize state
+    @State private var scrollOffset: CGFloat = 0 // Track scroll position
     @StateObject private var backgroundManager = BackgroundColorManager.shared
     
     // Sample video URL - replace with your actual video content
@@ -112,7 +123,7 @@ struct ContentView: View {
             
             TabView {
         Tab("Home", systemImage: "house") {
-            HomeView(showCard: $showCard, showWelcomeModal: $showWelcomeModal, showVideoPlayer: $showVideoPlayer)
+            HomeView(showCard: $showCard, showWelcomeModal: $showWelcomeModal, showVideoPlayer: $showVideoPlayer, isTabBarMinimized: $isTabBarMinimized, scrollOffset: $scrollOffset)
         }
 
                 Tab("Trips", systemImage: "airplane") {
@@ -136,6 +147,27 @@ struct ContentView: View {
             .searchable(text: $searchText, prompt: "Search")
             .tint(.blue) // System accent color
             .preferredColorScheme(isDarkMode ? .dark : .light)
+            .tabBarMinimizeBehavior(.onScrollDown)
+            .tabViewBottomAccessory {
+                if showMiniPlayer {
+                    PlayBackView(
+                        onTap: {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                showMiniPlayer = false
+                                showVideoPlayer = true
+                            }
+                        },
+                        onClose: {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                showMiniPlayer = false
+                                showCard = true
+                            }
+                        },
+                        hideDismissButton: isTabBarMinimized
+                    )
+                    .padding(.vertical, 8)
+                }
+            }
             .onAppear {
                 showWelcomeModal = true
             }
@@ -168,37 +200,6 @@ struct ContentView: View {
                 }
             }
             
-            // Mini Player - positioned above tab bar with fixed positioning
-            if showMiniPlayer {
-        VStack {
-                    Spacer()
-                    MiniPlayerView(isDarkMode: isDarkMode, onTap: {
-                        // When mini player play button is tapped, open video player
-                        showVideoPlayer = true
-                    }, onClose: {
-                        // When close button is tapped, show card
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                            showMiniPlayer = false
-                            showCard = true
-                        }
-                    })
-                    .padding(.horizontal, 16) // Match tab bar horizontal padding
-                    .padding(.bottom, 64) // 4px above tab bar (84px tab bar height + 4px spacing)
-                    .scaleEffect(showMiniPlayer ? 1.0 : 0.8)
-                    .opacity(showMiniPlayer ? 1.0 : 0.0)
-                }
-                .transition(
-                    .asymmetric(
-                        insertion: .move(edge: .bottom)
-                            .combined(with: .scale(scale: 0.8))
-                            .combined(with: .opacity),
-                        removal: .move(edge: .bottom)
-                            .combined(with: .opacity)
-                    )
-                )
-                .allowsHitTesting(showMiniPlayer) // Only allow interaction when visible
-                .zIndex(1000) // Keep above other content during scroll
-            }
         }
         .onAppear {
             // Initialize player when ContentView appears
@@ -232,6 +233,8 @@ struct HomeView: View {
     @Binding var showCard: Bool
     @Binding var showWelcomeModal: Bool
     @Binding var showVideoPlayer: Bool
+    @Binding var isTabBarMinimized: Bool
+    @Binding var scrollOffset: CGFloat
     
     @StateObject private var backgroundManager = BackgroundColorManager.shared
     
@@ -261,6 +264,21 @@ struct HomeView: View {
                     Spacer(minLength: 100)
                 }
                 .padding(.top, 20)
+                .background(
+                    GeometryReader { geometry in
+                        Color.clear
+                            .preference(key: ScrollOffsetPreferenceKey.self, value: geometry.frame(in: .named("scroll")).minY)
+                    }
+                )
+            }
+            .scrollIndicators(.hidden)
+            .coordinateSpace(name: "scroll")
+            .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+                scrollOffset = value
+                // Update tab bar minimize state based on scroll direction
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    isTabBarMinimized = value < -20 // Hide dismiss button when scrolled down more than 20 points
+                }
             }
             .navigationTitle("Home")
             .navigationBarTitleDisplayMode(.large)
@@ -673,10 +691,10 @@ struct SearchTabContent: View {
 }
 
 // MARK: - Mini Player
-struct MiniPlayerView: View {
-    let isDarkMode: Bool
+struct PlayBackView: View {
     let onTap: () -> Void
     let onClose: () -> Void
+    let hideDismissButton: Bool
     
     var body: some View {
         HStack(spacing: 12) {
@@ -689,55 +707,61 @@ struct MiniPlayerView: View {
                 Rectangle()
                     .fill(.quaternary)
             }
-            .frame(width: 50, height: 50)
-            .cornerRadius(8)
+            .frame(width: 24, height: 24)
+            .cornerRadius(12)
             .clipped()
             
-            // Content info
+            // Content info - expanded container
             VStack(alignment: .leading, spacing: 2) {
                 Text("Title")
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.primary)
                     .lineLimit(1)
                 
-                Text("Subtitle")
-                    .font(.system(size: 14, weight: .regular))
+                Text("Description")
+                    .font(.system(size: 10, weight: .regular))
                     .foregroundColor(.secondary)
                     .lineLimit(1)
             }
-            
-            Spacer()
+            .frame(maxWidth: .infinity, alignment: .leading)
             
             // Control buttons
-            HStack(spacing: 16) {
+            HStack(spacing: 8) {
                 // Play/Pause button with larger tap area
                 Button(action: onTap) {
                     Image(systemName: "play.fill")
-                        .font(.system(size: 18, weight: .medium))
+                        .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.primary)
-                        .frame(width: 44, height: 44) // Minimum Apple recommended tap target
+                        .frame(width: 32, height: 32) // Smaller tap target for tab bar
                         .contentShape(Rectangle()) // Ensure entire frame is tappable
                 }
                 .buttonStyle(.plain)
                 
-                // Close button with larger tap area
-                Button(action: onClose) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.secondary)
-                        .frame(width: 44, height: 44) // Minimum Apple recommended tap target
-                        .contentShape(Rectangle()) // Ensure entire frame is tappable
+                // Close button - hide when tab bar is minimized
+                if !hideDismissButton {
+                    Button(action: onClose) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .frame(width: 32, height: 32) // Smaller tap target
+                            .contentShape(Rectangle()) // Ensure entire frame is tappable
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.clear)
-                .glassEffect(in: RoundedRectangle(cornerRadius: 12))
-        )
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+    }
+}
+
+struct MiniPlayerView: View {
+    let isDarkMode: Bool
+    let onTap: () -> Void
+    let onClose: () -> Void
+    
+    var body: some View {
+        PlayBackView(onTap: onTap, onClose: onClose, hideDismissButton: false)
     }
 }
 
@@ -1004,12 +1028,12 @@ struct BrowseCollectionsSection: View {
         VStack(alignment: .leading, spacing: 16) {
             // Section Header
             VStack(alignment: .leading, spacing: 8) {
-                Text("Browse Collections")
+                Text("SectionTitle")
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
                 
-                Text("Discover curated collections of stunning visuals and experiences")
+                Text("Lectus sed pellentesque faucibus, urna lectus rutrum lorem, sit amet mattis orci lorem pretium nisl.")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .lineLimit(2)
