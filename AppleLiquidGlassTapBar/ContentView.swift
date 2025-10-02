@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVKit
 import Combine
 #if canImport(UIKit)
 import UIKit
@@ -78,7 +79,12 @@ struct ContentView: View {
     @State private var showMiniPlayer = false // Track mini player visibility
     @State private var showCard = false // Track card visibility
     @State private var dismissedByDrag = false // Track if dismissed by drag vs button
+    @State private var showVideoPlayer = false // Track video player presentation
     @StateObject private var backgroundManager = BackgroundColorManager.shared
+    
+    // Sample video URL - replace with your actual video content
+    private let videoURL = URL(string: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")!
+    @State private var player: AVPlayer?
 
     init() {
         #if canImport(UIKit)
@@ -105,9 +111,9 @@ struct ContentView: View {
                 .ignoresSafeArea(.all)
             
             TabView {
-                Tab("Home", systemImage: "house") {
-                    HomeView(showCard: $showCard, showWelcomeModal: $showWelcomeModal)
-                }
+        Tab("Home", systemImage: "house") {
+            HomeView(showCard: $showCard, showWelcomeModal: $showWelcomeModal, showVideoPlayer: $showVideoPlayer)
+        }
 
                 Tab("Trips", systemImage: "airplane") {
                     TripsView()
@@ -147,6 +153,9 @@ struct ContentView: View {
                     dismissedByDrag = false
                     showWelcomeModal = false
                     // Don't show mini player when dismissed via button
+                }, onPlayTapped: {
+                    // Open video player when play button is tapped
+                    showVideoPlayer = true
                 })
                 .presentationDetents([.fraction(0.75)])
                 .presentationDragIndicator(.visible)
@@ -164,11 +173,8 @@ struct ContentView: View {
         VStack {
                     Spacer()
                     MiniPlayerView(isDarkMode: isDarkMode, onTap: {
-                        // When mini player play button is tapped, hide it and show full modal
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                            showMiniPlayer = false
-                        }
-                        showWelcomeModal = true
+                        // When mini player play button is tapped, open video player
+                        showVideoPlayer = true
                     }, onClose: {
                         // When close button is tapped, show card
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
@@ -194,6 +200,25 @@ struct ContentView: View {
                 .zIndex(1000) // Keep above other content during scroll
             }
         }
+        .onAppear {
+            // Initialize player when ContentView appears
+            player = AVPlayer(url: videoURL)
+        }
+        // Video Player Presentation
+        .fullScreenCover(isPresented: $showVideoPlayer) {
+            if let player = player {
+                VideoPlayer(player: player)
+                    .ignoresSafeArea()
+                    .onAppear {
+                        // Auto-play when video player appears
+                        player.play()
+                    }
+                    .onDisappear {
+                        // Pause when video player disappears
+                        player.pause()
+                    }
+            }
+        }
     }
 }
 
@@ -202,6 +227,7 @@ struct HomeView: View {
     @AppStorage("selectedBackgroundColor") private var selectedBackgroundColor = 0
     @Binding var showCard: Bool
     @Binding var showWelcomeModal: Bool
+    @Binding var showVideoPlayer: Bool
     
     @StateObject private var backgroundManager = BackgroundColorManager.shared
     
@@ -217,7 +243,7 @@ struct HomeView: View {
                     VideoCardView(onPlayTapped: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                             showCard = false
-                            showWelcomeModal = true
+                            showVideoPlayer = true
                         }
                     })
                     .transition(.move(edge: .top).combined(with: .opacity))
@@ -709,6 +735,7 @@ struct MiniPlayerView: View {
 struct WelcomeModalView: View {
     let isDarkMode: Bool
     let onButtonDismiss: () -> Void
+    let onPlayTapped: () -> Void
     
     var body: some View {
         NavigationView {
@@ -728,7 +755,7 @@ struct WelcomeModalView: View {
                     .clipped()
                     
                     // Play button with Apple's official Glass Effect
-                    Button(action: {}) {
+                    Button(action: onPlayTapped) {
                         ZStack {
                             // Base circle with glass effect
                             Circle()
@@ -800,7 +827,7 @@ struct WelcomeModalView: View {
             }
             .navigationBarHidden(true)
         }
-        .navigationViewStyle(StackNavigationViewStyle())
+.navigationViewStyle(StackNavigationViewStyle())
     }
 }
 
