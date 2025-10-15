@@ -1,0 +1,269 @@
+//
+//  MusicSectionView.swift
+//  AppleLiquidGlassTapBar
+//
+//  Created by Meghdad Abbaszadegan on 10/1/25.
+//
+
+import SwiftUI
+import MusicKit
+
+struct MusicSectionView: View {
+    @StateObject private var musicManager = MusicManager()
+    @State private var showingAlbumAlert = false
+    @State private var showingPlaylistAlert = false
+    @State private var selectedAlbum: Album?
+    @State private var selectedPlaylist: Playlist?
+    
+    // Callback for when music is selected
+    let onMusicSelected: (String, String, URL?) -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            // Section Header
+            HStack {
+                Text("Your Music")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                if musicManager.authorizationStatus != .authorized {
+                    Button("Connect Music") {
+                        Task {
+                            await musicManager.requestAuthorization()
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundColor(.blue)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(.blue.opacity(0.1))
+                    )
+                }
+            }
+            .padding(.horizontal, 16)
+            
+            if musicManager.authorizationStatus == .authorized {
+                // Albums Section
+                if !musicManager.albums.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Recent Albums")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primary)
+                            .padding(.horizontal, 16)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 16) {
+                                ForEach(musicManager.albums) { album in
+                                    AlbumCardView(album: album) {
+                                        // Handle album tap
+                                        handleAlbumTap(album)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                        }
+                    }
+                }
+                
+                // Playlists Section
+                if !musicManager.playlists.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Your Playlists")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primary)
+                            .padding(.horizontal, 16)
+                        
+                        VStack(spacing: 12) {
+                            ForEach(musicManager.playlists) { playlist in
+                                PlaylistCardView(playlist: playlist) {
+                                    // Handle playlist tap
+                                    handlePlaylistTap(playlist)
+                                }
+                                .padding(.horizontal, 16)
+                            }
+                        }
+                    }
+                }
+                
+                if musicManager.isLoading {
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        Text("Loading music...")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .padding(.vertical, 20)
+                }
+                
+            } else if musicManager.authorizationStatus == .denied {
+                // Permission denied state
+                VStack(spacing: 12) {
+                    Image(systemName: "music.note.slash")
+                        .font(.system(size: 40))
+                        .foregroundColor(.secondary)
+                    
+                    Text("Music Access Required")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                    
+                    Text("To display your music library, please grant access to Apple Music in Settings.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+                }
+                .padding(.vertical, 30)
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(.regularMaterial)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(.separator, lineWidth: 0.5)
+                        )
+                )
+                .padding(.horizontal, 16)
+                
+            } else {
+                // Not determined state
+                VStack(spacing: 12) {
+                    Image(systemName: "music.note")
+                        .font(.system(size: 40))
+                        .foregroundColor(.blue)
+                    
+                    Text("Connect Your Music")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                    
+                    Text("Access your Apple Music library to see your albums and playlists right here.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+                    
+                    Button("Connect Apple Music") {
+                        Task {
+                            await musicManager.requestAuthorization()
+                        }
+                    }
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(.blue)
+                    )
+                }
+                .padding(.vertical, 30)
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(.regularMaterial)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(.separator, lineWidth: 0.5)
+                        )
+                )
+                .padding(.horizontal, 16)
+            }
+            
+            // Demo button for testing
+            if musicManager.authorizationStatus == .authorized && musicManager.albums.isEmpty {
+                Button("Load Sample Music") {
+                    musicManager.loadSampleMusic()
+                }
+                .font(.headline)
+                .foregroundColor(.blue)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(.blue.opacity(0.1))
+                )
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .onAppear {
+            if musicManager.authorizationStatus == .authorized {
+                Task {
+                    await musicManager.loadMusicLibrary()
+                }
+            } else {
+                // Load sample music for demo purposes
+                musicManager.loadSampleMusic()
+            }
+        }
+        .alert("Album Selected", isPresented: $showingAlbumAlert) {
+            Button("OK") { }
+        } message: {
+            if let album = selectedAlbum {
+                Text("You selected \(album.title) by \(album.artist)\nReleased: \(album.formattedReleaseDate)\nTracks: \(album.trackCount)")
+            }
+        }
+        .alert("Playlist Selected", isPresented: $showingPlaylistAlert) {
+            Button("OK") { }
+        } message: {
+            if let playlist = selectedPlaylist {
+                Text("You selected \(playlist.title)\nCurated by: \(playlist.curatorName)\n\(playlist.trackCount) tracks\n\n\(playlist.description)")
+            }
+        }
+    }
+    
+    // MARK: - Tap Handlers
+    private func handleAlbumTap(_ album: Album) {
+        // Add haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+        
+        // Play the album (simulate first track)
+        let firstTrack = "\(album.title) - Track 1"
+        onMusicSelected(firstTrack, album.artist, album.artworkURL)
+        
+        // Show album alert
+        selectedAlbum = album
+        showingAlbumAlert = true
+        
+        // Also print to console
+        print("🎵 Tapped album: \(album.title) by \(album.artist)")
+        print("   📅 Released: \(album.formattedReleaseDate)")
+        print("   🎶 Tracks: \(album.trackCount)")
+    }
+    
+    private func handlePlaylistTap(_ playlist: Playlist) {
+        // Add haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+        impactFeedback.impactOccurred()
+        
+        // Play the playlist (simulate first track)
+        let firstTrack = "\(playlist.title) - First Track"
+        onMusicSelected(firstTrack, playlist.curatorName, playlist.artworkURL)
+        
+        // Show playlist alert
+        selectedPlaylist = playlist
+        showingPlaylistAlert = true
+        
+        // Also print to console
+        print("🎶 Tapped playlist: \(playlist.title)")
+        print("   👤 Curated by: \(playlist.curatorName)")
+        print("   📝 \(playlist.description)")
+        print("   🎵 \(playlist.trackCount) tracks")
+    }
+}
+
+#Preview {
+    MusicSectionView { track, artist, artwork in
+        print("Selected: \(track) by \(artist)")
+    }
+    .padding()
+}

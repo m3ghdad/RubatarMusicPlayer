@@ -7,6 +7,8 @@
 
 import SwiftUI
 import AVKit
+import AVFoundation
+import MusicKit
 
 // MARK: - Scroll Offset Preference Key
 struct ScrollOffsetPreferenceKey: PreferenceKey {
@@ -92,6 +94,7 @@ struct ContentView: View {
     @State private var isTabBarMinimized = false // Track tab bar minimize state
     @State private var scrollOffset: CGFloat = 0 // Track scroll position
     @StateObject private var backgroundManager = BackgroundColorManager.shared
+    @StateObject private var audioPlayer = AudioPlayer()
     
     // Sample video URL - replace with your actual video content
     private let videoURL = URL(string: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")!
@@ -123,7 +126,7 @@ struct ContentView: View {
             
             TabView {
         Tab("Home", systemImage: "house") {
-            HomeView(showCard: $showCard, showWelcomeModal: $showWelcomeModal, showVideoPlayer: $showVideoPlayer, isTabBarMinimized: $isTabBarMinimized, scrollOffset: $scrollOffset)
+            HomeView(showCard: $showCard, showWelcomeModal: $showWelcomeModal, showVideoPlayer: $showVideoPlayer, isTabBarMinimized: $isTabBarMinimized, scrollOffset: $scrollOffset, onMusicSelected: playSelectedTrack)
         }
 
                 Tab("Trips", systemImage: "road.lanes") {
@@ -152,18 +155,15 @@ struct ContentView: View {
                 if showMiniPlayer {
                     PlayBackView(
                         onTap: {
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                                showMiniPlayer = false
-                                showVideoPlayer = true
-                            }
+                            audioPlayer.togglePlayPause()
                         },
-                        onClose: {
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                                showMiniPlayer = false
-                                showCard = true
-                            }
+                        onNext: {
+                            audioPlayer.playNextTrack()
                         },
-                        hideDismissButton: isTabBarMinimized
+                        currentTrack: audioPlayer.currentTrack,
+                        currentArtist: audioPlayer.currentArtist,
+                        currentArtwork: audioPlayer.currentArtwork,
+                        isPlaying: audioPlayer.isPlaying
                     )
                     .padding(.vertical, 8)
                 }
@@ -172,13 +172,8 @@ struct ContentView: View {
                 showWelcomeModal = true
             }
             .sheet(isPresented: $showWelcomeModal, onDismiss: {
-                // This is called when sheet is dismissed by drag or swipe
-                if dismissedByDrag {
-                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0)) {
-                        showMiniPlayer = true
-                    }
-                }
-                dismissedByDrag = false // Reset flag
+                // Reset flag - mini player is now controlled by music selection
+                dismissedByDrag = false
             }) {
                 WelcomeModalView(isDarkMode: isDarkMode, onButtonDismiss: {
                     // This is called when "Learn more" button is tapped
@@ -206,7 +201,6 @@ struct ContentView: View {
             player = AVPlayer(url: videoURL)
             //player?.allowsExternalPlayback = false
         }
-    
         // Video Player Presentation
         .fullScreenCover(isPresented: $showVideoPlayer) {
             if let player = player {
@@ -224,6 +218,18 @@ struct ContentView: View {
                 
             }
         }
+    }
+    
+    // MARK: - Music Control Functions
+    func playSelectedTrack(track: String, artist: String, artwork: URL?) {
+        audioPlayer.playSelectedTrack(track: track, artist: artist, artwork: artwork)
+        showMiniPlayer = true
+        
+        // Add haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+        
+        print("🎵 Now playing: \(track) by \(artist)")
     }
 }
 
@@ -274,6 +280,7 @@ struct HomeView: View {
     @Binding var showVideoPlayer: Bool
     @Binding var isTabBarMinimized: Bool
     @Binding var scrollOffset: CGFloat
+    let onMusicSelected: (String, String, URL?) -> Void
     
     @State private var lastScrollOffset: CGFloat = 0
     
@@ -303,6 +310,11 @@ struct HomeView: View {
                             }
                         })
                         .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+                    
+                    // Music Section
+                    MusicSectionView { track, artist, artwork in
+                        onMusicSelected(track, artist, artwork)
                     }
                     
                     // Browse Collections Section
@@ -711,35 +723,49 @@ struct SearchTabContent: View {
     }
 }
 
-// MARK: - Mini Player
+// MARK: - Mini Music Player
 struct PlayBackView: View {
     let onTap: () -> Void
-    let onClose: () -> Void
-    let hideDismissButton: Bool
+    let onNext: () -> Void
+    let currentTrack: String
+    let currentArtist: String
+    let currentArtwork: URL?
+    let isPlaying: Bool
     
     var body: some View {
         HStack(spacing: 12) {
-            // Album artwork / video thumbnail
-            AsyncImage(url: URL(string: "https://plus.unsplash.com/premium_photo-1752782188828-6bff4fe86c4e?q=80&w=2664&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")) { image in
+            // Album artwork
+            AsyncImage(url: currentArtwork) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
             } placeholder: {
                 Rectangle()
-                    .fill(.quaternary)
+                    .fill(
+                        LinearGradient(
+                            colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay(
+                        Image(systemName: "music.note")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.7))
+                    )
             }
-            .frame(width: 24, height: 24)
-            .cornerRadius(12)
+            .frame(width: 32, height: 32)
+            .cornerRadius(8)
             .clipped()
             
             // Content info - expanded container
             VStack(alignment: .leading, spacing: 2) {
-                Text("Title")
+                Text(currentTrack)
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.primary)
                     .lineLimit(1)
                 
-                Text("Description")
+                Text(currentArtist)
                     .font(.system(size: 10, weight: .regular))
                     .foregroundColor(.secondary)
                     .lineLimit(1)
@@ -748,43 +774,40 @@ struct PlayBackView: View {
             
             // Control buttons
             HStack(spacing: 8) {
-                // Play/Pause button with larger tap area
+                // Play/Pause button
                 Button(action: onTap) {
-                    Image(systemName: "play.fill")
+                    Image(systemName: isPlaying ? "pause.fill" : "play.fill")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.primary)
-                        .frame(width: 32, height: 32) // Smaller tap target for tab bar
-                        .contentShape(Rectangle()) // Ensure entire frame is tappable
+                        .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 
-                // Close button - hide when tab bar is minimized
-                if !hideDismissButton {
-                    Button(action: onClose) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.secondary)
-                            .frame(width: 32, height: 32) // Smaller tap target
-                            .contentShape(Rectangle()) // Ensure entire frame is tappable
-                    }
-                    .buttonStyle(.plain)
+                // Next track button
+                Button(action: onNext) {
+                    Image(systemName: "forward.fill")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(.regularMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(.separator, lineWidth: 0.5)
+                )
+        )
     }
 }
 
-struct MiniPlayerView: View {
-    let isDarkMode: Bool
-    let onTap: () -> Void
-    let onClose: () -> Void
-    
-    var body: some View {
-        PlayBackView(onTap: onTap, onClose: onClose, hideDismissButton: false)
-    }
-}
 
 // MARK: - Welcome Modal
 struct WelcomeModalView: View {
@@ -1183,9 +1206,6 @@ struct CollectionCard: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.15), radius: 12, x: 0, y: 6)
-        .onTapGesture {
-            // Handle card tap
-        }
     }
 }
 

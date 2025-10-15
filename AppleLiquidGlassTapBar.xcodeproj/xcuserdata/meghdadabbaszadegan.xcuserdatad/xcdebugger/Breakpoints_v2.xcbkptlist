@@ -14,10 +14,10 @@
             filePath = "AppleLiquidGlassTapBar/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "210"
-            endingLineNumber = "210"
-            landmarkName = "body"
-            landmarkType = "24">
+            startingLineNumber = "278"
+            endingLineNumber = "278"
+            landmarkName = "HomeView"
+            landmarkType = "14">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

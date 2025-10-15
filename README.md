@@ -13,6 +13,14 @@ A modern iOS app showcasing Apple's Liquid Glass design language with a beautifu
 - **Adaptive Theming**: Light and dark mode support
 - **Liquid Glass Effects**: Translucent materials with proper blur and shadows
 
+#### **Apple MusicKit Integration**
+- **Music Library Access**: Display user's albums and playlists from Apple Music
+- **Permission Handling**: Graceful authorization flow with user-friendly prompts
+- **Sample Data**: Fallback to curated music content for demonstration
+- **Beautiful Cards**: Custom album and playlist cards with artwork support
+- **Horizontal Scrolling**: Smooth album browsing with native scroll behavior
+- **Privacy Compliant**: Proper usage descriptions and permission requests
+
 #### **Welcome Modal & Video Experience**
 - **Full-Screen Video Experience**: Immersive background with scenic content
 - **Apple Liquid Glass Play Button**: Authentic translucent play controller with `.glassEffect()`
@@ -110,6 +118,7 @@ TabView(selection: $selectedTab) {
 - iOS 17.0+
 - Xcode 15.0+
 - Swift 5.9+
+- Apple Music subscription (for full functionality)
 
 #### **Installation**
 1. Clone the repository:
@@ -247,3 +256,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Built with ❤️ using SwiftUI and Apple's Liquid Glass design language**
+# RubatarMusicPlayer
