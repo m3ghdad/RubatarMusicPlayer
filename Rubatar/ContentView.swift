@@ -93,6 +93,8 @@ struct ContentView: View {
     @State private var showVideoPlayer = false // Track video player presentation
     @State private var isTabBarMinimized = false // Track tab bar minimize state
     @State private var scrollOffset: CGFloat = 0 // Track scroll position
+    @State private var showEnhancedPlayer = false // Track enhanced player visibility
+    @State private var hideMiniPlayer = false // Track mini player hide state
     @StateObject private var backgroundManager = BackgroundColorManager.shared
     @StateObject private var audioPlayer = AudioPlayer()
     
@@ -155,7 +157,8 @@ struct ContentView: View {
                 if showMiniPlayer {
                     PlayBackView(
                         onTap: {
-                            audioPlayer.togglePlayPause()
+                            // Open enhanced player instead of just toggling play/pause
+                            showEnhancedPlayer = true
                         },
                         onNext: {
                             audioPlayer.playNextTrack()
@@ -196,6 +199,16 @@ struct ContentView: View {
                     showCard = false // Hide card when modal appears
                     dismissedByDrag = true // Assume drag dismissal unless button is pressed
                 }
+            }
+            
+            // Enhanced Music Player Overlay
+            if showEnhancedPlayer {
+                EnhancedMusicPlayer(
+                    show: $showEnhancedPlayer,
+                    hideMiniPlayer: $hideMiniPlayer
+                )
+                .environmentObject(audioPlayer)
+                .zIndex(1000)
             }
             
         }

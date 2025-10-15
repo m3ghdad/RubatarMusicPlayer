@@ -10,13 +10,14 @@ import AVFoundation
 import Combine
 import MusicKit
 
+@MainActor
 class AudioPlayer: ObservableObject {
     @Published var isPlaying = false
     @Published var currentTrack: String = "No track selected"
     @Published var currentArtist: String = ""
     @Published var currentArtwork: URL? = nil
     
-    private var usingMusicKit = false
+    @Published var usingMusicKit = false
     private var isLocallyPaused = false
     private var autoAdvanceEnabled = true
     private var isSkipping = false
@@ -333,7 +334,7 @@ class AudioPlayer: ObservableObject {
         stopTrackUpdateTimer()
         trackUpdateTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.checkAndUpdateCurrentTrack()
+                await self?.checkAndUpdateCurrentTrack()
             }
         }
     }
@@ -343,7 +344,7 @@ class AudioPlayer: ObservableObject {
         trackUpdateTimer = nil
     }
     
-    private func checkAndUpdateCurrentTrack() {
+    private func checkAndUpdateCurrentTrack() async {
         guard usingMusicKit else { return }
         let player = ApplicationMusicPlayer.shared
         
@@ -508,6 +509,81 @@ class AudioPlayer: ObservableObject {
         }
     }
     
+    func setVolume(_ volume: Float) {
+        mixerNode.outputVolume = volume
+        print("🔊 Volume set to: \(volume)")
+    }
+    
+    func seekTo(_ time: TimeInterval) {
+        // For MusicKit
+        if usingMusicKit {
+            Task { @MainActor in
+                let player = ApplicationMusicPlayer.shared
+                player.playbackTime = time
+                print("🎯 Seeked to time: \(time)")
+            }
+        } else {
+            // For local playback, restart with offset
+            print("🎯 Local seek to time: \(time) (simplified implementation)")
+            // This is a simplified implementation - full seek would require more complex buffer management
+        }
+    }
+    
+    func playPreviousTrack() {
+        Task { @MainActor in
+            // Prevent re-entrant or duplicate previous operations
+            if isSkipping { return }
+            isSkipping = true
+            defer { isSkipping = false }
+
+            if usingMusicKit {
+                let player = ApplicationMusicPlayer.shared
+                do {
+                    try await player.skipToPreviousEntry()
+                    isPlaying = true
+                    
+                    // Update our queue index and track info
+                    currentQueueIndex = max(currentQueueIndex - 1, 0)
+                    updateCurrentTrackInfo()
+                    return
+                } catch {
+                    // Fallback to local sequence
+                    usingMusicKit = false
+                    stopTrackUpdateTimer()
+
+                    // Disable auto-advance before stopping to avoid completion chaining
+                    autoAdvanceEnabled = false
+                    playbackSessionID = UUID()
+                    playerNode.stop()
+                    playerNode.reset()
+
+                    currentTrackIndex = currentTrackIndex > 0 ? currentTrackIndex - 1 : sampleTracks.count - 1
+                    let track = sampleTracks[currentTrackIndex]
+                    currentTrack = track.title
+                    currentArtist = track.artist
+                    currentArtwork = track.artwork
+
+                    playAudio()
+                }
+            } else {
+                // Local tone path
+                // Disable auto-advance before stopping to avoid completion chaining
+                autoAdvanceEnabled = false
+                playbackSessionID = UUID()
+                playerNode.stop()
+                playerNode.reset()
+
+                currentTrackIndex = currentTrackIndex > 0 ? currentTrackIndex - 1 : sampleTracks.count - 1
+                let track = sampleTracks[currentTrackIndex]
+                currentTrack = track.title
+                currentArtist = track.artist
+                currentArtwork = track.artwork
+
+                playAudio()
+            }
+        }
+    }
+    
     func stop() {
         autoAdvanceEnabled = false
         isLocallyPaused = false
@@ -515,6 +591,11 @@ class AudioPlayer: ObservableObject {
         playerNode.stop()
         isPlaying = false
         stopTrackUpdateTimer()
+    }
+    
+    // MARK: - Volume Control
+    var currentVolume: Float {
+        return mixerNode.outputVolume
     }
 }
 
