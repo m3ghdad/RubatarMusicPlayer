@@ -37,13 +37,14 @@ class AudioPlayer: ObservableObject {
     
     private var currentTrackIndex = 0
     
-    // Sample tracks with their audio data
+    // Sample tracks with their audio data - Updated with Persian music
     private let sampleTracks: [(title: String, artist: String, artwork: URL?, duration: TimeInterval)] = [
-        ("The Dark Side of the Moon - Track 1", "Pink Floyd", URL(string: "https://upload.wikimedia.org/wikipedia/en/3/3b/Dark_Side_of_the_Moon.png"), 30.0),
-        ("Classic Rock Essentials - First Track", "Your Music", URL(string: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop"), 25.0),
-        ("Abbey Road - Track 1", "The Beatles", URL(string: "https://upload.wikimedia.org/wikipedia/en/4/42/Beatles_-_Abbey_Road.jpg"), 35.0),
-        ("Thriller - Track 1", "Michael Jackson", URL(string: "https://upload.wikimedia.org/wikipedia/en/5/55/Michael_Jackson_-_Thriller.png"), 40.0),
-        ("Hotel California - Track 1", "Eagles", URL(string: "https://upload.wikimedia.org/wikipedia/en/4/49/Hotelcalifornia.jpg"), 28.0)
+        ("Gypsy Wind - Track 1", "Sohrab Pournazeri", URL(string: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop"), 30.0),
+        ("Voices of the Shades - Track 1", "Kayhan Kalhor & Madjid Khaladj", URL(string: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=400&h=400&fit=crop"), 25.0),
+        ("Setar Improvisation - Track 1", "Keivan Saket", URL(string: "https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=400&h=400&fit=crop"), 35.0),
+        ("Setar سه تار - Track 1", "Matin Baghani", URL(string: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&h=400&fit=crop"), 28.0),
+        ("Kamkars Santur - Track 1", "Siavash Kamkar", URL(string: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=400&h=400&fit=crop"), 32.0),
+        ("Kamancheh Instrumental - Track 1", "Mekuvenet", URL(string: "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=400&h=400&fit=crop"), 40.0)
     ]
     
     init() {
@@ -89,11 +90,24 @@ class AudioPlayer: ObservableObject {
             } catch {
                 print("⚠️ MusicKit playback failed (\(error)). Falling back to tone generator.")
                 usingMusicKit = false
-                if let trackIndex = sampleTracks.firstIndex(where: { $0.title.contains(track.prefix(20)) }) {
+                
+                // Better matching for Persian music
+                if let trackIndex = sampleTracks.firstIndex(where: { 
+                    $0.title.lowercased().contains(track.lowercased().prefix(15)) || 
+                    $0.artist.lowercased().contains(artist.lowercased().prefix(15))
+                }) {
                     currentTrackIndex = trackIndex
                 } else {
-                    currentTrackIndex = 0
+                    // If no match found, find a random track or cycle through
+                    currentTrackIndex = (currentTrackIndex + 1) % sampleTracks.count
                 }
+                
+                // Update current track info to match the sample track
+                let selectedTrack = sampleTracks[currentTrackIndex]
+                currentTrack = selectedTrack.title
+                currentArtist = selectedTrack.artist
+                currentArtwork = selectedTrack.artwork
+                
                 playAudio()
             }
         }
@@ -115,7 +129,23 @@ class AudioPlayer: ObservableObject {
         guard let song = response.songs.first else { throw PlaybackError.noResults }
 
         let player = ApplicationMusicPlayer.shared
-        player.queue = .init(for: [song])
+        
+        // Create a queue with multiple songs for proper next track functionality
+        var songsToQueue: [Song] = [song]
+        
+        // Try to add more songs from the same artist to create a proper queue
+        do {
+            var artistRequest = MusicCatalogSearchRequest(term: artist, types: [Song.self])
+            artistRequest.limit = 6
+            let artistResponse = try await artistRequest.response()
+            if !artistResponse.songs.isEmpty {
+                songsToQueue = Array(artistResponse.songs.prefix(6))
+            }
+        } catch {
+            print("⚠️ Could not load artist songs, using single song: \(error)")
+        }
+        
+        player.queue = .init(for: songsToQueue, startingAt: song)
         try await player.play()
         usingMusicKit = true
         isPlaying = true

@@ -28,23 +28,138 @@ class MusicManager: ObservableObject {
     }
     
     func loadMusicLibrary() async {
-        // Temporarily use sample data to avoid relying on MusicKit library requests
-        // with custom model types. You can re-enable MusicKit fetching by mapping
-        // MusicKit.Album/Playlist into these app models.
         if authorizationStatus != .authorized {
             await requestAuthorization()
         }
-        // If still not authorized, just load samples for a graceful UI.
+        
         guard authorizationStatus == .authorized else {
             loadSampleMusic()
             return
         }
+        
         isLoading = true
         error = nil
-        // TODO: Implement real MusicKit fetching and map results to Album/Playlist app models.
-        // For now, load sample data to keep the app building and running.
-        loadSampleMusic()
+        
+        // Search for the specific Persian albums by name and artist
+        await loadPersianAlbums()
+        await loadPersianPlaylists()
+        
+        // If no albums found, fallback to sample data
+        if albums.isEmpty {
+            loadSampleMusic()
+        }
+        
         isLoading = false
+    }
+    
+    private func loadPersianAlbums() async {
+        let albumSearches = [
+            ("Gypsy Wind", "Sohrab Pournazeri"),
+            ("Voices of the Shades", "Kayhan Kalhor"),
+            ("Setar Improvisation", "Keivan Saket")
+        ]
+        
+        var foundAlbums: [Album] = []
+        
+        for (albumName, artistName) in albumSearches {
+            do {
+                let searchRequest = MusicCatalogSearchRequest(
+                    term: "\(albumName) \(artistName)",
+                    types: [MusicKit.Album.self]
+                )
+                
+                let searchResponse = try await searchRequest.response()
+                
+                if let musicKitAlbum = searchResponse.albums.first {
+                    let album = Album(
+                        id: musicKitAlbum.id.rawValue,
+                        title: musicKitAlbum.title,
+                        artist: musicKitAlbum.artistName,
+                        artwork: CustomArtwork(url: musicKitAlbum.artwork?.url(width: 400, height: 400) ?? URL(string: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop")!),
+                        trackCount: musicKitAlbum.trackCount,
+                        releaseDate: musicKitAlbum.releaseDate ?? Date()
+                    )
+                    foundAlbums.append(album)
+                }
+            } catch {
+                print("Error searching for album \(albumName): \(error)")
+            }
+        }
+        
+        self.albums = foundAlbums
+    }
+    
+    private func loadPersianPlaylists() async {
+        // For playlists, we'll use sample data since Apple Music API doesn't have
+        // the exact playlists we want, but we can search for similar content
+        let playlistSearches = [
+            ("Setar", "Persian traditional music"),
+            ("Santur", "Kamkar family"),
+            ("Kamancheh", "Persian classical")
+        ]
+        
+        var foundPlaylists: [Playlist] = []
+        
+        for (instrument, searchTerm) in playlistSearches {
+            do {
+                let searchRequest = MusicCatalogSearchRequest(
+                    term: "\(instrument) \(searchTerm)",
+                    types: [MusicKit.Playlist.self]
+                )
+                
+                let searchResponse = try await searchRequest.response()
+                
+                if let musicKitPlaylist = searchResponse.playlists.first {
+                    let playlist = Playlist(
+                        id: musicKitPlaylist.id.rawValue,
+                        title: musicKitPlaylist.name,
+                        curatorName: musicKitPlaylist.curatorName ?? "Apple Music",
+                        artwork: CustomArtwork(url: musicKitPlaylist.artwork?.url(width: 400, height: 400) ?? URL(string: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&h=400&fit=crop")!),
+                        trackCount: 15, // Default track count since MusicKit Playlist doesn't have trackCount
+                        description: musicKitPlaylist.description
+                    )
+                    foundPlaylists.append(playlist)
+                }
+            } catch {
+                print("Error searching for playlist \(instrument): \(error)")
+            }
+        }
+        
+        // If no playlists found, use sample data
+        if foundPlaylists.isEmpty {
+            loadSamplePlaylists()
+        } else {
+            self.playlists = foundPlaylists
+        }
+    }
+    
+    private func loadSamplePlaylists() {
+        playlists = [
+            Playlist(
+                id: "1",
+                title: "Setar سه تار",
+                curatorName: "Matin Baghani",
+                artwork: CustomArtwork(url: URL(string: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&h=400&fit=crop")!),
+                trackCount: 15,
+                description: "Beautiful Setar performances and traditional Persian music"
+            ),
+            Playlist(
+                id: "2",
+                title: "Kamkars Santur کامکارها / سنتور",
+                curatorName: "Siavash Kamkar",
+                artwork: CustomArtwork(url: URL(string: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=400&h=400&fit=crop")!),
+                trackCount: 20,
+                description: "Masterful Santur performances by the Kamkar family"
+            ),
+            Playlist(
+                id: "3",
+                title: "Kamancheh Instrumental | کمانچه",
+                curatorName: "Mekuvenet",
+                artwork: CustomArtwork(url: URL(string: "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=400&h=400&fit=crop")!),
+                trackCount: 18,
+                description: "Emotional Kamancheh instrumentals and Persian classical music"
+            )
+        ]
     }
     
     func loadSampleMusic() {
