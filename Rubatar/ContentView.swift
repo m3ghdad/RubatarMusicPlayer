@@ -157,8 +157,12 @@ struct ContentView: View {
                 if showMiniPlayer {
                     PlayBackView(
                         onTap: {
-                            // Open enhanced player instead of just toggling play/pause
+                            // Open enhanced player
                             showEnhancedPlayer = true
+                        },
+                        onPlayPause: {
+                            // Toggle play/pause
+                            audioPlayer.togglePlayPause()
                         },
                         onNext: {
                             audioPlayer.playNextTrack()
@@ -861,16 +865,16 @@ struct SearchTabContent: View {
 
 // MARK: - Mini Music Player
 struct PlayBackView: View {
-    let onTap: () -> Void
+    let onTap: () -> Void // Opens the enhanced player
+    let onPlayPause: () -> Void // Toggles play/pause
     let onNext: () -> Void
     let currentTrack: String
     let currentArtist: String
     let currentArtwork: URL?
     let isPlaying: Bool
-    
     var body: some View {
         HStack(spacing: 12) {
-            // Album artwork
+            // Album artwork - tappable to open player
             AsyncImage(url: currentArtwork) { image in
                 image
                     .resizable()
@@ -893,8 +897,11 @@ struct PlayBackView: View {
             .frame(width: 32, height: 32)
             .cornerRadius(8)
             .clipped()
+            .onTapGesture {
+                onTap() // Opens enhanced player
+            }
             
-            // Content info - expanded container
+            // Content info - expanded container - also tappable to open player
             VStack(alignment: .leading, spacing: 2) {
                 Text(currentTrack)
                     .font(.system(size: 12, weight: .medium))
@@ -907,28 +914,35 @@ struct PlayBackView: View {
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .onTapGesture {
+                onTap() // Opens enhanced player
+            }
             
-            // Control buttons
+            // Control buttons - these have priority over background taps
             HStack(spacing: 8) {
                 // Play/Pause button
-                Button(action: onTap) {
-                    Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.primary)
-                        .frame(width: 32, height: 32)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+                Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.primary)
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+                    .highPriorityGesture(
+                        TapGesture().onEnded {
+                            onPlayPause()
+                        }
+                    )
                 
                 // Next track button
-                Button(action: onNext) {
-                    Image(systemName: "forward.fill")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.secondary)
-                        .frame(width: 32, height: 32)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+                Image(systemName: "forward.fill")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.secondary)
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+                    .highPriorityGesture(
+                        TapGesture().onEnded {
+                            onNext()
+                        }
+                    )
             }
         }
         .padding(.horizontal, 12)

@@ -1,4 +1,6 @@
 import SwiftUI
+import AVFoundation
+import MediaPlayer
 
 struct EnhancedMusicPlayer: View {
     @Binding var show: Bool
@@ -8,7 +10,7 @@ struct EnhancedMusicPlayer: View {
     @EnvironmentObject var audioPlayer: AudioPlayer
     
     // View Properties
-    @State private var expandPlayer: Bool = false
+    @State private var expandPlayer: Bool = true // Start expanded since this only appears when user wants full player
     @State private var offsetY: CGFloat = 0
     @State private var mainWindow: UIWindow?
     @State private var windowProgress: CGFloat = 0
@@ -20,6 +22,7 @@ struct EnhancedMusicPlayer: View {
     @State private var volume: Double = 0.7
     @State private var isSeekingTime: Bool = false
     @State private var isAdjustingVolume: Bool = false
+    @State private var volumeObserver: NSObjectProtocol?
     
     // Bottom Tab Selection
     @State private var selectedBottomTab: BottomTab = .booklet
@@ -125,14 +128,9 @@ struct EnhancedMusicPlayer: View {
                 gradient = Color(audioPlayer.currentArtwork?.absoluteString.isEmpty == false ? .systemPurple : .systemBlue).gradient
             }
             
-            // Auto-expand when appearing with snap animation
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                withAnimation(.smooth(duration: 0.5, extraBounce: 0)) {
-                    expandPlayer = true
-                }
-                UIView.animate(withDuration: 0.5) {
-                    resizeWindow(0.1)
-                }
+            // Apply window resize immediately since we start expanded
+            DispatchQueue.main.async {
+                resizeWindow(0.1)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
@@ -178,21 +176,33 @@ struct EnhancedMusicPlayer: View {
             
             Spacer(minLength: 0)
             
-            Group {
-                Button("", systemImage: audioPlayer.isPlaying ? "pause.fill" : "play.fill") {
-                    audioPlayer.togglePlayPause()
-                }
-                
-                Button("", systemImage: "forward.fill") {
-                    audioPlayer.playNextTrack()
-                }
-            }
-            .font(.title3)
-            .foregroundStyle(Color.primary)
+            // Control buttons with high priority gestures only
+            Image(systemName: audioPlayer.isPlaying ? "pause.fill" : "play.fill")
+                .font(.title3)
+                .foregroundStyle(Color.primary)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+                .highPriorityGesture(
+                    TapGesture().onEnded {
+                        audioPlayer.togglePlayPause()
+                    }
+                )
+            
+            Image(systemName: "forward.fill")
+                .font(.title3)
+                .foregroundStyle(Color.primary)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+                .highPriorityGesture(
+                    TapGesture().onEnded {
+                        audioPlayer.playNextTrack()
+                    }
+                )
         }
         .padding(.horizontal, 10)
         .frame(height: 55)
-        .contentShape(.rect)
+        .background(Color.clear)
+        .contentShape(Rectangle())
         .onTapGesture {
             show = true
             withAnimation(.smooth(duration: 0.3, extraBounce: 0)) {
@@ -259,20 +269,26 @@ struct EnhancedMusicPlayer: View {
                 Spacer()
                 
                 HStack(spacing: 15) {
-                    Button("", systemImage: "heart") {
+                    Button(action: {
                         // Favorite action
+                    }) {
+                        Image(systemName: "heart")
+                            .font(.title2)
+                            .foregroundStyle(.white)
                     }
-                    .font(.title2)
-                    .foregroundStyle(.white)
                     .frame(width: 44, height: 44)
+                    .background(.clear)
                     .glassEffect(.regular.tint(.white.opacity(0.1)).interactive(), in: .circle)
                     
-                    Button("", systemImage: "ellipsis") {
+                    Button(action: {
                         // More options
+                    }) {
+                        Image(systemName: "ellipsis")
+                            .font(.title2)
+                            .foregroundStyle(.white)
                     }
-                    .font(.title2)
-                    .foregroundStyle(.white)
                     .frame(width: 44, height: 44)
+                    .background(.clear)
                     .glassEffect(.regular.tint(.white.opacity(0.1)).interactive(), in: .circle)
                 }
             }
@@ -338,28 +354,37 @@ struct EnhancedMusicPlayer: View {
             // Playback Controls with Glass Container
             GlassEffectContainer(spacing: 40.0) {
                 HStack(spacing: 40) {
-                    Button("", systemImage: "backward.fill") {
+                    Button(action: {
                         audioPlayer.playPreviousTrack()
+                    }) {
+                        Image(systemName: "backward.fill")
+                            .font(.title)
+                            .foregroundStyle(.white)
                     }
-                    .font(.title)
-                    .foregroundStyle(.white)
                     .frame(width: 54, height: 54)
+                    .background(.clear)
                     .glassEffect(.regular.tint(.white.opacity(0.1)).interactive(), in: .circle)
                     
-                    Button("", systemImage: audioPlayer.isPlaying ? "pause.circle.fill" : "play.circle.fill") {
+                    Button(action: {
                         audioPlayer.togglePlayPause()
+                    }) {
+                        Image(systemName: audioPlayer.isPlaying ? "pause.fill" : "play.fill")
+                            .font(.system(size: 30))
+                            .foregroundStyle(.white)
                     }
-                    .font(.system(size: 60))
-                    .foregroundStyle(.white)
                     .frame(width: 80, height: 80)
+                    .background(.clear)
                     .glassEffect(.regular.tint(.white.opacity(0.15)).interactive(), in: .circle)
                     
-                    Button("", systemImage: "forward.fill") {
+                    Button(action: {
                         audioPlayer.playNextTrack()
+                    }) {
+                        Image(systemName: "forward.fill")
+                            .font(.title)
+                            .foregroundStyle(.white)
                     }
-                    .font(.title)
-                    .foregroundStyle(.white)
                     .frame(width: 54, height: 54)
+                    .background(.clear)
                     .glassEffect(.regular.tint(.white.opacity(0.1)).interactive(), in: .circle)
                 }
             }
@@ -376,7 +401,7 @@ struct EnhancedMusicPlayer: View {
                             } else {
                                 volume = 0.7 // Default volume
                             }
-                            audioPlayer.setVolume(Float(volume))
+                            setSystemVolume(Float(volume))
                         }
                     }) {
                         Image(systemName: volume <= 0 ? "speaker.slash.fill" : (volume < 0.3 ? "speaker.fill" : (volume < 0.7 ? "speaker.wave.1.fill" : "speaker.wave.3.fill")))
@@ -386,20 +411,17 @@ struct EnhancedMusicPlayer: View {
                     
                     Slider(value: $volume, in: 0...1, onEditingChanged: { isEditing in
                         isAdjustingVolume = isEditing
+                        // Always update system volume during dragging
+                        setSystemVolume(Float(volume))
                         if !isEditing {
-                            // Final volume update when user stops dragging
-                            audioPlayer.setVolume(Float(volume))
                             print("🔊 Final volume set to: \(volume)")
-                        } else {
-                            // Immediate feedback while dragging
-                            audioPlayer.setVolume(Float(volume))
                         }
                     })
                     .tint(.white)
                     .onChange(of: volume) { oldValue, newValue in
-                        // Only update during active user interaction
+                        // Update system volume whenever slider changes
                         if isAdjustingVolume {
-                            audioPlayer.setVolume(Float(newValue))
+                            setSystemVolume(Float(newValue))
                         }
                     }
                     
@@ -410,7 +432,7 @@ struct EnhancedMusicPlayer: View {
                         
                         withAnimation(.easeInOut(duration: 0.2)) {
                             volume = min(volume + 0.2, 1.0)
-                            audioPlayer.setVolume(Float(volume))
+                            setSystemVolume(Float(volume))
                         }
                     }) {
                         Image(systemName: "speaker.wave.3.fill")
@@ -441,19 +463,11 @@ struct EnhancedMusicPlayer: View {
             .padding(.bottom, safeArea.bottom + 10)
         }
         .onAppear {
-            // Initialize volume from audio player
-            volume = Double(audioPlayer.currentVolume)
+            // Initialize volume from system volume
+            initializeSystemVolume()
             
-            // Start periodic volume sync to keep slider in sync
-            Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
-                // Only update if the difference is significant and user isn't currently adjusting
-                let currentAudioVolume = Double(audioPlayer.currentVolume)
-                if abs(volume - currentAudioVolume) > 0.05 && !isAdjustingVolume {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        volume = currentAudioVolume
-                    }
-                }
-            }
+            // Set up volume observation using notifications
+            setupVolumeObservation()
             
             // Start timer for progress simulation - only if not using MusicKit
             if !audioPlayer.usingMusicKit {
@@ -466,6 +480,13 @@ struct EnhancedMusicPlayer: View {
                         // audioPlayer.pause()
                     }
                 }
+            }
+        }
+        .onDisappear {
+            // Clean up volume observation
+            if let observer = volumeObserver {
+                NotificationCenter.default.removeObserver(observer)
+                volumeObserver = nil
             }
         }
     }
@@ -615,6 +636,78 @@ struct EnhancedMusicPlayer: View {
         return String(format: "%d:%02d", minutes, seconds)
     }
     
+    // MARK: - System Volume Control
+    func setSystemVolume(_ volume: Float) {
+        // Use MPVolumeView to control system volume
+        let volumeView = MPVolumeView(frame: CGRect(x: -1000, y: -1000, width: 100, height: 100))
+        volumeView.showsVolumeSlider = true
+        
+        // Add to a temporary window to make it work
+        let tempWindow = UIWindow(frame: CGRect(x: 0, y: 0, width: 1, height: 1))
+        tempWindow.alpha = 0.01
+        tempWindow.makeKeyAndVisible()
+        tempWindow.addSubview(volumeView)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            if let slider = volumeView.subviews.first(where: { $0 is UISlider }) as? UISlider {
+                slider.value = volume
+            }
+            
+            // Clean up
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                tempWindow.isHidden = true
+            }
+        }
+    }
+    
+    func getSystemVolume() -> Float {
+        // Try to get system volume with proper session configuration
+        let session = AVAudioSession.sharedInstance()
+        
+        do {
+            // Configure the session before activating
+            try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            try session.setActive(true, options: [])
+            return session.outputVolume
+        } catch {
+            print("Failed to get system volume, using fallback: \(error.localizedDescription)")
+            // Fallback to a reasonable default
+            return 0.5
+        }
+    }
+    
+    func initializeSystemVolume() {
+        let systemVolume = getSystemVolume()
+        volume = Double(systemVolume)
+        print("🔊 Initialized volume to: \(volume)")
+    }
+    
+    func setupVolumeObservation() {
+        // Set up AVAudioSession for volume monitoring (without conflicting with audio playback)
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            
+            // Observe volume changes via notification
+            volumeObserver = NotificationCenter.default.addObserver(
+                forName: NSNotification.Name("AVSystemController_SystemVolumeDidChangeNotification"),
+                object: nil,
+                queue: .main
+            ) { notification in
+                if !self.isAdjustingVolume {
+                    if let volumeValue = notification.userInfo?["AVSystemController_AudioVolumeNotificationParameter"] as? Float {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            self.volume = Double(volumeValue)
+                        }
+                    }
+                }
+            }
+        } catch {
+            print("Failed to set up volume observation: \(error.localizedDescription)")
+        }
+    }
+    
+    // MARK: - Window Control
     func resizeWindow(_ progress: CGFloat) {
         if let mainWindow = mainWindow?.subviews.first {
             let offsetY = (mainWindow.frame.height * progress) / 2
