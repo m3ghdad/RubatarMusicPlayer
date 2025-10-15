@@ -24,25 +24,25 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		8C647E9C2E8DA04800F36002 /* AppleLiquidGlassTapBar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppleLiquidGlassTapBar.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		8C647EA92E8DA04900F36002 /* AppleLiquidGlassTapBarTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AppleLiquidGlassTapBarTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		8C647EB32E8DA04900F36002 /* AppleLiquidGlassTapBarUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AppleLiquidGlassTapBarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8C647E9C2E8DA04800F36002 /* Rubatar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Rubatar.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8C647EA92E8DA04900F36002 /* RubatarTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RubatarTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8C647EB32E8DA04900F36002 /* RubatarUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RubatarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		8C647E9E2E8DA04800F36002 /* AppleLiquidGlassTapBar */ = {
+		8C647E9E2E8DA04800F36002 /* Rubatar */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = AppleLiquidGlassTapBar;
+			path = Rubatar;
 			sourceTree = "<group>";
 		};
-		8C647EAC2E8DA04900F36002 /* AppleLiquidGlassTapBarTests */ = {
+		8C647EAC2E8DA04900F36002 /* RubatarTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = AppleLiquidGlassTapBarTests;
+			path = RubatarTests;
 			sourceTree = "<group>";
 		};
-		8C647EB62E8DA04900F36002 /* AppleLiquidGlassTapBarUITests */ = {
+		8C647EB62E8DA04900F36002 /* RubatarUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = AppleLiquidGlassTapBarUITests;
+			path = RubatarUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -75,9 +75,9 @@
 		8C647E932E8DA04700F36002 = {
 			isa = PBXGroup;
 			children = (
-				8C647E9E2E8DA04800F36002 /* AppleLiquidGlassTapBar */,
-				8C647EAC2E8DA04900F36002 /* AppleLiquidGlassTapBarTests */,
-				8C647EB62E8DA04900F36002 /* AppleLiquidGlassTapBarUITests */,
+				8C647E9E2E8DA04800F36002 /* Rubatar */,
+				8C647EAC2E8DA04900F36002 /* RubatarTests */,
+				8C647EB62E8DA04900F36002 /* RubatarUITests */,
 				8C647E9D2E8DA04800F36002 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -85,9 +85,9 @@
 		8C647E9D2E8DA04800F36002 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8C647E9C2E8DA04800F36002 /* AppleLiquidGlassTapBar.app */,
-				8C647EA92E8DA04900F36002 /* AppleLiquidGlassTapBarTests.xctest */,
-				8C647EB32E8DA04900F36002 /* AppleLiquidGlassTapBarUITests.xctest */,
+				8C647E9C2E8DA04800F36002 /* Rubatar.app */,
+				8C647EA92E8DA04900F36002 /* RubatarTests.xctest */,
+				8C647EB32E8DA04900F36002 /* RubatarUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,9 +95,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		8C647E9B2E8DA04800F36002 /* AppleLiquidGlassTapBar */ = {
+		8C647E9B2E8DA04800F36002 /* Rubatar */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 8C647EBD2E8DA04900F36002 /* Build configuration list for PBXNativeTarget "AppleLiquidGlassTapBar" */;
+			buildConfigurationList = 8C647EBD2E8DA04900F36002 /* Build configuration list for PBXNativeTarget "Rubatar" */;
 			buildPhases = (
 				8C647E982E8DA04800F36002 /* Sources */,
 				8C647E992E8DA04800F36002 /* Frameworks */,
@@ -108,18 +108,18 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				8C647E9E2E8DA04800F36002 /* AppleLiquidGlassTapBar */,
+				8C647E9E2E8DA04800F36002 /* Rubatar */,
 			);
-			name = AppleLiquidGlassTapBar;
+			name = Rubatar;
 			packageProductDependencies = (
 			);
 			productName = AppleLiquidGlassTapBar;
-			productReference = 8C647E9C2E8DA04800F36002 /* AppleLiquidGlassTapBar.app */;
+			productReference = 8C647E9C2E8DA04800F36002 /* Rubatar.app */;
 			productType = "com.apple.product-type.application";
 		};
-		8C647EA82E8DA04900F36002 /* AppleLiquidGlassTapBarTests */ = {
+		8C647EA82E8DA04900F36002 /* RubatarTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 8C647EC02E8DA04900F36002 /* Build configuration list for PBXNativeTarget "AppleLiquidGlassTapBarTests" */;
+			buildConfigurationList = 8C647EC02E8DA04900F36002 /* Build configuration list for PBXNativeTarget "RubatarTests" */;
 			buildPhases = (
 				8C647EA52E8DA04900F36002 /* Sources */,
 				8C647EA62E8DA04900F36002 /* Frameworks */,
@@ -131,18 +131,18 @@
 				8C647EAB2E8DA04900F36002 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				8C647EAC2E8DA04900F36002 /* AppleLiquidGlassTapBarTests */,
+				8C647EAC2E8DA04900F36002 /* RubatarTests */,
 			);
-			name = AppleLiquidGlassTapBarTests;
+			name = RubatarTests;
 			packageProductDependencies = (
 			);
 			productName = AppleLiquidGlassTapBarTests;
-			productReference = 8C647EA92E8DA04900F36002 /* AppleLiquidGlassTapBarTests.xctest */;
+			productReference = 8C647EA92E8DA04900F36002 /* RubatarTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		8C647EB22E8DA04900F36002 /* AppleLiquidGlassTapBarUITests */ = {
+		8C647EB22E8DA04900F36002 /* RubatarUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 8C647EC32E8DA04900F36002 /* Build configuration list for PBXNativeTarget "AppleLiquidGlassTapBarUITests" */;
+			buildConfigurationList = 8C647EC32E8DA04900F36002 /* Build configuration list for PBXNativeTarget "RubatarUITests" */;
 			buildPhases = (
 				8C647EAF2E8DA04900F36002 /* Sources */,
 				8C647EB02E8DA04900F36002 /* Frameworks */,
@@ -154,13 +154,13 @@
 				8C647EB52E8DA04900F36002 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				8C647EB62E8DA04900F36002 /* AppleLiquidGlassTapBarUITests */,
+				8C647EB62E8DA04900F36002 /* RubatarUITests */,
 			);
-			name = AppleLiquidGlassTapBarUITests;
+			name = RubatarUITests;
 			packageProductDependencies = (
 			);
 			productName = AppleLiquidGlassTapBarUITests;
-			productReference = 8C647EB32E8DA04900F36002 /* AppleLiquidGlassTapBarUITests.xctest */;
+			productReference = 8C647EB32E8DA04900F36002 /* RubatarUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -186,7 +186,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 8C647E972E8DA04700F36002 /* Build configuration list for PBXProject "AppleLiquidGlassTapBar" */;
+			buildConfigurationList = 8C647E972E8DA04700F36002 /* Build configuration list for PBXProject "Rubatar" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -200,9 +200,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				8C647E9B2E8DA04800F36002 /* AppleLiquidGlassTapBar */,
-				8C647EA82E8DA04900F36002 /* AppleLiquidGlassTapBarTests */,
-				8C647EB22E8DA04900F36002 /* AppleLiquidGlassTapBarUITests */,
+				8C647E9B2E8DA04800F36002 /* Rubatar */,
+				8C647EA82E8DA04900F36002 /* RubatarTests */,
+				8C647EB22E8DA04900F36002 /* RubatarUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -258,12 +258,12 @@
 /* Begin PBXTargetDependency section */
 		8C647EAB2E8DA04900F36002 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 8C647E9B2E8DA04800F36002 /* AppleLiquidGlassTapBar */;
+			target = 8C647E9B2E8DA04800F36002 /* Rubatar */;
 			targetProxy = 8C647EAA2E8DA04900F36002 /* PBXContainerItemProxy */;
 		};
 		8C647EB52E8DA04900F36002 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 8C647E9B2E8DA04800F36002 /* AppleLiquidGlassTapBar */;
+			target = 8C647E9B2E8DA04800F36002 /* Rubatar */;
 			targetProxy = 8C647EB42E8DA04900F36002 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -474,7 +474,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AppleLiquidGlassTapBar.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AppleLiquidGlassTapBar";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Rubatar.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Rubatar";
 			};
 			name = Debug;
 		};
@@ -496,7 +496,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AppleLiquidGlassTapBar.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AppleLiquidGlassTapBar";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Rubatar.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Rubatar";
 			};
 			name = Release;
 		};
@@ -543,7 +543,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		8C647E972E8DA04700F36002 /* Build configuration list for PBXProject "AppleLiquidGlassTapBar" */ = {
+		8C647E972E8DA04700F36002 /* Build configuration list for PBXProject "Rubatar" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8C647EBB2E8DA04900F36002 /* Debug */,
@@ -552,7 +552,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		8C647EBD2E8DA04900F36002 /* Build configuration list for PBXNativeTarget "AppleLiquidGlassTapBar" */ = {
+		8C647EBD2E8DA04900F36002 /* Build configuration list for PBXNativeTarget "Rubatar" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8C647EBE2E8DA04900F36002 /* Debug */,
@@ -561,7 +561,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		8C647EC02E8DA04900F36002 /* Build configuration list for PBXNativeTarget "AppleLiquidGlassTapBarTests" */ = {
+		8C647EC02E8DA04900F36002 /* Build configuration list for PBXNativeTarget "RubatarTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8C647EC12E8DA04900F36002 /* Debug */,
@@ -570,7 +570,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		8C647EC32E8DA04900F36002 /* Build configuration list for PBXNativeTarget "AppleLiquidGlassTapBarUITests" */ = {
+		8C647EC32E8DA04900F36002 /* Build configuration list for PBXNativeTarget "RubatarUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8C647EC42E8DA04900F36002 /* Debug */,

@@ -17,6 +17,7 @@ struct MusicSectionView: View {
     
     // Callback for when music is selected
     let onMusicSelected: (String, String, URL?) -> Void
+    let onPlaylistSelected: (String, String, String, URL?) -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -245,9 +246,8 @@ struct MusicSectionView: View {
         let impactFeedback = UIImpactFeedbackGenerator(style: .light)
         impactFeedback.impactOccurred()
         
-        // Play the playlist (simulate first track)
-        let firstTrack = "\(playlist.title) - First Track"
-        onMusicSelected(firstTrack, playlist.curatorName, playlist.artworkURL)
+        // Play the playlist using the actual playlist ID and info
+        onPlaylistSelected(playlist.id, playlist.title, playlist.curatorName, playlist.artworkURL)
         
         // Show playlist alert
         selectedPlaylist = playlist
@@ -262,8 +262,13 @@ struct MusicSectionView: View {
 }
 
 #Preview {
-    MusicSectionView { track, artist, artwork in
-        print("Selected: \(track) by \(artist)")
-    }
+    MusicSectionView(
+        onMusicSelected: { track, artist, artwork in
+            print("Selected: \(track) by \(artist)")
+        },
+        onPlaylistSelected: { playlistId, playlistTitle, curatorName, artwork in
+            print("Selected playlist: \(playlistTitle) by \(curatorName)")
+        }
+    )
     .padding()
 }

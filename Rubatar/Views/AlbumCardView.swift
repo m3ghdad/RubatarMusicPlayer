@@ -48,15 +48,20 @@ struct AlbumCardView: View {
                     .foregroundColor(.primary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: 160, alignment: .leading)
                 
                 Text(album.artist)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: 160, alignment: .leading)
                 
                 Text("\(album.trackCount) tracks")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
+                    .frame(maxWidth: 160, alignment: .leading)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -111,17 +116,23 @@ struct PlaylistCardView: View {
                     .foregroundColor(.primary)
                     .lineLimit(1)
                     .multilineTextAlignment(.leading)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 
                 Text(playlist.curatorName)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 
                 Text(playlist.description)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             

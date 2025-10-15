@@ -90,22 +90,22 @@ class MusicManager: ObservableObject {
     }
     
     private func loadPersianPlaylists() async {
-        // For playlists, we'll use sample data since Apple Music API doesn't have
-        // the exact playlists we want, but we can search for similar content
+        // Search for Persian music playlists
         let playlistSearches = [
             ("Setar", "Persian traditional music"),
-            ("Santur", "Kamkar family"),
-            ("Kamancheh", "Persian classical")
+            ("Santur", "Persian classical"),
+            ("Kamancheh", "Persian instrumental")
         ]
         
         var foundPlaylists: [Playlist] = []
         
         for (instrument, searchTerm) in playlistSearches {
             do {
-                let searchRequest = MusicCatalogSearchRequest(
+                var searchRequest = MusicCatalogSearchRequest(
                     term: "\(instrument) \(searchTerm)",
                     types: [MusicKit.Playlist.self]
                 )
+                searchRequest.limit = 5 // Get more results to find better matches
                 
                 let searchResponse = try await searchRequest.response()
                 
@@ -119,6 +119,9 @@ class MusicManager: ObservableObject {
                         description: musicKitPlaylist.description
                     )
                     foundPlaylists.append(playlist)
+                    print("✅ Found playlist: \(musicKitPlaylist.name) with artwork: \(musicKitPlaylist.artwork?.url(width: 400, height: 400)?.absoluteString ?? "none")")
+                } else {
+                    print("⚠️ No playlist found for \(instrument)")
                 }
             } catch {
                 print("Error searching for playlist \(instrument): \(error)")

@@ -130,7 +130,7 @@ struct ContentView: View {
         }
 
                 Tab("Music", systemImage: "music.note") {
-                    MusicView(showCard: $showCard, showWelcomeModal: $showWelcomeModal, showVideoPlayer: $showVideoPlayer, isTabBarMinimized: $isTabBarMinimized, scrollOffset: $scrollOffset, onMusicSelected: playSelectedTrack)
+                    MusicView(showCard: $showCard, showWelcomeModal: $showWelcomeModal, showVideoPlayer: $showVideoPlayer, isTabBarMinimized: $isTabBarMinimized, scrollOffset: $scrollOffset, onMusicSelected: playSelectedTrack, onPlaylistSelected: playSelectedPlaylist)
                 }
 
                 Tab("Plan", systemImage: "heart") {
@@ -230,6 +230,17 @@ struct ContentView: View {
         impactFeedback.impactOccurred()
         
         print("🎵 Now playing: \(track) by \(artist)")
+    }
+    
+    func playSelectedPlaylist(playlistId: String, playlistTitle: String, curatorName: String, artwork: URL?) {
+        audioPlayer.playSelectedPlaylist(playlistId: playlistId, playlistTitle: playlistTitle, curatorName: curatorName, artwork: artwork)
+        showMiniPlayer = true
+        
+        // Add haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+        
+        print("🎶 Now playing playlist: \(playlistTitle) by \(curatorName)")
     }
 }
 
@@ -360,6 +371,7 @@ struct MusicView: View {
     @Binding var isTabBarMinimized: Bool
     @Binding var scrollOffset: CGFloat
     let onMusicSelected: (String, String, URL?) -> Void
+    let onPlaylistSelected: (String, String, String, URL?) -> Void
     
     @State private var lastScrollOffset: CGFloat = 0
     
@@ -388,9 +400,14 @@ struct MusicView: View {
                         .padding(.horizontal, 16)
                         
                         // Music Section
-                        MusicSectionView { track, artist, artwork in
-                            onMusicSelected(track, artist, artwork)
-                        }
+                        MusicSectionView(
+                            onMusicSelected: { track, artist, artwork in
+                                onMusicSelected(track, artist, artwork)
+                            },
+                            onPlaylistSelected: { playlistId, playlistTitle, curatorName, artwork in
+                                onPlaylistSelected(playlistId, playlistTitle, curatorName, artwork)
+                            }
+                        )
                         
                         Spacer(minLength: 100)
                     }

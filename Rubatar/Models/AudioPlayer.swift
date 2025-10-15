@@ -22,6 +22,11 @@ class AudioPlayer: ObservableObject {
     private var isSkipping = false
     private var playbackSessionID = UUID()
     
+    // Store the queue of songs for MusicKit
+    private var musicKitQueue: [Song] = []
+    private var currentQueueIndex = 0
+    private var trackUpdateTimer: Timer?
+    
     enum PlaybackError: Error {
         case notAuthorized
         case noResults
@@ -113,6 +118,32 @@ class AudioPlayer: ObservableObject {
         }
     }
     
+    func playSelectedPlaylist(playlistId: String, playlistTitle: String, curatorName: String, artwork: URL?) {
+        print("🎶 playSelectedPlaylist called with: \(playlistTitle) by \(curatorName)")
+
+        currentTrack = playlistTitle
+        currentArtist = curatorName
+        currentArtwork = artwork
+
+        // Try MusicKit playlist playback only - no fallback to tones
+        Task { @MainActor in
+            do {
+                try await playPlaylistWithMusicKit(playlistId: playlistId, playlistTitle: playlistTitle, curatorName: curatorName)
+                usingMusicKit = true
+                print("✅ MusicKit playlist playback started")
+            } catch {
+                print("⚠️ MusicKit playlist playback failed (\(error)). No fallback - playlist playback requires MusicKit.")
+                usingMusicKit = false
+                isPlaying = false
+                
+                // Reset to default state
+                currentTrack = "Playlist playback unavailable"
+                currentArtist = "MusicKit required"
+                currentArtwork = nil
+            }
+        }
+    }
+    
     @MainActor
     private func playWithMusicKit(trackTitle: String, artist: String) async throws {
         // NOTE: Requires MusicKit capability, active Apple Music subscription, and a valid developer token configured for catalog playback.
@@ -122,33 +153,206 @@ class AudioPlayer: ObservableObject {
             guard status == .authorized else { throw PlaybackError.notAuthorized }
         }
 
-        // Search Apple Music catalog for the song
-        var request = MusicCatalogSearchRequest(term: "\(trackTitle) \(artist)", types: [Song.self])
-        request.limit = 1
-        let response = try await request.response()
-        guard let song = response.songs.first else { throw PlaybackError.noResults }
-
         let player = ApplicationMusicPlayer.shared
+        var songsToQueue: [Song] = []
         
-        // Create a queue with multiple songs for proper next track functionality
-        var songsToQueue: [Song] = [song]
+        // Map the album titles to search for the actual albums from Apple Music
+        let albumMappings = [
+            "Gypsy Wind": "Sohrab Pournazeri Gypsy Wind",
+            "Voices of the Shades": "Kayhan Kalhor Madjid Khaladj Voices of the Shades",
+            "Setar Improvisation": "Keivan Saket Setar Improvisation"
+        ]
         
-        // Try to add more songs from the same artist to create a proper queue
-        do {
-            var artistRequest = MusicCatalogSearchRequest(term: artist, types: [Song.self])
-            artistRequest.limit = 6
-            let artistResponse = try await artistRequest.response()
-            if !artistResponse.songs.isEmpty {
-                songsToQueue = Array(artistResponse.songs.prefix(6))
-            }
-        } catch {
-            print("⚠️ Could not load artist songs, using single song: \(error)")
+        // First, try to find the specific album
+        var searchTerm = trackTitle
+        if let mappedSearch = albumMappings[trackTitle] {
+            searchTerm = mappedSearch
         }
         
-        player.queue = .init(for: songsToQueue, startingAt: song)
+        print("🔍 Searching for album: \(searchTerm)")
+        
+        // Search for the album first
+        var albumRequest = MusicCatalogSearchRequest(term: searchTerm, types: [MusicKit.Album.self])
+        albumRequest.limit = 5
+        let albumResponse = try await albumRequest.response()
+        
+        if let album = albumResponse.albums.first {
+            print("✅ Found album: \(album.title) by \(album.artistName)")
+            
+            // Load the album's tracks - albums contain Track objects, not Song objects
+            // We need to search for the individual songs instead
+            if let albumTracks = album.tracks, !albumTracks.isEmpty {
+                // For now, we'll search for songs by the album title since we can't directly cast Track to Song
+                var songRequest = MusicCatalogSearchRequest(term: "\(album.title) \(album.artistName)", types: [Song.self])
+                songRequest.limit = 15
+                let songResponse = try await songRequest.response()
+                if !songResponse.songs.isEmpty {
+                    songsToQueue = Array(songResponse.songs.prefix(15))
+                    print("✅ Loaded \(songsToQueue.count) songs for album: \(album.title)")
+                }
+            }
+        }
+        
+        // If no album tracks found, fall back to searching for individual songs
+        if songsToQueue.isEmpty {
+            print("⚠️ No album tracks found, searching for individual songs...")
+            var songRequest = MusicCatalogSearchRequest(term: "\(trackTitle) \(artist)", types: [Song.self])
+            songRequest.limit = 10
+            let songResponse = try await songRequest.response()
+            
+            if !songResponse.songs.isEmpty {
+                songsToQueue = Array(songResponse.songs.prefix(10))
+                print("✅ Found \(songsToQueue.count) individual songs")
+            }
+        }
+        
+        guard !songsToQueue.isEmpty else { 
+            print("❌ No songs found for: \(trackTitle) by \(artist)")
+            throw PlaybackError.noResults 
+        }
+        
+        // Store the queue and reset index
+        musicKitQueue = songsToQueue
+        currentQueueIndex = 0
+        
+        // Update current track info with the first song
+        updateCurrentTrackInfo()
+        
+        // Start playing the first song
+        player.queue = .init(for: songsToQueue, startingAt: songsToQueue[0])
         try await player.play()
         usingMusicKit = true
         isPlaying = true
+        
+        // Start tracking the current song
+        startTrackUpdateTimer()
+    }
+    
+    @MainActor
+    private func playPlaylistWithMusicKit(playlistId: String, playlistTitle: String, curatorName: String) async throws {
+        // Ensure authorization
+        if MusicAuthorization.currentStatus != .authorized {
+            let status = await MusicAuthorization.request()
+            guard status == .authorized else { throw PlaybackError.notAuthorized }
+        }
+
+        let player = ApplicationMusicPlayer.shared
+        var songsToQueue: [Song] = []
+        
+        // Map the playlist titles to search for the actual playlists from Apple Music
+        let playlistMappings = [
+            "Setar سه تار": "Matin Baghani Setar",
+            "Kamkars Santur کامکارها / سنتور": "Siavash Kamkar Santur",
+            "Kamancheh Instrumental | کمانچه": "Mekuvenet Kamancheh"
+        ]
+        
+        // First, try to find the specific playlist
+        var searchTerm = playlistTitle
+        if let mappedSearch = playlistMappings[playlistTitle] {
+            searchTerm = mappedSearch
+        }
+        
+        print("🔍 Searching for playlist: \(searchTerm)")
+        
+        // Search for the playlist first
+        var playlistRequest = MusicCatalogSearchRequest(term: searchTerm, types: [MusicKit.Playlist.self])
+        playlistRequest.limit = 5
+        let playlistResponse = try await playlistRequest.response()
+        
+        if let playlist = playlistResponse.playlists.first {
+            print("✅ Found playlist: \(playlist.name) by \(playlist.curatorName ?? "Unknown")")
+            
+            // Load the playlist's tracks - playlists contain Track objects, not Song objects
+            // We need to search for the individual songs instead
+            if let playlistTracks = playlist.tracks, !playlistTracks.isEmpty {
+                // For now, we'll search for songs by the playlist name since we can't directly cast Track to Song
+                var songRequest = MusicCatalogSearchRequest(term: "\(playlist.name) \(playlist.curatorName ?? "")", types: [Song.self])
+                songRequest.limit = 20
+                let songResponse = try await songRequest.response()
+                if !songResponse.songs.isEmpty {
+                    songsToQueue = Array(songResponse.songs.prefix(20))
+                    print("✅ Loaded \(songsToQueue.count) songs for playlist: \(playlist.name)")
+                }
+            }
+        }
+        
+        // If no playlist tracks found, fall back to searching for related songs
+        if songsToQueue.isEmpty {
+            print("⚠️ No playlist tracks found, searching for related songs...")
+            
+            // Try different search terms for Persian music
+            let searchTerms = [
+                "Persian \(playlistTitle) instrumental",
+                playlistTitle,
+                "Persian traditional \(playlistTitle.replacingOccurrences(of: " سه تار", with: "").replacingOccurrences(of: " کامکارها / سنتور", with: "").replacingOccurrences(of: " | کمانچه", with: ""))"
+            ]
+            
+            for term in searchTerms {
+                var songRequest = MusicCatalogSearchRequest(term: term, types: [Song.self])
+                songRequest.limit = 15
+                let songResponse = try await songRequest.response()
+                
+                if !songResponse.songs.isEmpty {
+                    songsToQueue = Array(songResponse.songs.prefix(15))
+                    print("✅ Found \(songsToQueue.count) related songs with term: \(term)")
+                    break
+                }
+            }
+        }
+        
+        guard !songsToQueue.isEmpty else { 
+            print("❌ No songs found for playlist: \(playlistTitle)")
+            throw PlaybackError.noResults 
+        }
+        
+        // Store the queue and reset index
+        musicKitQueue = songsToQueue
+        currentQueueIndex = 0
+        
+        // Update current track info with the first song
+        updateCurrentTrackInfo()
+        
+        // Start playing the first song
+        player.queue = .init(for: songsToQueue, startingAt: songsToQueue[0])
+        try await player.play()
+        
+        usingMusicKit = true
+        isPlaying = true
+        startTrackUpdateTimer()
+    }
+    
+    private func updateCurrentTrackInfo() {
+        guard currentQueueIndex < musicKitQueue.count else { return }
+        let song = musicKitQueue[currentQueueIndex]
+        currentTrack = song.title
+        currentArtist = song.artistName
+        currentArtwork = song.artwork?.url(width: 400, height: 400)
+    }
+    
+    private func startTrackUpdateTimer() {
+        stopTrackUpdateTimer()
+        trackUpdateTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.checkAndUpdateCurrentTrack()
+            }
+        }
+    }
+    
+    private func stopTrackUpdateTimer() {
+        trackUpdateTimer?.invalidate()
+        trackUpdateTimer = nil
+    }
+    
+    private func checkAndUpdateCurrentTrack() {
+        guard usingMusicKit else { return }
+        let player = ApplicationMusicPlayer.shared
+        
+        // Try to determine which song is currently playing by checking playback position
+        // This is a simplified approach - in a real app you might use MusicKit's state observation
+        if player.state.playbackStatus == .playing {
+            // For now, we'll rely on manual tracking via playNextTrack
+            // In a production app, you'd want to use MusicKit's state observation
+        }
     }
     
     private func playAudio() {
@@ -261,10 +465,15 @@ class AudioPlayer: ObservableObject {
                 do {
                     try await player.skipToNextEntry()
                     isPlaying = true
+                    
+                    // Update our queue index and track info
+                    currentQueueIndex = (currentQueueIndex + 1) % musicKitQueue.count
+                    updateCurrentTrackInfo()
                     return
                 } catch {
                     // Fallback to local sequence
                     usingMusicKit = false
+                    stopTrackUpdateTimer()
 
                     // Disable auto-advance before stopping to avoid completion chaining
                     autoAdvanceEnabled = false
@@ -305,6 +514,7 @@ class AudioPlayer: ObservableObject {
         playbackSessionID = UUID()
         playerNode.stop()
         isPlaying = false
+        stopTrackUpdateTimer()
     }
 }
 
