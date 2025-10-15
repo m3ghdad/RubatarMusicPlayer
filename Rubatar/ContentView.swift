@@ -166,6 +166,9 @@ struct ContentView: View {
                         isPlaying: audioPlayer.isPlaying
                     )
                     .padding(.vertical, 8)
+                    .onChange(of: isTabBarMinimized) { oldValue, newValue in
+                        print("🎛️ Mini player - Tab bar minimized: \(newValue)")
+                    }
                 }
             }
             .onAppear {
@@ -346,13 +349,17 @@ struct HomeView: View {
                 // Small changes are noise; ignore them to avoid flicker
                 if abs(delta) <= 2 { return }
 
+                print("🏠 HomeView scroll - delta: \(delta), isTabBarMinimized: \(isTabBarMinimized)")
+
                 withAnimation(.easeInOut(duration: 0.25)) {
                     if delta < 0 {
                         // Scrolling down -> minimize tab bar
                         isTabBarMinimized = true
+                        print("🏠 HomeView - Minimizing tab bar")
                     } else {
                         // Scrolling up -> expand tab bar
                         isTabBarMinimized = false
+                        print("🏠 HomeView - Expanding tab bar")
                     }
                 }
 
@@ -409,6 +416,29 @@ struct MusicView: View {
                             }
                         )
                         
+                        // Add some extra content to ensure scrolling
+                        VStack(spacing: 20) {
+                            ForEach(0..<5) { index in
+                                VStack(spacing: 12) {
+                                    Text("Music Category \(index + 1)")
+                                        .font(.headline)
+                                        .fontWeight(.semibold)
+                                    
+                                    Text("This is additional content to make sure the Music tab is scrollable and the mini player behavior works correctly.")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                        .multilineTextAlignment(.center)
+                                }
+                                .padding()
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(.regularMaterial)
+                                )
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 20)
+                        
                         Spacer(minLength: 100)
                     }
                     .padding(.top, 20)
@@ -428,13 +458,17 @@ struct MusicView: View {
                     // Small changes are noise; ignore them to avoid flicker
                     if abs(delta) <= 2 { return }
 
+                    print("🎵 MusicView scroll - delta: \(delta), isTabBarMinimized: \(isTabBarMinimized)")
+
                     withAnimation(.easeInOut(duration: 0.25)) {
                         if delta < 0 {
                             // Scrolling down -> minimize tab bar
                             isTabBarMinimized = true
+                            print("🎵 MusicView - Minimizing tab bar")
                         } else {
                             // Scrolling up -> expand tab bar
                             isTabBarMinimized = false
+                            print("🎵 MusicView - Expanding tab bar")
                         }
                     }
 
