@@ -1,6 +1,6 @@
 //
 //  AudioPlayer.swift
-//  AppleLiquidGlassTapBar
+//  Rubatar
 //
 //  Created by AI Assistant on 10/15/25.
 //

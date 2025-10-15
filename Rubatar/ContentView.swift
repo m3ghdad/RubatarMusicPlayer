@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  AppleLiquidGlassTapBar
+//  Rubatar
 //
 //  Created by Meghdad Abbaszadegan on 10/1/25.
 //
@@ -126,11 +126,11 @@ struct ContentView: View {
             
             TabView {
         Tab("Home", systemImage: "house") {
-            HomeView(showCard: $showCard, showWelcomeModal: $showWelcomeModal, showVideoPlayer: $showVideoPlayer, isTabBarMinimized: $isTabBarMinimized, scrollOffset: $scrollOffset, onMusicSelected: playSelectedTrack)
+            HomeView(showCard: $showCard, showWelcomeModal: $showWelcomeModal, showVideoPlayer: $showVideoPlayer, isTabBarMinimized: $isTabBarMinimized, scrollOffset: $scrollOffset)
         }
 
-                Tab("Trips", systemImage: "road.lanes") {
-                    TripsView()
+                Tab("Music", systemImage: "music.note") {
+                    MusicView(showCard: $showCard, showWelcomeModal: $showWelcomeModal, showVideoPlayer: $showVideoPlayer, isTabBarMinimized: $isTabBarMinimized, scrollOffset: $scrollOffset, onMusicSelected: playSelectedTrack)
                 }
 
                 Tab("Plan", systemImage: "heart") {
@@ -280,7 +280,6 @@ struct HomeView: View {
     @Binding var showVideoPlayer: Bool
     @Binding var isTabBarMinimized: Bool
     @Binding var scrollOffset: CGFloat
-    let onMusicSelected: (String, String, URL?) -> Void
     
     @State private var lastScrollOffset: CGFloat = 0
     
@@ -312,10 +311,6 @@ struct HomeView: View {
                         .transition(.move(edge: .top).combined(with: .opacity))
                     }
                     
-                    // Music Section
-                    MusicSectionView { track, artist, artwork in
-                        onMusicSelected(track, artist, artwork)
-                    }
                     
                     // Browse Collections Section
                     BrowseCollectionsSection()
@@ -353,6 +348,83 @@ struct HomeView: View {
                 lastScrollOffset = value
             }
             .navigationBarHidden(true)
+        }
+    }
+}
+
+struct MusicView: View {
+    @AppStorage("selectedBackgroundColor") private var selectedBackgroundColor = 0
+    @Binding var showCard: Bool
+    @Binding var showWelcomeModal: Bool
+    @Binding var showVideoPlayer: Bool
+    @Binding var isTabBarMinimized: Bool
+    @Binding var scrollOffset: CGFloat
+    let onMusicSelected: (String, String, URL?) -> Void
+    
+    @State private var lastScrollOffset: CGFloat = 0
+    
+    @StateObject private var backgroundManager = BackgroundColorManager.shared
+    
+    private var backgroundColors: [(name: String, gradient: LinearGradient)] {
+        backgroundManager.getBackgroundColors()
+    }
+    
+    var body: some View {
+        ZStack {
+            // Apply selected background color
+            backgroundColors[selectedBackgroundColor].gradient
+                .ignoresSafeArea()
+            
+            NavigationView {
+                ScrollView {
+                    VStack(spacing: 20) {
+                        HStack {
+                            Text("Music")
+                                .font(.largeTitle)
+                                .fontWeight(.bold)
+                            Spacer()
+                            AvatarButtonView()
+                        }
+                        .padding(.horizontal, 16)
+                        
+                        // Music Section
+                        MusicSectionView { track, artist, artwork in
+                            onMusicSelected(track, artist, artwork)
+                        }
+                        
+                        Spacer(minLength: 100)
+                    }
+                    .padding(.top, 20)
+                    .padding(.horizontal, 16)
+                    .background(
+                        GeometryReader { geometry in
+                            Color.clear
+                                .preference(key: ScrollOffsetPreferenceKey.self, value: geometry.frame(in: .global).minY)
+                        }
+                    )
+                }
+                .scrollIndicators(.hidden)
+                .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+                    let delta = value - lastScrollOffset
+                    scrollOffset = value
+
+                    // Small changes are noise; ignore them to avoid flicker
+                    if abs(delta) <= 2 { return }
+
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        if delta < 0 {
+                            // Scrolling down -> minimize tab bar
+                            isTabBarMinimized = true
+                        } else {
+                            // Scrolling up -> expand tab bar
+                            isTabBarMinimized = false
+                        }
+                    }
+
+                    lastScrollOffset = value
+                }
+                .navigationBarHidden(true)
+            }
         }
     }
 }

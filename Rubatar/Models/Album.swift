@@ -1,6 +1,6 @@
 //
 //  Album.swift
-//  AppleLiquidGlassTapBar
+//  Rubatar
 //
 //  Created by Meghdad Abbaszadegan on 10/1/25.
 //

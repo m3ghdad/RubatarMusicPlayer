@@ -1,6 +1,6 @@
 //
-//  AppleLiquidGlassTapBarApp.swift
-//  AppleLiquidGlassTapBar
+//  RubatarApp.swift
+//  Rubatar
 //
 //  Created by Meghdad Abbaszadegan on 10/1/25.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct AppleLiquidGlassTapBarApp: App {
+struct RubatarApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

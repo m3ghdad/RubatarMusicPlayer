@@ -1,13 +1,13 @@
 //
-//  AppleLiquidGlassTapBarUITestsLaunchTests.swift
-//  AppleLiquidGlassTapBarUITests
+//  RubatarUITestsLaunchTests.swift
+//  RubatarUITests
 //
 //  Created by Meghdad Abbaszadegan on 10/1/25.
 //
 
 import XCTest
 
-final class AppleLiquidGlassTapBarUITestsLaunchTests: XCTestCase {
+final class RubatarUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
