@@ -1,0 +1,64 @@
+import SwiftUI
+
+struct HomeView: View {
+    @AppStorage("selectedBackgroundColor") private var selectedBackgroundColor = 0
+    @Binding var showCard: Bool
+    @Binding var showWelcomeModal: Bool
+    @Binding var showVideoPlayer: Bool
+    @Binding var isTabBarMinimized: Bool
+    @Binding var scrollOffset: CGFloat
+    
+    @State private var lastScrollOffset: CGFloat = 0
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 20) {
+                    HStack {
+                        Text("Home")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                        Spacer()
+                        AvatarButtonView()
+                    }
+                    .padding(.horizontal, 16)
+                    if showCard {
+                        VideoCardView(onPlayTapped: {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                showCard = false
+                                showVideoPlayer = true
+                            }
+                        })
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+                    
+                    BrowseCollectionsSection()
+                    
+                    Spacer(minLength: 100)
+                }
+                .padding(.top, 20)
+                .padding(.horizontal, 16)
+                .background(
+                    GeometryReader { geometry in
+                        Color.clear
+                            .preference(key: ScrollOffsetPreferenceKey.self, value: geometry.frame(in: .global).minY)
+                    }
+                )
+            }
+            .scrollIndicators(.hidden)
+            .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+                let delta = value - lastScrollOffset
+                scrollOffset = value
+
+                if abs(delta) <= 2 { return }
+
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    if delta < 0 { isTabBarMinimized = true } else { isTabBarMinimized = false }
+                }
+
+                lastScrollOffset = value
+            }
+            .navigationBarHidden(true)
+        }
+    }
+}
