@@ -17,7 +17,7 @@ struct PageCurlView<Content: View>: UIViewControllerRepresentable {
         let pageViewController = UIPageViewController(
             transitionStyle: .pageCurl,
             navigationOrientation: .horizontal,
-            options: nil
+            options: [UIPageViewController.OptionsKey.spineLocation: NSNumber(value: UIPageViewController.SpineLocation.min.rawValue)]
         )
         
         pageViewController.dataSource = context.coordinator
