@@ -68,14 +68,14 @@ struct ProfileView: View {
             getBackgroundColors()[selectedBackgroundColor].gradient
                 .ignoresSafeArea()
             
-            NavigationView {
+        NavigationView {
                 VStack(spacing: 0) {
                     // Header
-                    HStack {
+                HStack {
                         Text("Rubatar")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                        Spacer()
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                    Spacer()
                         AvatarButtonView(action: {
                             showProfileSheet = true
                         })
@@ -85,23 +85,15 @@ struct ProfileView: View {
                     .padding(.bottom, 16)
                     
                     // Main content area (F4F4F4 background)
-                    ZStack(alignment: .center) {
-                        // Main container background (no border radius)
-                        Rectangle()
-                            .fill(Color(red: 244/255, green: 244/255, blue: 244/255))
-                        
-                        VStack(spacing: 24) {
-                            // Poem card container
-                            ZStack {
-                                // Card background - white with subtle shadow
-                                RoundedRectangle(cornerRadius: 24)
-                                    .fill(Color.white)
-                                    .shadow(color: .black.opacity(0.08), radius: 16, x: 0, y: 8)
-                            
-                                VStack(spacing: 0) {
-                                    // Poem title, poet name, and action buttons (all in one row)
+                    // Main container with exact Figma spacing
+                    VStack(spacing: 24) {
+                        // Poem card container with 8px spacing between all sections
+                        VStack(spacing: 8) {
+                            // Header section - fixed with dashed bottom border
+                            VStack(spacing: 10) {
+                                VStack(spacing: 4) {
+                                    // Title and buttons row
                                     HStack(alignment: .top, spacing: 0) {
-                                        // Left side: Title and poet
                                         VStack(alignment: .leading, spacing: 8) {
                                             Text(poemTitle)
                                                 .font(.custom("Palatino-Roman", size: 24))
@@ -118,9 +110,7 @@ struct ProfileView: View {
                                         
                                         Spacer()
                                         
-                                        // Right side: Action buttons (28x28)
                                         HStack(spacing: 8) {
-                                            // Book button
                                             Button(action: {}) {
                                                 Image(systemName: "book.closed")
                                                     .font(.system(size: 18, weight: .medium))
@@ -129,7 +119,6 @@ struct ProfileView: View {
                                             }
                                             .buttonStyle(.plain)
                                             
-                                            // Heart button
                                             Button(action: {}) {
                                                 Image(systemName: "heart")
                                                     .font(.system(size: 18, weight: .medium))
@@ -139,17 +128,24 @@ struct ProfileView: View {
                                             .buttonStyle(.plain)
                                         }
                                     }
-                                    .padding(.bottom, 4)
-                                    
-                                    // Separator line under header (dashed)
+                                    .padding(.top, 48)
+                                }
+                            }
+                            .padding(.horizontal, 24)
+                            .padding(.bottom, 16)
+                            .background(Color.white)
+                            .overlay(
+                                VStack {
+                                    Spacer()
                                     DashedLine(dashCount: 12)
                                         .stroke(Color.black.opacity(0.1), lineWidth: 1)
                                         .frame(height: 1)
-                                    
-                                    // Swipeable poem carousel with numbered verses
-                                    TabView(selection: $currentPage) {
-                                        ForEach(0..<poems.count, id: \.self) { index in
-                                            VStack(spacing: 2) {
+                                }
+                            )
+                            
+                            // Pages section with page curl - fills available space
+                            PageCurlView(currentPage: $currentPage, pageCount: poems.count) { index in
+                                VStack(alignment: .leading, spacing: 10) {
                                                 // First verse (numbered - continues from previous page)
                                                 HStack(alignment: .top, spacing: 10) {
                                                     Text("\(index * 2 + 1).")
@@ -170,19 +166,15 @@ struct ProfileView: View {
                                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                                         }
                                                     }
-                                                    .background(
-                                                        RoundedRectangle(cornerRadius: 24)
-                                                            .fill(Color(red: 244/255, green: 244/255, blue: 244/255, opacity: 0.2))
-                                                    )
                                                 }
                                                 
-                                                // Separator line (dashed) with padding
-                                                VStack(spacing: 0) {
+                                                // Separator line (dashed) with 8px padding top and bottom
+                                                VStack {
                                                     DashedLine(dashCount: 12)
                                                         .stroke(Color.black.opacity(0.1), lineWidth: 1)
                                                         .frame(height: 1)
                                                 }
-                                                .padding(.vertical, 12)
+                                                .padding(.vertical, 8)
                                                 
                                                 // Second verse (numbered - continues from previous page)
                                                 HStack(alignment: .top, spacing: 10) {
@@ -204,54 +196,48 @@ struct ProfileView: View {
                                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                                         }
                                                     }
-                                                    .background(
-                                                        RoundedRectangle(cornerRadius: 24)
-                                                            .fill(Color(red: 244/255, green: 244/255, blue: 244/255, opacity: 0.2))
-                                                    )
                                                 }
-                                            }
-                                            .padding(.vertical, 16)
-                                            .tag(index)
-                                        }
-                                    }
-                                    .tabViewStyle(.page(indexDisplayMode: .never))
-                                    .frame(maxWidth: .infinity)
-                                    
-                                    // Page control
-                                    HStack(spacing: 8) {
-                                        ForEach(0..<poems.count, id: \.self) { index in
-                                            Circle()
-                                                .fill(index == currentPage ? Color.black : Color.black.opacity(0.3))
-                                                .frame(width: 8, height: 8)
-                                        }
-                                    }
-                                    .padding(.bottom, 8)
                                 }
                                 .padding(.horizontal, 24)
-                                .padding(.top, 48)
-                                .padding(.bottom, 36)
+                                .padding(.vertical, 16)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                                .background(Color.white)
+                                .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
                             }
-                            .frame(height: 549)
-                            .padding(.horizontal, 30)
                             
-                            // Navigation buttons (previous, refresh, next)
-                            HStack(spacing: 0) {
-                                // Previous button (no action - swipe to navigate)
-                                LiquidGlassButton(icon: "chevron.left.circle.fill", action: {})
-                                
-                                Spacer()
-                                
-                                // Refresh button
-                                LiquidGlassButton(icon: "arrow.clockwise", action: {})
-                                
-                                Spacer()
-                                
-                                // Next button (no action - swipe to navigate)
-                                LiquidGlassButton(icon: "chevron.right.circle.fill", action: {})
+                            // Page control (separate, fixed at bottom of poem card)
+                            HStack(spacing: 8) {
+                                ForEach(0..<poems.count, id: \.self) { pageIndex in
+                                    Circle()
+                                        .fill(pageIndex == currentPage ? Color.black : Color.black.opacity(0.3))
+                                        .frame(width: 8, height: 8)
+                                }
                             }
-                            .padding(.horizontal, 30)
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                        }
+                        .background(Color(red: 244/255, green: 244/255, blue: 244/255))
+                        .clipShape(RoundedRectangle(cornerRadius: 24))
+                            
+                        // Navigation buttons (previous, refresh, next)
+                        HStack(spacing: 0) {
+                            // Previous button (no action - swipe to navigate)
+                            LiquidGlassButton(icon: "chevron.left.circle.fill", action: {})
+                            
+                            Spacer()
+                            
+                            // Refresh button
+                            LiquidGlassButton(icon: "arrow.clockwise", action: {})
+                            
+                            Spacer()
+                            
+                            // Next button (no action - swipe to navigate)
+                            LiquidGlassButton(icon: "chevron.right.circle.fill", action: {})
                         }
                     }
+                    .padding(.horizontal, 30)
+                    .padding(.top, 24)
+                    .padding(.bottom, 48)
+                    .background(Color(red: 244/255, green: 244/255, blue: 244/255))
                 }
                 .navigationBarHidden(true)
             }
