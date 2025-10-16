@@ -136,11 +136,11 @@ struct ContentView: View {
                     MusicView(showCard: $showCard, showWelcomeModal: $showWelcomeModal, showVideoPlayer: $showVideoPlayer, isTabBarMinimized: $isTabBarMinimized, scrollOffset: $scrollOffset, onMusicSelected: playSelectedTrack, onPlaylistSelected: playSelectedPlaylist)
                 }
 
-                Tab("Plan", systemImage: "heart") {
+                Tab("Favorites", systemImage: "heart") {
                     PlanView()
                 }
 
-                Tab("Messages", systemImage: "message") {
+                Tab("Rubatar", systemImage: "apple.books.pages.fill") {
                     ProfileView()
                 }
 
