@@ -10,11 +10,15 @@ struct EnhancedMusicPlayer: View {
     @EnvironmentObject var audioPlayer: AudioPlayer
     
     // View Properties
-    @State private var expandPlayer: Bool = true // Start expanded since this only appears when user wants full player
+    @State private var expandPlayer: Bool = true // Start expanded when opened from PlayBackView
     @State private var offsetY: CGFloat = 0
     @State private var mainWindow: UIWindow?
     @State private var windowProgress: CGFloat = 0
     @State private var gradient: AnyGradient = Color.clear.gradient
+    
+    // Animation Properties
+    @State private var animationProgress: CGFloat = 0
+    @State private var isAnimating: Bool = false
     
     // Player Controls State
     @State private var currentTime: Double = 0.0
@@ -55,18 +59,25 @@ struct EnhancedMusicPlayer: View {
         GeometryReader {
             let size = $0.size
             let safeArea = $0.safeAreaInsets
-            let cornerRadius: CGFloat = expandPlayer ? 0 : 15 // Remove corner radius when expanded
+            let cornerRadius: CGFloat = expandPlayer ? (safeArea.bottom == 0 ? 0 : 45) : 15
             
             ZStack(alignment: .top) {
                 // Background with Liquid Glass Effect
-                Rectangle()
-                    .fill(Color.black)
-                    .frame(height: expandPlayer ? nil : 55)
-                    .frame(maxHeight: expandPlayer ? .infinity : 55)
-                    .clipShape(.rect(cornerRadius: cornerRadius))
-                    .glassEffect(.regular.tint(.black.opacity(0.6)).interactive(), 
-                                in: .rect(cornerRadius: cornerRadius))
-                    .shadow(color: .black.opacity(0.4), radius: expandPlayer ? 0 : 15, x: 0, y: expandPlayer ? 0 : -8)
+                ZStack {
+                    Rectangle()
+                        .fill(Color.black)
+                    
+                    Rectangle()
+                        .fill(gradient)
+                        .opacity(expandPlayer ? 1 : 0)
+                }
+                .frame(height: expandPlayer ? nil : 55)
+                .frame(maxHeight: expandPlayer ? .infinity : 55)
+                .clipShape(.rect(cornerRadius: cornerRadius))
+                .glassEffect(.regular.tint(.blue.opacity(0.3)), 
+                            in: .rect(cornerRadius: cornerRadius))
+                .shadow(color: .primary.opacity(0.06), radius: 5, x: 5, y: 5)
+                .shadow(color: .primary.opacity(0.05), radius: 5, x: -5, y: -5)
                 
                 MiniPlayer()
                     .opacity(expandPlayer ? 0 : 1)
@@ -82,39 +93,48 @@ struct EnhancedMusicPlayer: View {
             .ignoresSafeArea(expandPlayer ? .all : [])
             .offset(y: offsetY)
             .gesture(
-                PanGesture { gestureRecognizer in
-                    guard expandPlayer else { return }
+                PanGesture({ value in
+                    guard expandPlayer && !isAnimating else { return }
                     
-                    let translation = gestureRecognizer.translation(in: gestureRecognizer.view)
-                    let translationHeight = max(translation.y, 0)
-                    offsetY = translationHeight
-                    windowProgress = max(min(translationHeight / size.height, 1), 0) * 0.1
+                    let translation = rubberBand(value.translation.y)
+                    let clampedTranslation = max(translation, 0)
+                    offsetY = clampedTranslation
                     
+                    let progress = dragProgress(for: clampedTranslation, height: size.height)
+                    windowProgress = progress
                     resizeWindow(0.1 - windowProgress)
-                } onEnd: { gestureRecognizer in
-                    guard expandPlayer else { return }
+                }, onEnd: { value in
+                    guard expandPlayer && !isAnimating else { return }
                     
-                    let translation = gestureRecognizer.translation(in: gestureRecognizer.view)
-                    let velocity = gestureRecognizer.velocity(in: gestureRecognizer.view)
-                    let translationHeight = max(translation.y, 0)
-                    let velocityHeight = velocity.y / 5
+                    let translation = rubberBand(value.translation.y)
+                    let clampedTranslation = max(translation, 0)
+                    let velocity = value.velocity.y
                     
-                    withAnimation(.smooth(duration: 0.4, extraBounce: 0)) {
-                        if (translationHeight + velocityHeight) > (size.height * 0.3) { // Lower threshold for easier dismissal
-                            // Animate back to mini player
+                    // Use projected position for better velocity handling
+                    let projected = clampedTranslation + 0.25 * velocity
+                    let shouldClose = projected > size.height * 0.45
+                    
+                    withAnimation(.smooth(duration: 0.3, extraBounce: 0)) {
+                        if shouldClose {
+                            // Closing View with haptic feedback
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
                             expandPlayer = false
                             windowProgress = 0
-                            resetWindowWithAnimation()
                             show = false
+                            resetWindowWithAnimation()
+                            // Show mini player again when enhanced player is dismissed
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                // This will be handled by ContentView
+                            }
                         } else {
-                            // Snap to full screen
-                            UIView.animate(withDuration: 0.4) {
+                            // Reset Window To 0.1 With Animation
+                            UIView.animate(withDuration: 0.3) {
                                 resizeWindow(0.1)
                             }
                         }
                         offsetY = 0
                     }
-                }
+                })
             )
             .offset(y: hideMiniPlayer && !expandPlayer ? safeArea.bottom + 200 : 0)
             .ignoresSafeArea(expandPlayer ? .all : [])
@@ -204,14 +224,20 @@ struct EnhancedMusicPlayer: View {
         .background(Color.clear)
         .contentShape(Rectangle())
         .onTapGesture {
+            guard !isAnimating else { return }
+            isAnimating = true
+            
             show = true
             withAnimation(.smooth(duration: 0.3, extraBounce: 0)) {
                 expandPlayer = true
             }
             
-            UIView.animate(withDuration: 0.3) {
+            // Resizing Window When Opening Player
+            UIView.animate(withDuration: 0.3, animations: {
                 resizeWindow(0.1)
-            }
+            }, completion: { _ in
+                isAnimating = false
+            })
         }
     }
     
@@ -463,6 +489,18 @@ struct EnhancedMusicPlayer: View {
             .padding(.bottom, safeArea.bottom + 10)
         }
         .onAppear {
+            if let window = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.keyWindow, mainWindow == nil {
+                mainWindow = window
+                // Generate gradient from current artwork or use default
+                if let artworkURL = audioPlayer.currentArtwork,
+                   let imageData = try? Data(contentsOf: artworkURL),
+                   let image = UIImage(data: imageData) {
+                    gradient = Color(image.averageColor ?? .systemPurple).gradient
+                } else {
+                    gradient = Color(.systemPurple).gradient
+                }
+            }
+            
             // Initialize volume from system volume
             initializeSystemVolume()
             
@@ -472,12 +510,14 @@ struct EnhancedMusicPlayer: View {
             // Start timer for progress simulation - only if not using MusicKit
             if !audioPlayer.usingMusicKit {
                 Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
-                    if audioPlayer.isPlaying && currentTime < totalTime && !isSeekingTime {
-                        currentTime += 1.0
-                    } else if currentTime >= totalTime {
-                        currentTime = 0
-                        // Note: You may want to call audioPlayer.pause() here instead
-                        // audioPlayer.pause()
+                    Task { @MainActor in
+                        if audioPlayer.isPlaying && currentTime < totalTime && !isSeekingTime {
+                            currentTime += 1.0
+                        } else if currentTime >= totalTime {
+                            currentTime = 0
+                            // Note: You may want to call audioPlayer.pause() here instead
+                            // audioPlayer.pause()
+                        }
                     }
                 }
             }
@@ -489,6 +529,37 @@ struct EnhancedMusicPlayer: View {
                 volumeObserver = nil
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
+            if expandPlayer {
+                mainWindow?.subviews.first?.transform = .identity
+            }
+        }
+        .accessibilityAction(named: "Expand Player") {
+            if !expandPlayer {
+                isAnimating = true
+                show = true
+                withAnimation(.smooth(duration: 0.3, extraBounce: 0)) {
+                    expandPlayer = true
+                }
+                UIView.animate(withDuration: 0.3, animations: {
+                    resizeWindow(0.1)
+                }, completion: { _ in
+                    isAnimating = false
+                })
+            }
+        }
+        .accessibilityAction(named: "Collapse Player") {
+            if expandPlayer {
+                withAnimation(.smooth(duration: 0.3, extraBounce: 0)) {
+                    expandPlayer = false
+                    windowProgress = 0
+                    show = false
+                    resetWindowWithAnimation()
+                }
+            }
+        }
+        .accessibilityLabel(expandPlayer ? "Expanded Music Player" : "Mini Music Player")
+        .accessibilityHint(expandPlayer ? "Swipe down to collapse or tap to control playback" : "Tap to expand music player")
     }
     
     // MARK: - Content Views
@@ -636,6 +707,21 @@ struct EnhancedMusicPlayer: View {
         return String(format: "%d:%02d", minutes, seconds)
     }
     
+    // MARK: - Animation Helper Functions
+    @inline(__always) func clamped(_ x: CGFloat, _ a: CGFloat, _ b: CGFloat) -> CGFloat { 
+        max(min(x, b), a) 
+    }
+    
+    func dragProgress(for translation: CGFloat, height: CGFloat) -> CGFloat {
+        let p = clamped(translation / height, 0, 1)
+        return p * 0.1 // max window scale fraction
+    }
+    
+    func rubberBand(_ x: CGFloat) -> CGFloat {
+        // small resistance above zero
+        x >= 0 ? x : 0.2 * atan(x)
+    }
+    
     // MARK: - System Volume Control
     func setSystemVolume(_ volume: Float) {
         // Use MPVolumeView to control system volume
@@ -643,19 +729,22 @@ struct EnhancedMusicPlayer: View {
         volumeView.showsVolumeSlider = true
         
         // Add to a temporary window to make it work
-        let tempWindow = UIWindow(frame: CGRect(x: 0, y: 0, width: 1, height: 1))
-        tempWindow.alpha = 0.01
-        tempWindow.makeKeyAndVisible()
-        tempWindow.addSubview(volumeView)
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+            let tempWindow = UIWindow(windowScene: windowScene)
+            tempWindow.frame = CGRect(x: 0, y: 0, width: 1, height: 1)
+            tempWindow.alpha = 0.01
+            tempWindow.makeKeyAndVisible()
+            tempWindow.addSubview(volumeView)
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            if let slider = volumeView.subviews.first(where: { $0 is UISlider }) as? UISlider {
-                slider.value = volume
-            }
-            
-            // Clean up
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                tempWindow.isHidden = true
+                if let slider = volumeView.subviews.first(where: { $0 is UISlider }) as? UISlider {
+                    slider.value = volume
+                }
+                
+                // Clean up
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    tempWindow.isHidden = true
+                }
             }
         }
     }
@@ -747,39 +836,54 @@ extension UIImage {
 }
 
 struct PanGesture: UIGestureRecognizerRepresentable {
-    var onChanged: (UIPanGestureRecognizer) -> Void
-    var onEnd: (UIPanGestureRecognizer) -> Void
-    
-    init(_ onChanged: @escaping (UIPanGestureRecognizer) -> Void, onEnd: @escaping (UIPanGestureRecognizer) -> Void) {
-        self.onChanged = onChanged
+    struct Value {
+        let translation: CGPoint
+        let velocity: CGPoint
+    }
+
+    var onChange: (Value) -> Void
+    var onEnd: (Value) -> Void
+
+    init(_ onChange: @escaping (Value) -> Void, onEnd: @escaping (Value) -> Void) {
+        self.onChange = onChange
         self.onEnd = onEnd
     }
-    
+
     func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
         let gesture = UIPanGestureRecognizer()
+        gesture.addTarget(context.coordinator, action: #selector(Coordinator.handlePan(_:)))
         return gesture
     }
-    
+
     func updateUIGestureRecognizer(_ recognizer: UIPanGestureRecognizer, context: Context) {
-        recognizer.addTarget(context.coordinator, action: #selector(Coordinator.onGestureChange(_:)))
+        // No dynamic updates needed per state; coordinator handles events.
     }
-    
+
     func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator {
         Coordinator(self)
     }
-    
+
     class Coordinator: NSObject {
         var parent: PanGesture
-        
+
         init(_ parent: PanGesture) {
             self.parent = parent
         }
-        
-        @objc func onGestureChange(_ sender: UIPanGestureRecognizer) {
-            if sender.state == .changed {
-                parent.onChanged(sender)
-            } else if sender.state == .ended {
-                parent.onEnd(sender)
+
+        @objc func handlePan(_ sender: UIPanGestureRecognizer) {
+            // Use the recognizer's view to compute translation and velocity in the correct coordinate space.
+            let inView = sender.view
+            let translation = sender.translation(in: inView)
+            let velocity = sender.velocity(in: inView)
+            let value = Value(translation: translation, velocity: velocity)
+
+            switch sender.state {
+            case .changed:
+                parent.onChange(value)
+            case .ended, .cancelled, .failed:
+                parent.onEnd(value)
+            default:
+                break
             }
         }
     }

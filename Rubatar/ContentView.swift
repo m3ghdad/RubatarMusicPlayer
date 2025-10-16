@@ -95,6 +95,7 @@ struct ContentView: View {
     @State private var scrollOffset: CGFloat = 0 // Track scroll position
     @State private var showEnhancedPlayer = false // Track enhanced player visibility
     @State private var hideMiniPlayer = false // Track mini player hide state
+    @State private var shouldShowMiniPlayer = false // Track if mini player should be shown
     @StateObject private var backgroundManager = BackgroundColorManager.shared
     @StateObject private var audioPlayer = AudioPlayer()
     
@@ -154,11 +155,12 @@ struct ContentView: View {
             .preferredColorScheme(isDarkMode ? .dark : .light)
             .tabBarMinimizeBehavior(.onScrollDown)
             .tabViewBottomAccessory {
-                if showMiniPlayer {
+                if showMiniPlayer && !showEnhancedPlayer {
                     PlayBackView(
                         onTap: {
-                            // Open enhanced player
+                            // Open enhanced player and hide mini player
                             showEnhancedPlayer = true
+                            shouldShowMiniPlayer = true // Remember we should show mini player
                         },
                         onPlayPause: {
                             // Toggle play/pause
@@ -220,6 +222,13 @@ struct ContentView: View {
             // Initialize player when ContentView appears
             player = AVPlayer(url: videoURL)
             //player?.allowsExternalPlayback = false
+        }
+        .onChange(of: showEnhancedPlayer) { oldValue, newValue in
+            // When enhanced player is dismissed, show mini player again if we should
+            if oldValue == true && newValue == false && shouldShowMiniPlayer {
+                showMiniPlayer = true
+                shouldShowMiniPlayer = false
+            }
         }
         // Video Player Presentation
         .fullScreenCover(isPresented: $showVideoPlayer) {
