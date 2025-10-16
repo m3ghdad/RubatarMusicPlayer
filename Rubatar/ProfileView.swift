@@ -7,6 +7,24 @@
 
 import SwiftUI
 
+// Custom dashed line shape
+struct DashedLine: Shape {
+    let dashCount: Int
+    
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let dashWidth = rect.width / CGFloat(dashCount * 2 - 1)
+        
+        for i in 0..<dashCount {
+            let x = CGFloat(i * 2) * dashWidth
+            path.move(to: CGPoint(x: x, y: rect.midY))
+            path.addLine(to: CGPoint(x: x + dashWidth, y: rect.midY))
+        }
+        
+        return path
+    }
+}
+
 struct ProfileView: View {
     @State private var showProfileSheet = false
     @AppStorage("selectedBackgroundColor") private var selectedBackgroundColor = 0
@@ -16,37 +34,32 @@ struct ProfileView: View {
     private let poemTitle = "Quatrain No. 127"
     private let poetName = "Khayam"
     
-    // Array of poems for carousel
-    private let poems = [
-        """
-Let not your heart linger on the day that is gone
-
-Nor raise a cry for the morrow not yet born
-
-Build no foundations on what has fled or what has not arrived
-
-Dwell in this moment,
-
-and do not cast your life to the wind.
-""",
-        """
-The secrets which my book of love has bred,
-Cannot be told for fear of loss of head;
-Since none is fit to learn, or cares to know,
-'Tis likely then, with me, the truth will go.
-""",
-        """
-Ah, fill the Cup: what boots it to repeat
-How Time is slipping underneath our Feet:
-Unborn To-morrow, and dead Yesterday,
-Why fret about them if To-day be sweet!
-""",
-        """
-Come, fill the Cup, and in the Fire of Spring
-The Winter Garment of Repentance fling:
-The Bird of Time has but a little way
-To fly—and Lo! the Bird is on the Wing.
-"""
+    // Array of poems as couplets (two sections each)
+    private let poems: [([String], [String])] = [
+        (
+            ["Let not your heart linger on the day that is gone",
+             "Nor raise a cry for the morrow not yet born"],
+            ["Build no foundations on what has fled or what has not arrived",
+             "Dwell in this moment, and do not cast your life to the wind."]
+        ),
+        (
+            ["The secrets which my book of love has bred,",
+             "Cannot be told for fear of loss of head;"],
+            ["Since none is fit to learn, or cares to know,",
+             "'Tis likely then, with me, the truth will go."]
+        ),
+        (
+            ["Ah, fill the Cup: what boots it to repeat",
+             "How Time is slipping underneath our Feet:"],
+            ["Unborn To-morrow, and dead Yesterday,",
+             "Why fret about them if To-day be sweet!"]
+        ),
+        (
+            ["Come, fill the Cup, and in the Fire of Spring",
+             "The Winter Garment of Repentance fling:"],
+            ["The Bird of Time has but a little way",
+             "To fly—and Lo! the Bird is on the Wing."]
+        )
     ]
     
     var body: some View {
@@ -85,49 +98,119 @@ To fly—and Lo! the Bird is on the Wing.
                                     .fill(Color.white)
                                     .shadow(color: .black.opacity(0.08), radius: 16, x: 0, y: 8)
                             
-                                VStack(spacing: 16) {
-                                    // Top action buttons (book and heart)
-                                    HStack {
+                                VStack(spacing: 0) {
+                                    // Poem title, poet name, and action buttons (all in one row)
+                                    HStack(alignment: .top, spacing: 0) {
+                                        // Left side: Title and poet
+                                        VStack(alignment: .leading, spacing: 8) {
+                                            Text(poemTitle)
+                                                .font(.custom("Palatino-Roman", size: 24))
+                                                .foregroundColor(Color(red: 60/255, green: 60/255, blue: 67/255, opacity: 0.6))
+                                                .kerning(-0.43)
+                                                .lineSpacing(22)
+                                            
+                                            Text(poetName)
+                                                .font(.custom("Palatino-Roman", size: 16))
+                                                .foregroundColor(Color(red: 122/255, green: 92/255, blue: 57/255))
+                                                .kerning(-0.23)
+                                                .lineSpacing(20)
+                                        }
+                                        
                                         Spacer()
                                         
+                                        // Right side: Action buttons (28x28)
                                         HStack(spacing: 8) {
                                             // Book button
-                                            LiquidGlassButton(icon: "book.fill", action: {})
+                                            Button(action: {}) {
+                                                Image(systemName: "book.closed")
+                                                    .font(.system(size: 18, weight: .medium))
+                                                    .foregroundColor(.primary)
+                                                    .frame(width: 28, height: 28)
+                                            }
+                                            .buttonStyle(.plain)
                                             
                                             // Heart button
-                                            LiquidGlassButton(icon: "heart.fill", action: {})
+                                            Button(action: {}) {
+                                                Image(systemName: "heart")
+                                                    .font(.system(size: 18, weight: .medium))
+                                                    .foregroundColor(.primary)
+                                                    .frame(width: 28, height: 28)
+                                            }
+                                            .buttonStyle(.plain)
                                         }
                                     }
+                                    .padding(.bottom, 4)
                                     
-                                    // Poem title and poet name (constant)
-                                    VStack(spacing: 8) {
-                                        Text(poemTitle)
-                                            .font(.custom("GideonRoman-Regular", size: 24))
-                                            .foregroundColor(Color(red: 60/255, green: 60/255, blue: 67/255, opacity: 0.6))
-                                            .kerning(-0.43)
-                                            .lineSpacing(22)
-                                        
-                                        Text(poetName)
-                                            .font(.custom("GideonRoman-Regular", size: 15))
-                                            .foregroundColor(Color(red: 122/255, green: 92/255, blue: 57/255))
-                                            .kerning(-0.23)
-                                            .lineSpacing(20)
-                                    }
+                                    // Separator line under header (dashed)
+                                    DashedLine(dashCount: 12)
+                                        .stroke(Color.black.opacity(0.1), lineWidth: 1)
+                                        .frame(height: 1)
                                     
-                                    // Swipeable poem carousel
+                                    // Swipeable poem carousel with numbered verses
                                     TabView(selection: $currentPage) {
                                         ForEach(0..<poems.count, id: \.self) { index in
-                                            VStack {
-                                                Text(poems[index])
-                                                    .font(.custom("GideonRoman-Regular", size: 12))
-                                                    .foregroundColor(.black)
-                                                    .lineSpacing(20)
-                                                    .kerning(1)
-                                                    .multilineTextAlignment(.center)
-                                                    .frame(maxWidth: .infinity)
+                                            VStack(spacing: 2) {
+                                                // First verse (numbered - continues from previous page)
+                                                HStack(alignment: .top, spacing: 10) {
+                                                    Text("\(index * 2 + 1).")
+                                                        .font(.custom("Palatino-Roman", size: 12))
+                                                        .foregroundColor(.black)
+                                                        .lineSpacing(14 * 1.66) // 2.66 line height = 14px * 1.66 extra spacing
+                                                        .kerning(1)
+                                                    
+                                                    VStack(alignment: .leading, spacing: 10) {
+                                                        ForEach(poems[index].0, id: \.self) { line in
+                                                            Text(line)
+                                                                .font(.custom("Palatino-Roman", size: 14))
+                                                                .foregroundColor(.black)
+                                                                .lineSpacing(14 * 1.66) // 2.66 line height = 14px * 1.66 extra spacing
+                                                                .kerning(1)
+                                                                .lineLimit(nil)
+                                                                .fixedSize(horizontal: false, vertical: true)
+                                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                        }
+                                                    }
+                                                    .background(
+                                                        RoundedRectangle(cornerRadius: 24)
+                                                            .fill(Color(red: 244/255, green: 244/255, blue: 244/255, opacity: 0.2))
+                                                    )
+                                                }
                                                 
-                                                Spacer()
+                                                // Separator line (dashed) with padding
+                                                VStack(spacing: 0) {
+                                                    DashedLine(dashCount: 12)
+                                                        .stroke(Color.black.opacity(0.1), lineWidth: 1)
+                                                        .frame(height: 1)
+                                                }
+                                                .padding(.vertical, 12)
+                                                
+                                                // Second verse (numbered - continues from previous page)
+                                                HStack(alignment: .top, spacing: 10) {
+                                                    Text("\(index * 2 + 2).")
+                                                        .font(.custom("Palatino-Roman", size: 12))
+                                                        .foregroundColor(.black)
+                                                        .lineSpacing(14 * 1.66) // 2.66 line height = 14px * 1.66 extra spacing
+                                                        .kerning(1)
+                                                    
+                                                    VStack(alignment: .leading, spacing: 10) {
+                                                        ForEach(poems[index].1, id: \.self) { line in
+                                                            Text(line)
+                                                                .font(.custom("Palatino-Roman", size: 14))
+                                                                .foregroundColor(.black)
+                                                                .lineSpacing(14 * 1.66) // 2.66 line height = 14px * 1.66 extra spacing
+                                                                .kerning(1)
+                                                                .lineLimit(nil)
+                                                                .fixedSize(horizontal: false, vertical: true)
+                                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                        }
+                                                    }
+                                                    .background(
+                                                        RoundedRectangle(cornerRadius: 24)
+                                                            .fill(Color(red: 244/255, green: 244/255, blue: 244/255, opacity: 0.2))
+                                                    )
+                                                }
                                             }
+                                            .padding(.vertical, 16)
                                             .tag(index)
                                         }
                                     }
@@ -148,7 +231,7 @@ To fly—and Lo! the Bird is on the Wing.
                                 .padding(.top, 48)
                                 .padding(.bottom, 36)
                             }
-                            .frame(height: 510)
+                            .frame(height: 549)
                             .padding(.horizontal, 30)
                             
                             // Navigation buttons (previous, refresh, next)
@@ -185,3 +268,4 @@ To fly—and Lo! the Bird is on the Wing.
 #Preview {
     ProfileView()
 }
+
