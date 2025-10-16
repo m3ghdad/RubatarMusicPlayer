@@ -98,6 +98,7 @@ struct ContentView: View {
     @State private var shouldShowMiniPlayer = false // Track if mini player should be shown
     @StateObject private var backgroundManager = BackgroundColorManager.shared
     @StateObject private var audioPlayer = AudioPlayer()
+    @Namespace private var animation
     
     // Sample video URL - replace with your actual video content
     private let videoURL = URL(string: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")!
@@ -159,7 +160,7 @@ struct ContentView: View {
                     PlayBackView(
                         onTap: {
                             // Open enhanced player and hide mini player
-                            showEnhancedPlayer = true
+                            showEnhancedPlayer.toggle()
                             shouldShowMiniPlayer = true // Remember we should show mini player
                         },
                         onPlayPause: {
@@ -174,6 +175,7 @@ struct ContentView: View {
                         currentArtwork: audioPlayer.currentArtwork,
                         isPlaying: audioPlayer.isPlaying
                     )
+                    .matchedTransitionSource(id: "MINIPLAYER", in: animation)
                     .padding(.vertical, 8)
                     .onChange(of: isTabBarMinimized) { oldValue, newValue in
                         print("🎛️ Mini player - Tab bar minimized: \(newValue)")
@@ -207,16 +209,6 @@ struct ContentView: View {
                 }
             }
             
-            // Enhanced Music Player Overlay
-            if showEnhancedPlayer {
-                EnhancedMusicPlayer(
-                    show: $showEnhancedPlayer,
-                    hideMiniPlayer: $hideMiniPlayer
-                )
-                .environmentObject(audioPlayer)
-                .zIndex(1000)
-            }
-            
         }
         .onAppear {
             // Initialize player when ContentView appears
@@ -229,6 +221,25 @@ struct ContentView: View {
                 showMiniPlayer = true
                 shouldShowMiniPlayer = false
             }
+        }
+        // Enhanced Music Player as Full Screen Cover with Zoom Transition
+        .fullScreenCover(isPresented: $showEnhancedPlayer) {
+            ScrollView {
+                EnhancedMusicPlayer(
+                    show: $showEnhancedPlayer,
+                    hideMiniPlayer: $hideMiniPlayer
+                )
+                .environmentObject(audioPlayer)
+            }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                VStack(spacing: 10) {
+                    Capsule()
+                        .fill(.primary.secondary)
+                        .frame(width: 35, height: 3)
+                }
+                .padding(.top, 6)
+            }
+            .navigationTransition(.zoom(sourceID: "MINIPLAYER", in: animation))
         }
         // Video Player Presentation
         .fullScreenCover(isPresented: $showVideoPlayer) {
