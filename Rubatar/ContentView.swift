@@ -224,21 +224,12 @@ struct ContentView: View {
         }
         // Enhanced Music Player as Full Screen Cover with Zoom Transition
         .fullScreenCover(isPresented: $showEnhancedPlayer) {
-            ScrollView {
-                EnhancedMusicPlayer(
-                    show: $showEnhancedPlayer,
-                    hideMiniPlayer: $hideMiniPlayer
-                )
-                .environmentObject(audioPlayer)
-            }
-            .safeAreaInset(edge: .top, spacing: 0) {
-                VStack(spacing: 10) {
-                    Capsule()
-                        .fill(.primary.secondary)
-                        .frame(width: 35, height: 3)
-                }
-                .padding(.top, 6)
-            }
+            EnhancedMusicPlayer(
+                show: $showEnhancedPlayer,
+                hideMiniPlayer: $hideMiniPlayer,
+                animation: animation
+            )
+            .environmentObject(audioPlayer)
             .navigationTransition(.zoom(sourceID: "MINIPLAYER", in: animation))
         }
         // Video Player Presentation

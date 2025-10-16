@@ -5,6 +5,7 @@ import MediaPlayer
 struct EnhancedMusicPlayer: View {
     @Binding var show: Bool
     @Binding var hideMiniPlayer: Bool
+    var animation: Namespace.ID
     
     // Pass the existing audio player from ContentView
     @EnvironmentObject var audioPlayer: AudioPlayer
@@ -32,7 +33,6 @@ struct EnhancedMusicPlayer: View {
     // Segmented Control Selection
     @State private var selectedSegment: SegmentTab = .listeningGuide
     
-    @Namespace private var animation
     
     enum BottomTab: String, CaseIterable {
         case booklet = "Booklet"
@@ -54,10 +54,9 @@ struct EnhancedMusicPlayer: View {
     }
     
     var body: some View {
-        GeometryReader {
-            let size = $0.size
-            let safeArea = $0.safeAreaInsets
-            let cornerRadius: CGFloat = expandPlayer ? (safeArea.bottom == 0 ? 0 : 45) : 15
+        GeometryReader { geometry in
+            let size = geometry.size
+            let safeArea = geometry.safeAreaInsets
             
             ZStack(alignment: .top) {
                 // Background with Liquid Glass Effect
@@ -67,52 +66,34 @@ struct EnhancedMusicPlayer: View {
                     
                     Rectangle()
                         .fill(gradient)
-                        .opacity(expandPlayer ? 1 : 0)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipShape(.rect(cornerRadius: cornerRadius))
-                .glassEffect(.regular.tint(.blue.opacity(0.3)), 
-                            in: .rect(cornerRadius: cornerRadius))
-                .shadow(color: .primary.opacity(0.06), radius: 5, x: 5, y: 5)
-                .shadow(color: .primary.opacity(0.05), radius: 5, x: -5, y: -5)
-                
-                MiniPlayer()
-                    .opacity(expandPlayer ? 0 : 1)
+                .ignoresSafeArea(.all)
                 
                 ExpandedPlayer(size, safeArea)
-                    .opacity(expandPlayer ? 1 : 0)
             }
-            .frame(height: expandPlayer ? nil : 55, alignment: .top)
-            .frame(maxHeight: .infinity, alignment: .bottom)
-            .padding(.bottom, expandPlayer ? 0 : safeArea.bottom + 55)
-            .padding(.horizontal, expandPlayer ? 0 : 15)
             .offset(y: offsetY)
             .gesture(
-                PanGesture { value in
-                    guard expandPlayer else { return }
-                    
-                    let translation = max(value.translation.y, 0)
-                    offsetY = translation
-                } onEnd: { value in
-                    guard expandPlayer else { return }
-                    
-                    let translation = max(value.translation.y, 0)
-                    let velocity = value.velocity.y / 5
-                    
-                    withAnimation(.smooth(duration: 0.3, extraBounce: 0)) {
-                        if (translation + velocity) > (size.height * 0.5) {
-                            // Closing View
-                            expandPlayer = false
-                            show = false
-                        }
-                        
-                        offsetY = 0
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        let translation = max(value.translation.height, 0)
+                        offsetY = translation
                     }
-                }
+                    .onEnded { value in
+                        let translation = max(value.translation.height, 0)
+                        let velocity = value.velocity.height / 5
+                        
+                        withAnimation(.smooth(duration: 0.3, extraBounce: 0)) {
+                            if (translation + velocity) > (size.height * 0.5) {
+                                // Closing View - dismiss fullScreenCover
+                                show = false
+                            }
+                            offsetY = 0
+                        }
+                    }
             )
-            .offset(y: hideMiniPlayer && !expandPlayer ? safeArea.bottom + 200 : 0)
-            .ignoresSafeArea()
         }
+        .ignoresSafeArea(.all)
         .onAppear {
             // Generate gradient from artwork or use clear fallback
             if let artworkURL = audioPlayer.currentArtwork,
@@ -126,73 +107,6 @@ struct EnhancedMusicPlayer: View {
         }
     }
     
-    // MARK: - Mini Player
-    @ViewBuilder
-    func MiniPlayer() -> some View {
-        HStack(spacing: 12) {
-            ZStack {
-                if !expandPlayer {
-                    AsyncImage(url: audioPlayer.currentArtwork) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Rectangle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .overlay(
-                                Image(systemName: "music.note")
-                                    .font(.caption)
-                                    .foregroundColor(.white.opacity(0.7))
-                            )
-                    }
-                    .clipShape(.rect(cornerRadius: 10))
-                    .matchedGeometryEffect(id: "Artwork", in: animation)
-                }
-            }
-            .frame(width: 45, height: 45)
-            
-            Text(audioPlayer.currentTrack != "No track selected" ? audioPlayer.currentTrack : "Calm Down")
-                .lineLimit(1)
-            
-            Spacer(minLength: 0)
-            
-            // Control buttons
-            Button(action: {
-                audioPlayer.togglePlayPause()
-            }) {
-                Image(systemName: audioPlayer.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.title3)
-                    .foregroundStyle(Color.primary)
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-            }
-            
-            Button(action: {
-                audioPlayer.playNextTrack()
-            }) {
-                Image(systemName: "forward.fill")
-                    .font(.title3)
-                    .foregroundStyle(Color.primary)
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-            }
-        }
-        .padding(.horizontal, 10)
-        .frame(height: 55)
-        .background(Color.clear)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            withAnimation(.smooth(duration: 0.3, extraBounce: 0)) {
-                expandPlayer = true
-            }
-        }
-    }
     
     // MARK: - Expanded Player
     @ViewBuilder
@@ -205,33 +119,27 @@ struct EnhancedMusicPlayer: View {
             
             // Header with Album Art and Info
             HStack(spacing: 12) {
-                ZStack {
-                    if expandPlayer {
-                        AsyncImage(url: audioPlayer.currentArtwork) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            Rectangle()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .overlay(
-                                    Image(systemName: "music.note")
-                                        .font(.title)
-                                        .foregroundColor(.white.opacity(0.7))
-                                )
-                        }
-                        .clipShape(.rect(cornerRadius: 10))
-                        .matchedGeometryEffect(id: "Artwork", in: animation)
-                        .transition(.offset(y: 1))
-                    }
+                AsyncImage(url: audioPlayer.currentArtwork) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay(
+                            Image(systemName: "music.note")
+                                .font(.title)
+                                .foregroundColor(.white.opacity(0.7))
+                        )
                 }
                 .frame(width: 80, height: 80)
+                .clipShape(.rect(cornerRadius: 10))
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(audioPlayer.currentTrack != "No track selected" ? audioPlayer.currentTrack : "Calm Down")
