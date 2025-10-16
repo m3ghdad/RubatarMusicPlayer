@@ -59,7 +59,7 @@ struct EnhancedMusicPlayer: View {
         GeometryReader {
             let size = $0.size
             let safeArea = $0.safeAreaInsets
-            let cornerRadius: CGFloat = expandPlayer ? (safeArea.bottom == 0 ? 0 : 45) : 15
+            let cornerRadius: CGFloat = expandPlayer ? 0 : 15
             
             ZStack(alignment: .top) {
                 // Background with Liquid Glass Effect
@@ -71,8 +71,7 @@ struct EnhancedMusicPlayer: View {
                         .fill(gradient)
                         .opacity(expandPlayer ? 1 : 0)
                 }
-                .frame(height: expandPlayer ? nil : 55)
-                .frame(maxHeight: expandPlayer ? .infinity : 55)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipShape(.rect(cornerRadius: cornerRadius))
                 .glassEffect(.regular.tint(.blue.opacity(0.3)), 
                             in: .rect(cornerRadius: cornerRadius))
@@ -85,12 +84,10 @@ struct EnhancedMusicPlayer: View {
                 ExpandedPlayer(size, safeArea)
                     .opacity(expandPlayer ? 1 : 0)
             }
-            .frame(height: expandPlayer ? nil : 55, alignment: .top)
-            .frame(maxHeight: expandPlayer ? .infinity : 55, alignment: expandPlayer ? .top : .bottom)
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.bottom, expandPlayer ? 0 : safeArea.bottom + 55)
             .padding(.horizontal, expandPlayer ? 0 : 15)
-            .ignoresSafeArea(expandPlayer ? .all : [])
+            .ignoresSafeArea(.all)
             .offset(y: offsetY)
             .gesture(
                 PanGesture({ value in
@@ -137,10 +134,6 @@ struct EnhancedMusicPlayer: View {
                 })
             )
             .offset(y: hideMiniPlayer && !expandPlayer ? safeArea.bottom + 200 : 0)
-            .ignoresSafeArea(expandPlayer ? .all : [])
-            .frame(maxWidth: .infinity)
-            .frame(height: expandPlayer ? nil : 55, alignment: .top)
-            .frame(maxHeight: expandPlayer ? .infinity : 55, alignment: expandPlayer ? .top : .bottom)
         }
         .onAppear {
             if let window = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.keyWindow, mainWindow == nil {
@@ -488,6 +481,7 @@ struct EnhancedMusicPlayer: View {
             .padding(.horizontal, 20)
             .padding(.bottom, safeArea.bottom + 10)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             if let window = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.keyWindow, mainWindow == nil {
                 mainWindow = window
