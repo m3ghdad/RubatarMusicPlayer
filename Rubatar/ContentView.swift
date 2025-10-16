@@ -25,6 +25,7 @@ struct ContentView: View {
     @State private var scrollOffset: CGFloat = 0
     @State private var showEnhancedPlayer = false
     @State private var shouldShowMiniPlayer = false
+    @State private var showProfileSheet = false
     @StateObject private var audioPlayer = AudioPlayer()
     
     // MARK: - Video Configuration
@@ -40,13 +41,14 @@ struct ContentView: View {
             Color.blue.ignoresSafeArea(.all)
             
             TabView {
-                Tab("Home", systemImage: "house") {
+        Tab("Home", systemImage: "house") {
                     HomeView(
                         showCard: $showCard,
                         showWelcomeModal: $showWelcomeModal,
                         showVideoPlayer: $showVideoPlayer,
                         isTabBarMinimized: $isTabBarMinimized,
-                        scrollOffset: $scrollOffset
+                        scrollOffset: $scrollOffset,
+                        showProfileSheet: $showProfileSheet
                     )
                 }
 
@@ -58,7 +60,8 @@ struct ContentView: View {
                         isTabBarMinimized: $isTabBarMinimized,
                         scrollOffset: $scrollOffset,
                         onMusicSelected: playSelectedTrack,
-                        onPlaylistSelected: playSelectedPlaylist
+                        onPlaylistSelected: playSelectedPlaylist,
+                        showProfileSheet: $showProfileSheet
                     )
                 }
 
@@ -105,6 +108,12 @@ struct ContentView: View {
         .fullScreenCover(isPresented: $showVideoPlayer) {
             videoPlayerView
         }
+        .sheet(isPresented: $showProfileSheet) {
+            ProfileBottomSheet(isPresented: $showProfileSheet)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.hidden)
+                .presentationCornerRadius(16)
+        }
     }
     
     // MARK: - Computed Views
@@ -138,7 +147,7 @@ struct ContentView: View {
                 showWelcomeModal = false
             },
             onPlayTapped: {
-                showVideoPlayer = true
+                                showVideoPlayer = true
             }
         )
         .presentationDetents([.fraction(0.75)])

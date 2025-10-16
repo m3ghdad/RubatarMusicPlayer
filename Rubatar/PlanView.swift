@@ -11,22 +11,22 @@ struct PlanView: View {
             NavigationView {
                 VStack(spacing: 20) {
                     HStack {
-                        Text("Plan")
+                        Text("Favorites")
                             .font(.largeTitle)
                             .fontWeight(.bold)
                         Spacer()
-                        AvatarButtonView()
+                        AvatarButtonView(action: {})
                     }
                     .padding(.horizontal, 20)
                     
                     VStack(spacing: 16) {
-                        Image(systemName: "calendar")
+                        Image(systemName: "heart.fill")
                             .font(.system(size: 50))
-                            .foregroundStyle(.purple)
-                        Text("Plan")
+                            .foregroundStyle(.pink)
+                        Text("Favorites")
                             .font(.title)
                             .fontWeight(.semibold)
-                        Text("Plan your next adventure")
+                        Text("Your favorite music")
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                     }

@@ -18,7 +18,7 @@ struct SearchTabContent: View {
                             .font(.largeTitle)
                             .fontWeight(.bold)
                         Spacer()
-                        AvatarButtonView()
+                        AvatarButtonView(action: {})
                     }
                     .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 8, trailing: 16))
                     .listRowBackground(Color.clear)

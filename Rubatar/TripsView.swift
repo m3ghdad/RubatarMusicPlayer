@@ -15,7 +15,7 @@ struct TripsView: View {
                             .font(.largeTitle)
                             .fontWeight(.bold)
                         Spacer()
-                        AvatarButtonView()
+                        AvatarButtonView(action: {})
                     }
                     .padding(.horizontal, 20)
                     

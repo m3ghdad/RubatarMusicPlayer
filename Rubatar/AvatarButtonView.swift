@@ -1,10 +1,10 @@
 import SwiftUI
 
 struct AvatarButtonView: View {
+    var action: () -> Void = {}
+    
     var body: some View {
-        Button(action: {
-            // TODO: Handle avatar tap (e.g., navigate to profile)
-        }) {
+        Button(action: action) {
             AsyncImage(url: URL(string: "https://i.ibb.co/TDWzY83h/IMG-3079.jpgformat&fit=crop")) { phase in
                 switch phase {
                 case .success(let image):

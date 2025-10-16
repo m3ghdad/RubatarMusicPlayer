@@ -9,6 +9,7 @@ struct MusicView: View {
     @Binding var scrollOffset: CGFloat
     let onMusicSelected: (String, String, URL?) -> Void
     let onPlaylistSelected: (String, String, String, URL?) -> Void
+    @Binding var showProfileSheet: Bool
     
     @State private var lastScrollOffset: CGFloat = 0
     
@@ -25,7 +26,9 @@ struct MusicView: View {
                                 .font(.largeTitle)
                                 .fontWeight(.bold)
                             Spacer()
-                            AvatarButtonView()
+                            AvatarButtonView(action: {
+                                showProfileSheet = true
+                            })
                         }
                         .padding(.horizontal, 16)
                         

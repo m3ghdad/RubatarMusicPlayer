@@ -7,6 +7,7 @@ struct HomeView: View {
     @Binding var showVideoPlayer: Bool
     @Binding var isTabBarMinimized: Bool
     @Binding var scrollOffset: CGFloat
+    @Binding var showProfileSheet: Bool
     
     @State private var lastScrollOffset: CGFloat = 0
     
@@ -19,7 +20,9 @@ struct HomeView: View {
                             .font(.largeTitle)
                             .fontWeight(.bold)
                         Spacer()
-                        AvatarButtonView()
+                        AvatarButtonView(action: {
+                            showProfileSheet = true
+                        })
                     }
                     .padding(.horizontal, 16)
                     if showCard {
