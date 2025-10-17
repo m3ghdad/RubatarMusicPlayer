@@ -278,29 +278,29 @@ struct SkeletonLoadingView: View {
                 )
             }
             
-            // Pages section with skeleton lines
+            // Pages section with skeleton lines - centered like the design
             VStack(spacing: 10) {
                 VStack(spacing: 8) {
                     VStack(spacing: 10) {
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(red: 246/255, green: 242/255, blue: 242/255))
+                            .fill(colorScheme == .dark ? Color(red: 58/255, green: 58/255, blue: 60/255) : Color(red: 246/255, green: 242/255, blue: 242/255))
                             .frame(width: 209, height: 12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(maxWidth: .infinity, alignment: .center)
                             .shimmer()
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(red: 246/255, green: 242/255, blue: 242/255))
+                            .fill(colorScheme == .dark ? Color(red: 58/255, green: 58/255, blue: 60/255) : Color(red: 246/255, green: 242/255, blue: 242/255))
                             .frame(width: 228, height: 12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(maxWidth: .infinity, alignment: .center)
                             .shimmer()
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(red: 246/255, green: 242/255, blue: 242/255))
+                            .fill(colorScheme == .dark ? Color(red: 58/255, green: 58/255, blue: 60/255) : Color(red: 246/255, green: 242/255, blue: 242/255))
                             .frame(width: 162, height: 12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(maxWidth: .infinity, alignment: .center)
                             .shimmer()
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(red: 246/255, green: 242/255, blue: 242/255))
+                            .fill(colorScheme == .dark ? Color(red: 58/255, green: 58/255, blue: 60/255) : Color(red: 246/255, green: 242/255, blue: 242/255))
                             .frame(width: 125, height: 12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(maxWidth: .infinity, alignment: .center)
                             .shimmer()
                     }
                 }
@@ -309,24 +309,24 @@ struct SkeletonLoadingView: View {
                 VStack(spacing: 8) {
                     VStack(spacing: 10) {
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(red: 246/255, green: 242/255, blue: 242/255))
+                            .fill(colorScheme == .dark ? Color(red: 58/255, green: 58/255, blue: 60/255) : Color(red: 246/255, green: 242/255, blue: 242/255))
                             .frame(width: 209, height: 12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(maxWidth: .infinity, alignment: .center)
                             .shimmer()
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(red: 246/255, green: 242/255, blue: 242/255))
+                            .fill(colorScheme == .dark ? Color(red: 58/255, green: 58/255, blue: 60/255) : Color(red: 246/255, green: 242/255, blue: 242/255))
                             .frame(width: 228, height: 12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(maxWidth: .infinity, alignment: .center)
                             .shimmer()
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(red: 246/255, green: 242/255, blue: 242/255))
+                            .fill(colorScheme == .dark ? Color(red: 58/255, green: 58/255, blue: 60/255) : Color(red: 246/255, green: 242/255, blue: 242/255))
                             .frame(width: 162, height: 12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(maxWidth: .infinity, alignment: .center)
                             .shimmer()
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(red: 246/255, green: 242/255, blue: 242/255))
+                            .fill(colorScheme == .dark ? Color(red: 58/255, green: 58/255, blue: 60/255) : Color(red: 246/255, green: 242/255, blue: 242/255))
                             .frame(width: 125, height: 12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(maxWidth: .infinity, alignment: .center)
                             .shimmer()
                     }
                 }
@@ -379,7 +379,7 @@ struct PoemCardView: View {
                             
                             Text(poemData.poet.name)
                                 .font(.custom("Palatino-Roman", size: 16))
-                                .foregroundColor(Color(red: 122/255, green: 92/255, blue: 57/255))
+                                .foregroundColor(colorScheme == .dark ? Color(hex: "E3B887") : Color(red: 122/255, green: 92/255, blue: 57/255))
                                 .kerning(-0.23)
                                 .lineSpacing(20)
                         }

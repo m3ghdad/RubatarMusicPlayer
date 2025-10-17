@@ -12,11 +12,13 @@ struct PageCurlView<Content: View>: View {
     @Binding var currentPage: Int
     let pageCount: Int
     let content: (Int) -> Content
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         PageCurlViewControllerWrapper(
             currentPage: $currentPage,
             pageCount: pageCount,
+            colorScheme: colorScheme,
             content: content
         )
     }
@@ -25,12 +27,14 @@ struct PageCurlView<Content: View>: View {
 struct PageCurlViewControllerWrapper<Content: View>: UIViewControllerRepresentable {
     @Binding var currentPage: Int
     let pageCount: Int
+    let colorScheme: ColorScheme
     let content: (Int) -> Content
     
     func makeUIViewController(context: Context) -> PageCurlHostController<Content> {
         let controller = PageCurlHostController(
             pageCount: pageCount,
             currentPage: currentPage,
+            colorScheme: colorScheme,
             contentBuilder: content
         )
         
@@ -47,6 +51,9 @@ struct PageCurlViewControllerWrapper<Content: View>: UIViewControllerRepresentab
         if uiViewController.currentPage != currentPage {
             uiViewController.setPage(currentPage, animated: true)
         }
+        
+        // Update background color when color scheme changes
+        uiViewController.updateColorScheme(colorScheme)
     }
     
     func makeCoordinator() -> Coordinator {
@@ -62,15 +69,17 @@ class PageCurlHostController<Content: View>: UIViewController, UIPageViewControl
     private var pageViewController: UIPageViewController!
     private var viewControllers: [UIHostingController<Content>] = []
     private var isReverse: Bool = false
+    private var colorScheme: ColorScheme
     
     let pageCount: Int
     var currentPage: Int
     var onPageChange: ((Int) -> Void)?
     private let contentBuilder: (Int) -> Content
     
-    init(pageCount: Int, currentPage: Int, contentBuilder: @escaping (Int) -> Content) {
+    init(pageCount: Int, currentPage: Int, colorScheme: ColorScheme, contentBuilder: @escaping (Int) -> Content) {
         self.pageCount = pageCount
         self.currentPage = currentPage
+        self.colorScheme = colorScheme
         self.contentBuilder = contentBuilder
         super.init(nibName: nil, bundle: nil)
         
@@ -85,8 +94,20 @@ class PageCurlHostController<Content: View>: UIViewController, UIPageViewControl
     private func setupViewControllers() {
         for index in 0..<pageCount {
             let hostingController = UIHostingController(rootView: contentBuilder(index))
-            hostingController.view.backgroundColor = .clear
+            // Set background color based on color scheme - this is the "back" of the page during curl
+            hostingController.view.backgroundColor = colorScheme == .dark ? UIColor(red: 44/255, green: 44/255, blue: 46/255, alpha: 1.0) : .white
             viewControllers.append(hostingController)
+        }
+    }
+    
+    func updateColorScheme(_ newColorScheme: ColorScheme) {
+        guard colorScheme != newColorScheme else { return }
+        colorScheme = newColorScheme
+        
+        // Update background color for all view controllers
+        let backgroundColor = colorScheme == .dark ? UIColor(red: 44/255, green: 44/255, blue: 46/255, alpha: 1.0) : .white
+        for controller in viewControllers {
+            controller.view.backgroundColor = backgroundColor
         }
     }
     
