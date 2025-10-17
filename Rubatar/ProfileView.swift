@@ -30,6 +30,7 @@ struct ProfileView: View {
     @State private var currentPage = 0 // Current page within a poem (verse index)
     @State private var showMenu = false
     @StateObject private var apiManager = GanjoorAPIManager()
+    @Environment(\.colorScheme) var colorScheme
     
     // Multiple poems from API
     @State private var poems: [PoemData] = []
@@ -68,8 +69,8 @@ struct ProfileView: View {
     
     var body: some View {
         ZStack {
-            // F4F4F4 background
-            Color(red: 244/255, green: 244/255, blue: 244/255)
+            // Background - adapts to dark mode
+            (colorScheme == .dark ? Color(red: 28/255, green: 28/255, blue: 30/255) : Color(red: 244/255, green: 244/255, blue: 244/255))
                 .ignoresSafeArea()
             
             // Paging carousel with peek of adjacent cards
@@ -134,6 +135,9 @@ struct ProfileView: View {
                             },
                             onShare: {
                                 print("Share tapped")
+                            },
+                            onSelectText: {
+                                print("Select text tapped")
                             },
                             onRefresh: {
                                 print("Refresh tapped")
@@ -217,6 +221,8 @@ extension View {
 
 // Skeleton Loading View
 struct SkeletonLoadingView: View {
+    @Environment(\.colorScheme) var colorScheme
+    
     var body: some View {
         VStack(spacing: 8) {
             // Header with skeleton
@@ -226,13 +232,13 @@ struct SkeletonLoadingView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             // Title placeholder
                             RoundedRectangle(cornerRadius: 12)
-                                .fill(Color(red: 246/255, green: 242/255, blue: 242/255))
+                                .fill(colorScheme == .dark ? Color(red: 58/255, green: 58/255, blue: 60/255) : Color(red: 246/255, green: 242/255, blue: 242/255))
                                 .frame(width: 135, height: 32)
                                 .shimmer()
                             
                             // Poet name placeholder
                             RoundedRectangle(cornerRadius: 12)
-                                .fill(Color(red: 246/255, green: 242/255, blue: 242/255))
+                                .fill(colorScheme == .dark ? Color(red: 58/255, green: 58/255, blue: 60/255) : Color(red: 246/255, green: 242/255, blue: 242/255))
                                 .frame(width: 87, height: 16)
                                 .shimmer()
                         }
@@ -261,12 +267,12 @@ struct SkeletonLoadingView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 16)
-                .background(Color.white)
-                        .overlay(
+                .background(colorScheme == .dark ? Color(red: 44/255, green: 44/255, blue: 46/255) : Color.white)
+                .overlay(
                     VStack {
                         Spacer()
                         DashedLine(dashCount: 12)
-                            .stroke(Color.black.opacity(0.1), lineWidth: 1)
+                            .stroke((colorScheme == .dark ? Color.white : Color.black).opacity(0.1), lineWidth: 1)
                             .frame(height: 1)
                     }
                 )
@@ -328,11 +334,11 @@ struct SkeletonLoadingView: View {
             }
             .padding(.horizontal, 24)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .background(Color.white)
+            .background(colorScheme == .dark ? Color(red: 44/255, green: 44/255, blue: 46/255) : Color.white)
             .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
             
         }
-        .background(Color(red: 244/255, green: 244/255, blue: 244/255))
+        .background(colorScheme == .dark ? Color(red: 28/255, green: 28/255, blue: 30/255) : Color(red: 244/255, green: 244/255, blue: 244/255))
         .clipShape(RoundedRectangle(cornerRadius: 24))
     }
 }
@@ -345,6 +351,7 @@ struct PoemCardView: View {
     @Binding var showMenu: Bool
     
     @State private var versePage = 0 // Current verse page within the poem
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         // Show skeleton if no poem data
@@ -366,7 +373,7 @@ struct PoemCardView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text(poemData.title)
                                 .font(.custom("Palatino-Roman", size: 24))
-                                .foregroundColor(Color(red: 60/255, green: 60/255, blue: 67/255, opacity: 0.6))
+                                .foregroundColor(colorScheme == .dark ? .white : Color(red: 60/255, green: 60/255, blue: 67/255, opacity: 0.6))
                                 .kerning(-0.43)
                                 .lineSpacing(22)
                             
@@ -403,12 +410,12 @@ struct PoemCardView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 16)
-                .background(Color.white)
-                .overlay(
+                .background(colorScheme == .dark ? Color(red: 44/255, green: 44/255, blue: 46/255) : Color.white)
+                        .overlay(
                     VStack {
                         Spacer()
                         DashedLine(dashCount: 12)
-                            .stroke(Color.black.opacity(0.1), lineWidth: 1)
+                            .stroke((colorScheme == .dark ? Color.white : Color.black).opacity(0.1), lineWidth: 1)
                             .frame(height: 1)
                     }
                 )
@@ -433,7 +440,7 @@ struct PoemCardView: View {
                                     if beyt.count > 0 {
                                         Text(beyt[0])
                                             .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
-                                            .foregroundColor(.black)
+                                            .foregroundColor(colorScheme == .dark ? .white : .black)
                                             .lineSpacing(isTranslated ? 4 : 14 * 2.66)
                                             .kerning(1)
                                             .lineLimit(nil)
@@ -445,7 +452,7 @@ struct PoemCardView: View {
                                     if beyt.count > 1 {
                                         Text(beyt[1])
                                             .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
-                                            .foregroundColor(.black)
+                                            .foregroundColor(colorScheme == .dark ? .white : .black)
                                             .lineSpacing(isTranslated ? 4 : 14 * 2.66)
                                             .kerning(1)
                                             .lineLimit(nil)
@@ -460,7 +467,7 @@ struct PoemCardView: View {
                     .padding(.horizontal, 24)
                     .padding(.vertical, 16)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    .background(Color.white)
+                    .background(colorScheme == .dark ? Color(red: 44/255, green: 44/255, blue: 46/255) : Color.white)
                     .cornerRadius(totalPages > 1 ? 0 : 12, corners: [.bottomLeft, .bottomRight])
                 }
                 .id(poemData.id)
@@ -473,7 +480,7 @@ struct PoemCardView: View {
                 }
                 .frame(height: 300)
                 .frame(maxWidth: .infinity)
-                .background(Color.white)
+                .background(colorScheme == .dark ? Color(red: 44/255, green: 44/255, blue: 46/255) : Color.white)
                 .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
             }
             
@@ -485,16 +492,16 @@ struct PoemCardView: View {
                 HStack(spacing: 8) {
                     ForEach(0..<totalPages, id: \.self) { pageIndex in
                         Circle()
-                            .fill(pageIndex == versePage ? Color.black : Color.black.opacity(0.3))
+                            .fill(pageIndex == versePage ? (colorScheme == .dark ? Color.white : Color.black) : (colorScheme == .dark ? Color.white : Color.black).opacity(0.3))
                             .frame(width: 8, height: 8)
                     }
                 }
                 .frame(maxWidth: .infinity, minHeight: 44)
-                .background(Color.white)
+                .background(colorScheme == .dark ? Color(red: 44/255, green: 44/255, blue: 46/255) : Color.white)
                 .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
             }
         }
-        .background(Color(red: 244/255, green: 244/255, blue: 244/255))
+        .background(colorScheme == .dark ? Color(red: 28/255, green: 28/255, blue: 30/255) : Color(red: 244/255, green: 244/255, blue: 244/255))
         .clipShape(RoundedRectangle(cornerRadius: 24))
     }
 }

@@ -11,6 +11,7 @@ struct LiquidGlassMenu: View {
     @Binding var isPresented: Bool
     let onSave: () -> Void
     let onShare: () -> Void
+    let onSelectText: () -> Void
     let onRefresh: () -> Void
     let onGoToPoet: () -> Void
     let onInterpretation: () -> Void
@@ -20,6 +21,7 @@ struct LiquidGlassMenu: View {
     
     @State private var hoveredItem: String? = nil
     @State private var dragLocation: CGPoint? = nil
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         VStack(spacing: 0) {
@@ -50,11 +52,19 @@ struct LiquidGlassMenu: View {
                 // Separator
                 HStack {
                     Rectangle()
-                        .fill(Color(hex: "E6E6E6"))
+                        .fill(colorScheme == .dark ? Color.white.opacity(0.2) : Color(hex: "E6E6E6"))
                         .frame(height: 1)
                 }
                 .frame(height: 21)
                 .padding(.horizontal, 24)
+                
+                // Select text
+                MenuItemView(
+                    id: "selecttext",
+                    icon: "document.on.clipboard",
+                    title: "Select text",
+                    isHovered: hoveredItem == "selecttext"
+                )
                 
                 // Refresh
                 MenuItemView(
@@ -75,7 +85,7 @@ struct LiquidGlassMenu: View {
                 // Separator
                 HStack {
                     Rectangle()
-                        .fill(Color(hex: "E6E6E6"))
+                        .fill(colorScheme == .dark ? Color.white.opacity(0.2) : Color(hex: "E6E6E6"))
                         .frame(height: 1)
                 }
                 .frame(height: 21)
@@ -92,7 +102,7 @@ struct LiquidGlassMenu: View {
                 // Separator
                 HStack {
                     Rectangle()
-                        .fill(Color(hex: "E6E6E6"))
+                        .fill(colorScheme == .dark ? Color.white.opacity(0.2) : Color(hex: "E6E6E6"))
                         .frame(height: 1)
                 }
                 .frame(height: 21)
@@ -164,28 +174,32 @@ struct LiquidGlassMenu: View {
         else if location.y > 97 { // After separator
             let menuY = location.y - 97
             
-            // Refresh: 0-40
+            // Select text: 0-40
             if menuY >= 0 && menuY < 40 {
+                setHoveredItem("selecttext")
+            }
+            // Refresh: 40-80
+            else if menuY >= 40 && menuY < 80 {
                 setHoveredItem("refresh")
             }
-            // Go to poet: 40-80
-            else if menuY >= 40 && menuY < 80 {
+            // Go to poet: 80-120
+            else if menuY >= 80 && menuY < 120 {
                 setHoveredItem("poet")
             }
-            // Separator + Interpretation: 80-141
-            else if menuY >= 101 && menuY < 141 {
+            // Separator + Interpretation: 141-181
+            else if menuY >= 141 && menuY < 181 {
                 setHoveredItem("interpretation")
             }
-            // Language: 162-202
-            else if menuY >= 162 && menuY < 202 {
+            // Language: 202-242
+            else if menuY >= 202 && menuY < 242 {
                 setHoveredItem("language")
             }
-            // Configure: 202-242
-            else if menuY >= 202 && menuY < 242 {
+            // Configure: 242-282
+            else if menuY >= 242 && menuY < 282 {
                 setHoveredItem("configure")
             }
-            // Themes: 242-282
-            else if menuY >= 242 && menuY < 282 {
+            // Themes: 282-322
+            else if menuY >= 282 && menuY < 322 {
                 setHoveredItem("themes")
             }
             else {
@@ -217,6 +231,8 @@ struct LiquidGlassMenu: View {
             onSave()
         case "share":
             onShare()
+        case "selecttext":
+            onSelectText()
         case "refresh":
             onRefresh()
         case "poet":
@@ -242,26 +258,27 @@ struct MenuItemView: View {
     var subtitle: String? = nil
     var hasChevron: Bool = false
     var isHovered: Bool = false
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         HStack(spacing: 8) {
             // Icon
             Image(systemName: icon)
                 .font(.system(size: 17))
-                .foregroundColor(Color(hex: "333333"))
+                .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
                 .frame(width: 28, alignment: .center)
             
             // Label and Subtitle
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.system(size: 17))
-                    .foregroundColor(Color(hex: "333333"))
+                    .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
                 if let subtitle = subtitle {
                     Text(subtitle)
                         .font(.system(size: 13))
-                        .foregroundColor(Color(hex: "999999"))
+                        .foregroundColor(colorScheme == .dark ? Color(hex: "CCCCCC") : Color(hex: "999999"))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
@@ -271,7 +288,7 @@ struct MenuItemView: View {
             if hasChevron {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(Color(hex: "333333"))
+                    .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
                     .frame(width: 14)
             }
         }
@@ -279,7 +296,7 @@ struct MenuItemView: View {
         .padding(.horizontal, 16)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(isHovered ? Color(hex: "EDEDED") : Color.clear)
+                .fill(isHovered ? (colorScheme == .dark ? Color.white.opacity(0.15) : Color(hex: "EDEDED")) : Color.clear)
                 .padding(.horizontal, 8) // 8px padding from edges
         )
         .contentShape(Rectangle())
@@ -292,23 +309,24 @@ struct QuickActionButton: View {
     let icon: String
     let title: String
     var isHovered: Bool = false
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         VStack(spacing: 4) {
             Image(systemName: icon)
                 .font(.system(size: 13))
-                .foregroundColor(Color(hex: "333333"))
+                .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
                 .frame(height: 22)
             
             Text(title)
                 .font(.system(size: 12, weight: .medium))
-                .foregroundColor(Color(hex: "333333"))
+                .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
         }
         .frame(maxWidth: .infinity)
         .frame(height: 56)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(isHovered ? Color(hex: "EDEDED") : Color.clear)
+                .fill(isHovered ? (colorScheme == .dark ? Color.white.opacity(0.15) : Color(hex: "EDEDED")) : Color.clear)
                 .padding(.horizontal, 8) // 8px padding from edges
         )
         .contentShape(Rectangle())
@@ -318,12 +336,13 @@ struct QuickActionButton: View {
 
 struct LiquidGlassBackground: View {
     let cornerRadius: CGFloat
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         ZStack {
             // Shadow layer
             RoundedRectangle(cornerRadius: cornerRadius)
-                .fill(Color.black.opacity(0.08))
+                .fill(Color.black.opacity(colorScheme == .dark ? 0.3 : 0.08))
                 .blur(radius: 20)
                 .offset(y: 5)
             
@@ -331,7 +350,10 @@ struct LiquidGlassBackground: View {
             RoundedRectangle(cornerRadius: cornerRadius)
                 .fill(
                     LinearGradient(
-                        gradient: Gradient(colors: [
+                        gradient: Gradient(colors: colorScheme == .dark ? [
+                            Color(red: 72/255, green: 72/255, blue: 74/255, opacity: 0.9),
+                            Color(red: 72/255, green: 72/255, blue: 74/255, opacity: 0.9)
+                        ] : [
                             Color(red: 245/255, green: 245/255, blue: 245/255, opacity: 0.6),
                             Color(red: 245/255, green: 245/255, blue: 245/255, opacity: 0.6)
                         ]),
@@ -341,7 +363,7 @@ struct LiquidGlassBackground: View {
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: cornerRadius)
-                        .strokeBorder(Color.white.opacity(0.5), lineWidth: 0.5)
+                        .strokeBorder((colorScheme == .dark ? Color.white : Color.white).opacity(colorScheme == .dark ? 0.2 : 0.5), lineWidth: 0.5)
                 )
                 .background(
                     RoundedRectangle(cornerRadius: cornerRadius)
@@ -387,6 +409,7 @@ extension Color {
             isPresented: .constant(true),
             onSave: {},
             onShare: {},
+            onSelectText: {},
             onRefresh: {},
             onGoToPoet: {},
             onInterpretation: {},
