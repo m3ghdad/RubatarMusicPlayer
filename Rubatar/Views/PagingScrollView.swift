@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct PagingScrollView<Content: View>: View {
     let pageCount: Int
@@ -13,6 +14,7 @@ struct PagingScrollView<Content: View>: View {
     @Binding var currentPage: Int
     
     @State private var dragOffset: CGFloat = 0
+    @State private var lastPage: Int = 0
     
     var body: some View {
         GeometryReader { geometry in
@@ -37,10 +39,19 @@ struct PagingScrollView<Content: View>: View {
                         let threshold: CGFloat = cardWidth / 3
                         let dragAmount = value.translation.width
                         
+                        var newPage = currentPage
+                        
                         if dragAmount > threshold && currentPage > 0 {
-                            currentPage -= 1
+                            newPage = currentPage - 1
                         } else if dragAmount < -threshold && currentPage < pageCount - 1 {
-                            currentPage += 1
+                            newPage = currentPage + 1
+                        }
+                        
+                        // Trigger haptic feedback if page changed
+                        if newPage != currentPage {
+                            let impact = UIImpactFeedbackGenerator(style: .medium)
+                            impact.impactOccurred()
+                            currentPage = newPage
                         }
                         
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
