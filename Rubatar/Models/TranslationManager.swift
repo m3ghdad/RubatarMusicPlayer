@@ -197,7 +197,7 @@ class TranslationManager {
         return verses
     }
     
-    // Clean title by removing brackets and asterisks
+    // Clean title by removing brackets and asterisks, and format Number to No.
     private func cleanTitle(_ title: String) -> String {
         var cleaned = title
         
@@ -212,6 +212,9 @@ class TranslationManager {
         // Remove any remaining brackets
         cleaned = cleaned.replacingOccurrences(of: "[", with: "")
         cleaned = cleaned.replacingOccurrences(of: "]", with: "")
+        
+        // Replace "Number" with "No." (case insensitive)
+        cleaned = cleaned.replacingOccurrences(of: "\\s+Number\\s+", with: " No. ", options: .regularExpression)
         
         return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
     }
