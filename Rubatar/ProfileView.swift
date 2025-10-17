@@ -278,7 +278,7 @@ struct SkeletonLoadingView: View {
                 )
             }
             
-            // Pages section with skeleton lines - centered like the design
+            // Pages section with skeleton lines - centered vertically and horizontally
             VStack(spacing: 10) {
                 VStack(spacing: 8) {
                     VStack(spacing: 10) {
@@ -333,7 +333,7 @@ struct SkeletonLoadingView: View {
                 .padding(.vertical, 16)
             }
             .padding(.horizontal, 24)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             .background(colorScheme == .dark ? Color(red: 44/255, green: 44/255, blue: 46/255) : Color.white)
             .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
             

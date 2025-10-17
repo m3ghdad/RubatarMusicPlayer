@@ -95,7 +95,7 @@ class PageCurlHostController<Content: View>: UIViewController, UIPageViewControl
         for index in 0..<pageCount {
             let hostingController = UIHostingController(rootView: contentBuilder(index))
             // Set background color based on color scheme - this is the "back" of the page during curl
-            hostingController.view.backgroundColor = colorScheme == .dark ? UIColor(red: 44/255, green: 44/255, blue: 46/255, alpha: 1.0) : .white
+            hostingController.view.backgroundColor = colorScheme == .dark ? .black : .white
             viewControllers.append(hostingController)
         }
     }
@@ -104,8 +104,22 @@ class PageCurlHostController<Content: View>: UIViewController, UIPageViewControl
         guard colorScheme != newColorScheme else { return }
         colorScheme = newColorScheme
         
-        // Update background color for all view controllers
-        let backgroundColor = colorScheme == .dark ? UIColor(red: 44/255, green: 44/255, blue: 46/255, alpha: 1.0) : .white
+        // Update background color for all view controllers and the page view controller
+        let backgroundColor = colorScheme == .dark ? UIColor.black : .white
+        view.backgroundColor = backgroundColor
+        
+        if let pageVC = pageViewController {
+            // Force interface style to match color scheme
+            if colorScheme == .dark {
+                pageVC.overrideUserInterfaceStyle = .dark
+            } else {
+                pageVC.overrideUserInterfaceStyle = .light
+            }
+            
+            pageVC.view.backgroundColor = backgroundColor
+            setBackgroundRecursively(pageVC.view, color: backgroundColor)
+        }
+        
         for controller in viewControllers {
             controller.view.backgroundColor = backgroundColor
         }
@@ -134,16 +148,48 @@ class PageCurlHostController<Content: View>: UIViewController, UIPageViewControl
         pageViewController.delegate = self
         pageViewController.isDoubleSided = false
         
+        // Force dark/light interface style
+        if colorScheme == .dark {
+            pageViewController.overrideUserInterfaceStyle = .dark
+        } else {
+            pageViewController.overrideUserInterfaceStyle = .light
+        }
+        
+        // Force black background for the page curl effect in dark mode
+        let backgroundColor = colorScheme == .dark ? UIColor.black : .white
+        pageViewController.view.backgroundColor = backgroundColor
+        
+        // Also set the background color for the underlying layer
+        if let scrollView = pageViewController.view.subviews.first(where: { $0 is UIScrollView }) {
+            scrollView.backgroundColor = backgroundColor
+        }
+        
         self.isReverse = isReverse
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // Set background colors for dark mode support - black for back of page curl
+        let backgroundColor = colorScheme == .dark ? UIColor.black : .white
+        view.backgroundColor = backgroundColor
+        
+        // Force dark/light interface style on the page view controller
+        if colorScheme == .dark {
+            pageViewController.overrideUserInterfaceStyle = .dark
+        } else {
+            pageViewController.overrideUserInterfaceStyle = .light
+        }
+        
         addChild(pageViewController)
         view.addSubview(pageViewController.view)
         pageViewController.view.frame = view.bounds
         pageViewController.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        pageViewController.view.backgroundColor = backgroundColor
+        
+        // Recursively set background color on all subviews to ensure the curl effect is dark
+        setBackgroundRecursively(pageViewController.view, color: backgroundColor)
+        
         pageViewController.didMove(toParent: self)
         
         if currentPage < viewControllers.count {
@@ -153,6 +199,21 @@ class PageCurlHostController<Content: View>: UIViewController, UIPageViewControl
                 animated: false,
                 completion: nil
             )
+        }
+    }
+    
+    // Helper to set background color recursively on all subviews
+    private func setBackgroundRecursively(_ view: UIView, color: UIColor) {
+        // Only set background for non-content views
+        // Skip views that are part of our hosting controllers (they should keep their own backgrounds)
+        let isHostingView = viewControllers.contains { $0.view == view }
+        
+        if !isHostingView {
+            view.backgroundColor = color
+        }
+        
+        for subview in view.subviews {
+            setBackgroundRecursively(subview, color: color)
         }
     }
     
