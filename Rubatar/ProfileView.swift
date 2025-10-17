@@ -275,7 +275,7 @@ struct SkeletonLoadingView: View {
                         
                         HStack(spacing: 8) {
                             Button(action: {}) {
-                                Image(systemName: "ellipsis")
+                                Image(systemName: "bookmark")
                                     .font(.system(size: 18, weight: .medium))
                                     .foregroundColor(.primary)
                                     .frame(width: 28, height: 28)
@@ -283,7 +283,7 @@ struct SkeletonLoadingView: View {
                             .buttonStyle(.plain)
                             
                             Button(action: {}) {
-                                Image(systemName: "bookmark")
+                                Image(systemName: "ellipsis")
                                     .font(.system(size: 18, weight: .medium))
                                     .foregroundColor(.primary)
                                     .frame(width: 28, height: 28)
