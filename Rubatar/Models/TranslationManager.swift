@@ -30,20 +30,21 @@ class TranslationManager {
         Persian Poem:
         \(poemText)
         
-        INSTRUCTIONS:
-        1. First line: Translate the title to English
+        IMPORTANT INSTRUCTIONS:
+        1. First line: Translate the title to English (remove any brackets [] or asterisks **)
         2. Following lines: Translate the poem verses, maintaining the structure
         3. Maintain poetic beauty, metaphors, and rhythm
         4. Make it feel like authentic English poetry
         5. Keep the same number of verse lines as the original
+        6. Do NOT include any brackets, asterisks, or formatting marks in your response
         
-        Format your response as:
-        [Translated Title]
-        [First line of verse 1]
-        [Second line of verse 1]
+        Format your response as plain text:
+        Translated Title
+        First line of verse 1
+        Second line of verse 1
         
-        [First line of verse 2]
-        [Second line of verse 2]
+        First line of verse 2
+        Second line of verse 2
         ... and so on
         """
         
@@ -114,13 +115,16 @@ class TranslationManager {
             let trimmedText = translatedText.trimmingCharacters(in: .whitespacesAndNewlines)
             let (translatedTitle, translatedVerses) = parseTranslatedTextWithTitle(trimmedText, originalTitle: poem.title)
             
-            // Translate poet name
+            // Clean up the translated title (remove brackets and asterisks)
+            let cleanedTitle = cleanTitle(translatedTitle)
+            
+            // Translate poet name (always translate, even if already in English)
             let translatedPoetName = translatePoetName(poem.poet.name)
             
             // Create translated poem
             let translatedPoem = PoemData(
                 id: poem.id + 100000, // Offset ID for translated version
-                title: translatedTitle,
+                title: cleanedTitle,
                 poet: PoetInfo(
                     id: poem.poet.id,
                     name: translatedPoetName,
@@ -129,7 +133,7 @@ class TranslationManager {
                 verses: translatedVerses
             )
             
-            print("✓ Translated poem: '\(poem.title)' → '\(translatedTitle)' by \(translatedPoetName)")
+            print("✓ Translated poem: '\(poem.title)' → '\(cleanedTitle)' by \(translatedPoetName)")
             return translatedPoem
             
         } catch {
@@ -187,8 +191,28 @@ class TranslationManager {
         return verses
     }
     
+    // Clean title by removing brackets and asterisks
+    private func cleanTitle(_ title: String) -> String {
+        var cleaned = title
+        
+        // Remove square brackets and their contents at start/end
+        cleaned = cleaned.replacingOccurrences(of: "^\\[.*?\\]\\s*", with: "", options: .regularExpression)
+        cleaned = cleaned.replacingOccurrences(of: "\\s*\\[.*?\\]$", with: "", options: .regularExpression)
+        
+        // Remove asterisks
+        cleaned = cleaned.replacingOccurrences(of: "**", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "*", with: "")
+        
+        // Remove any remaining brackets
+        cleaned = cleaned.replacingOccurrences(of: "[", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "]", with: "")
+        
+        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
     // Translate common Persian poet names to English
     private func translatePoetName(_ persianName: String) -> String {
+        // Check for exact match first
         let commonTranslations: [String: String] = [
             "حافظ": "Hafez",
             "خیام": "Khayyam",
@@ -203,10 +227,32 @@ class TranslationManager {
             "امیرخسرو دهلوی": "Amir Khusrau",
             "محتشم کاشانی": "Mohtasham Kashani",
             "سلمان ساوجی": "Salman Savoji",
-            "ابوسعید ابوالخیر": "Abu-Said Abulkheir"
+            "ابوسعید ابوالخیر": "Abu-Said Abulkheir",
+            "بابا طاهر": "Baba Taher",
+            "عطار نیشابوری": "Attar",
+            "سنایی": "Sanai",
+            "انوری": "Anvari",
+            "منوچهری": "Manuchehri",
+            "ناصرخسرو": "Nasir Khusraw",
+            "پروین اعتصامی": "Parvin Etesami",
+            "فروغ فرخزاد": "Forough Farrokhzad",
+            "شهریار": "Shahriar",
+            "اقبال لاهوری": "Allama Iqbal"
         ]
         
-        return commonTranslations[persianName] ?? persianName
+        // Return translation if found, otherwise return original
+        // If the name contains Persian characters, it's likely not translated yet
+        let isPersian = persianName.range(of: "[\\u0600-\\u06FF]", options: .regularExpression) != nil
+        
+        if let translation = commonTranslations[persianName] {
+            return translation
+        } else if isPersian {
+            // If it's Persian but not in our dictionary, return a generic translation
+            return "Persian Poet"
+        } else {
+            // Already in English or unknown
+            return persianName
+        }
     }
 }
 
