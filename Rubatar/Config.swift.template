@@ -1,0 +1,25 @@
+//
+//  Config.swift.template
+//  Rubatar
+//
+//  Configuration template file for API keys and settings
+//  Copy this file to Config.swift and add your actual API key
+//
+//  Created by Meghdad Abbaszadegan on 10/17/25.
+//
+
+import Foundation
+
+struct Config {
+    // OpenAI API Key for poem translation
+    // Get your key at: https://platform.openai.com/api-keys
+    static let openAIAPIKey = "YOUR_OPENAI_API_KEY_HERE"
+    
+    // Translation settings
+    // Available models: "gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"
+    // Recommended: "gpt-4o-mini" for best balance of cost and quality
+    static let translationModel = "gpt-4o-mini" // Fast, affordable, high quality
+    static let translationTemperature = 0.7 // Creativity level (0.0 - 1.0)
+    static let translationMaxTokens = 1000
+}
+

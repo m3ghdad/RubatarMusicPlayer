@@ -34,11 +34,19 @@ struct ProfileView: View {
     
     // Multiple poems from API
     @State private var poems: [PoemData] = []
+    @State private var translatedPoems: [Int: PoemData] = [:] // Cache: poem.id -> translated poem
+    @State private var isTranslating = false
     
-    // Computed property for current poem
+    // Translation manager
+    private let translationManager = TranslationManager(apiKey: Config.openAIAPIKey)
+    
+    // Computed property for current poem (returns translated version if available)
     private var currentPoem: PoemData? {
         guard !poems.isEmpty, currentPoemIndex < poems.count else { return nil }
-        return poems[currentPoemIndex]
+        let originalPoem = poems[currentPoemIndex]
+        
+        // Return translated version if available, otherwise original
+        return translatedPoems[originalPoem.id] ?? originalPoem
     }
     
     // Helper function to convert numbers to Farsi numerals
@@ -48,6 +56,31 @@ struct ProfileView: View {
             guard let digit = Int(String(char)) else { return String(char) }
             return farsiDigits[digit]
         }.joined()
+    }
+    
+    // Translate poems automatically
+    private func translatePoemsIfNeeded() {
+        Task {
+            for poem in poems {
+                // Skip if already translated
+                guard translatedPoems[poem.id] == nil else { continue }
+                
+                isTranslating = true
+                
+                if let translated = await translationManager.translatePoem(poem) {
+                    translatedPoems[poem.id] = translated
+                }
+                
+                isTranslating = false
+            }
+        }
+    }
+    
+    // Check if current poem is translated (for formatting)
+    private var isCurrentPoemTranslated: Bool {
+        guard !poems.isEmpty, currentPoemIndex < poems.count else { return false }
+        let originalPoem = poems[currentPoemIndex]
+        return translatedPoems[originalPoem.id] != nil
     }
     
     var body: some View {
@@ -137,8 +170,8 @@ struct ProfileView: View {
                                 let beytsPerPage = 2
                                 let totalPages = (poem.verses.count + beytsPerPage - 1) / beytsPerPage
                                 
-                                PageCurlView(currentPage: $currentPage, pageCount: totalPages) { pageIndex in
-                                    VStack(alignment: .trailing, spacing: 0) {
+                                    PageCurlView(currentPage: $currentPage, pageCount: totalPages) { pageIndex in
+                                    VStack(alignment: isCurrentPoemTranslated ? .leading : .trailing, spacing: 0) {
                                         // Calculate which beyts to show on this page
                                         let startBeytIndex = pageIndex * beytsPerPage
                                         let endBeytIndex = min(startBeytIndex + beytsPerPage, poem.verses.count)
@@ -148,49 +181,76 @@ struct ProfileView: View {
                                                 let beyt = poem.verses[beytIndex]
                                                 let beytNumber = beytIndex + 1 // Beyt number (1, 2, 3, ...)
                                                 
-                                                VStack(alignment: .trailing, spacing: 10) {
+                                                VStack(alignment: isCurrentPoemTranslated ? .leading : .trailing, spacing: 10) {
                                                     // First line of beyt
                                                     if beyt.count > 0 {
                                                         HStack(alignment: .top, spacing: 10) {
-                                                            Spacer()
+                                                            // For English (LTR): Number on left
+                                                            if isCurrentPoemTranslated {
+                                                                Text(String(beytNumber) + ".")
+                                                                    .font(.system(size: 12))
+                                                                    .foregroundColor(.black)
+                                                                    .lineSpacing(16 * 1.66)
+                                                                    .kerning(1)
+                                                                    .frame(width: 20, alignment: .leading)
+                                                            } else {
+                                                                Spacer()
+                                                            }
                                                             
                                                             Text(beyt[0])
-                                                                .font(.system(size: 16))
+                                                                .font(isCurrentPoemTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 16))
                                                                 .foregroundColor(.black)
                                                                 .lineSpacing(16 * 1.66)
                                                                 .kerning(1)
                                                                 .lineLimit(nil)
                                                                 .fixedSize(horizontal: false, vertical: true)
-                                                                .multilineTextAlignment(.trailing)
-                                                                .environment(\.layoutDirection, .rightToLeft)
+                                                                .multilineTextAlignment(isCurrentPoemTranslated ? .leading : .trailing)
+                                                                .environment(\.layoutDirection, isCurrentPoemTranslated ? .leftToRight : .rightToLeft)
                                                             
-                                                            Text("." + toFarsiNumber(beytNumber))
-                                                                .font(.system(size: 12))
-                                                                .foregroundColor(.black)
-                                                                .lineSpacing(16 * 1.66)
-                                                                .kerning(1)
+                                                            // For Farsi (RTL): Number on right
+                                                            if !isCurrentPoemTranslated {
+                                                                Text("." + toFarsiNumber(beytNumber))
+                                                                    .font(.system(size: 12))
+                                                                    .foregroundColor(.black)
+                                                                    .lineSpacing(16 * 1.66)
+                                                                    .kerning(1)
+                                                                    .frame(width: 20, alignment: .trailing)
+                                                            } else {
+                                                                Spacer()
+                                                            }
                                                         }
                                                     }
                                                     
                                                     // Second line of beyt (no number, same beyt)
                                                     if beyt.count > 1 {
                                                         HStack(alignment: .top, spacing: 10) {
-                                                            Spacer()
+                                                            // For English (LTR): Empty space on left
+                                                            if isCurrentPoemTranslated {
+                                                                Text("")
+                                                                    .font(.system(size: 12))
+                                                                    .frame(width: 20)
+                                                            } else {
+                                                                Spacer()
+                                                            }
                                                             
                                                             Text(beyt[1])
-                                                                .font(.system(size: 16))
+                                                                .font(isCurrentPoemTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 16))
                                                                 .foregroundColor(.black)
                                                                 .lineSpacing(16 * 1.66)
                                                                 .kerning(1)
                                                                 .lineLimit(nil)
                                                                 .fixedSize(horizontal: false, vertical: true)
-                                                                .multilineTextAlignment(.trailing)
-                                                                .environment(\.layoutDirection, .rightToLeft)
+                                                                .multilineTextAlignment(isCurrentPoemTranslated ? .leading : .trailing)
+                                                                .environment(\.layoutDirection, isCurrentPoemTranslated ? .leftToRight : .rightToLeft)
                                                             
-                                                            // Empty space to align with first line (no number for second line)
-                                                            Text("")
-                                                                .font(.system(size: 12))
-                                                                .frame(width: 20) // Same width as number
+                                                            // For Farsi (RTL): Empty space on right
+                                                            if !isCurrentPoemTranslated {
+                                                                Text("")
+                                                                    .font(.system(size: 12))
+                                                                    .frame(width: 20)
+                                                            } else {
+                                                                Spacer()
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -253,9 +313,11 @@ struct ProfileView: View {
                                     Task {
                                         currentPage = 0
                                         currentPoemIndex = 0
+                                        translatedPoems.removeAll() // Clear translation cache
                                         let newPoems = await apiManager.fetchMultiplePoems(count: 4)
                                         if !newPoems.isEmpty {
                                             poems = newPoems
+                                            translatePoemsIfNeeded() // Translate new poems
                                         }
                                     }
                                 })
@@ -275,6 +337,7 @@ struct ProfileView: View {
                                             poems.append(contentsOf: newPoems)
                                             currentPoemIndex += 1
                                             currentPage = 0
+                                            translatePoemsIfNeeded() // Translate newly loaded poems
                                         }
                                     }
                                 }
@@ -303,6 +366,9 @@ struct ProfileView: View {
                     poems = initialPoems
                     currentPoemIndex = 0
                     currentPage = 0
+                    
+                    // Automatically translate poems
+                    translatePoemsIfNeeded()
                 }
             }
         }
