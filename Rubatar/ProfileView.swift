@@ -362,11 +362,11 @@ struct PoemCardView: View {
             
             // Pages section with page curl
             if !poemData.verses.isEmpty {
-                let beytsPerPage = 2
+                let beytsPerPage = 4
                 let totalPages = (poemData.verses.count + beytsPerPage - 1) / beytsPerPage
                 
                 PageCurlView(currentPage: $versePage, pageCount: totalPages) { pageIndex in
-                    VStack(alignment: isTranslated ? .leading : .trailing, spacing: 0) {
+                    VStack(alignment: .center, spacing: 0) {
                         let startBeytIndex = pageIndex * beytsPerPage
                         let endBeytIndex = min(startBeytIndex + beytsPerPage, poemData.verses.count)
                         
@@ -375,82 +375,38 @@ struct PoemCardView: View {
                                 let beyt = poemData.verses[beytIndex]
                                 let beytNumber = beytIndex + 1
                                 
-                                VStack(alignment: isTranslated ? .leading : .trailing, spacing: 10) {
+                                VStack(alignment: .center, spacing: 10) {
                                     // First line of beyt
                                     if beyt.count > 0 {
-                                        HStack(alignment: .top, spacing: 10) {
-                                            if isTranslated {
-                                                Text(String(beytNumber) + ".")
-                                                    .font(.custom("Palatino-Roman", size: 12))
-                                                    .foregroundColor(.black)
-                                                    .lineSpacing(14 * 2.66)
-                                                    .kerning(1)
-                                                    .frame(width: 20, alignment: .leading)
-                                            } else {
-                                                Spacer()
-                                            }
-                                            
-                                            Text(beyt[0])
-                                                .font(isTranslated ? .custom("Palatino-Roman", size: 14) : .system(size: 14))
-                                                .foregroundColor(.black)
-                                                .lineSpacing(14 * 2.66)
-                                                .kerning(1)
-                                                .lineLimit(nil)
-                                                .fixedSize(horizontal: false, vertical: true)
-                                                .multilineTextAlignment(isTranslated ? .leading : .trailing)
-                                                .environment(\.layoutDirection, isTranslated ? .leftToRight : .rightToLeft)
-                                            
-                                            if !isTranslated {
-                                                Text("." + toFarsiNumber(beytNumber))
-                                                    .font(.system(size: 12))
-                                                    .foregroundColor(.black)
-                                                    .lineSpacing(14 * 2.66)
-                                                    .kerning(1)
-                                                    .frame(width: 20, alignment: .trailing)
-                                            } else {
-                                                Spacer()
-                                            }
-                                        }
+                                        Text(beyt[0])
+                                            .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
+                                            .foregroundColor(.black)
+                                            .lineSpacing(isTranslated ? 4 : 14 * 2.66)
+                                            .kerning(1)
+                                            .lineLimit(nil)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                            .multilineTextAlignment(.center)
                                     }
                                     
-                                    // Second line of beyt (no number)
+                                    // Second line of beyt
                                     if beyt.count > 1 {
-                                        HStack(alignment: .top, spacing: 10) {
-                                            if isTranslated {
-                                                Text("")
-                                                    .font(.system(size: 12))
-                                                    .frame(width: 20)
-                                            } else {
-                                                Spacer()
-                                            }
-                                            
-                                            Text(beyt[1])
-                                                .font(isTranslated ? .custom("Palatino-Roman", size: 14) : .system(size: 14))
-                                                .foregroundColor(.black)
-                                                .lineSpacing(14 * 2.66)
-                                                .kerning(1)
-                                                .lineLimit(nil)
-                                                .fixedSize(horizontal: false, vertical: true)
-                                                .multilineTextAlignment(isTranslated ? .leading : .trailing)
-                                                .environment(\.layoutDirection, isTranslated ? .leftToRight : .rightToLeft)
-                                            
-                                            if !isTranslated {
-                                                Text("")
-                                                    .font(.system(size: 12))
-                                                    .frame(width: 20)
-                                            } else {
-                Spacer()
-                                            }
-                                        }
+                                        Text(beyt[1])
+                                            .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
+                                            .foregroundColor(.black)
+                                            .lineSpacing(isTranslated ? 4 : 14 * 2.66)
+                                            .kerning(1)
+                                            .lineLimit(nil)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                            .multilineTextAlignment(.center)
                                     }
                                 }
-                                .padding(.bottom, beytIndex < endBeytIndex - 1 ? 8 : 0)
+                                .padding(.bottom, beytIndex < endBeytIndex - 1 ? 24 : 0)
                             }
                         }
                     }
                     .padding(.horizontal, 24)
                     .padding(.vertical, 16)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                     .background(Color.white)
                     .cornerRadius(totalPages > 1 ? 0 : 12, corners: [.bottomLeft, .bottomRight])
                 }
@@ -469,7 +425,7 @@ struct PoemCardView: View {
             }
             
             // Page control with bottom corners rounded (only show if more than 1 page)
-            let beytsPerPage = 2
+            let beytsPerPage = 4
             let totalPages = (poemData.verses.count + beytsPerPage - 1) / beytsPerPage
             
             if totalPages > 1 {
