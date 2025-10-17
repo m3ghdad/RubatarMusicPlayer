@@ -118,8 +118,14 @@ class TranslationManager {
             // Clean up the translated title (remove brackets and asterisks)
             let cleanedTitle = cleanTitle(translatedTitle)
             
-            // Translate poet name (always translate, even if already in English)
-            let translatedPoetName = translatePoetName(poem.poet.name)
+            // Translate poet name (check dictionary first, then use AI if needed)
+            var translatedPoetName = translatePoetName(poem.poet.name)
+            
+            // If still in Persian, use AI to translate
+            let isPersian = translatedPoetName.range(of: "[\\u0600-\\u06FF]", options: .regularExpression) != nil
+            if isPersian {
+                translatedPoetName = await translatePoetNameWithAI(translatedPoetName)
+            }
             
             // Create translated poem
             let translatedPoem = PoemData(
@@ -240,17 +246,95 @@ class TranslationManager {
             "اقبال لاهوری": "Allama Iqbal"
         ]
         
-        // Return translation if found, otherwise return original
-        // If the name contains Persian characters, it's likely not translated yet
-        let isPersian = persianName.range(of: "[\\u0600-\\u06FF]", options: .regularExpression) != nil
-        
+        // Return translation if found
         if let translation = commonTranslations[persianName] {
             return translation
-        } else if isPersian {
-            // If it's Persian but not in our dictionary, return a generic translation
-            return "Persian Poet"
+        }
+        
+        // If the name contains Persian characters, it needs translation
+        let isPersian = persianName.range(of: "[\\u0600-\\u06FF]", options: .regularExpression) != nil
+        
+        if isPersian {
+            // If it's Persian but not in our dictionary, try extracting from the prompt
+            // The AI was given the poet name, so we should have gotten it from the full title
+            return persianName // This will be translated via API in the next step
         } else {
             // Already in English or unknown
+            return persianName
+        }
+    }
+    
+    // Translate poet name using OpenAI API for unknown Persian names
+    func translatePoetNameWithAI(_ persianName: String) async -> String {
+        // Check if already translated
+        let isPersian = persianName.range(of: "[\\u0600-\\u06FF]", options: .regularExpression) != nil
+        
+        if !isPersian {
+            return persianName
+        }
+        
+        let prompt = """
+        Translate this Persian poet's name to English. Respond with ONLY the English name, nothing else.
+        
+        Persian name: \(persianName)
+        
+        Examples:
+        - حافظ → Hafez
+        - خیام → Khayyam
+        - سعدی → Saadi
+        
+        Just provide the English name:
+        """
+        
+        do {
+            guard let url = URL(string: "https://api.openai.com/v1/chat/completions") else {
+                print("❌ Invalid OpenAI API URL")
+                return persianName
+            }
+            
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("Bearer \(openAIAPIKey)", forHTTPHeaderField: "Authorization")
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.timeoutInterval = 10.0
+            
+            let requestBody: [String: Any] = [
+                "model": "gpt-4o-mini",
+                "messages": [
+                    [
+                        "role": "system",
+                        "content": "You are a translator of Persian names to English. Respond with only the translated name, nothing else."
+                    ],
+                    [
+                        "role": "user",
+                        "content": prompt
+                    ]
+                ],
+                "temperature": 0.3,
+                "max_tokens": 50
+            ]
+            
+            request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200,
+                  let jsonResponse = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let choices = jsonResponse["choices"] as? [[String: Any]],
+                  let firstChoice = choices.first,
+                  let message = firstChoice["message"] as? [String: Any],
+                  let translatedName = message["content"] as? String else {
+                print("❌ Failed to translate poet name via AI")
+                return persianName
+            }
+            
+            let cleanedName = translatedName.trimmingCharacters(in: .whitespacesAndNewlines)
+            print("✓ Translated poet name: '\(persianName)' → '\(cleanedName)'")
+            return cleanedName
+            
+        } catch {
+            print("❌ Error translating poet name: \(error.localizedDescription)")
             return persianName
         }
     }

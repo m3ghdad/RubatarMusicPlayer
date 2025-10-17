@@ -28,6 +28,7 @@ struct DashedLine: Shape {
 struct ProfileView: View {
     @State private var showProfileSheet = false
     @State private var currentPage = 0 // Current page within a poem (verse index)
+    @State private var showMenu = false
     @StateObject private var apiManager = GanjoorAPIManager()
     
     // Multiple poems from API
@@ -79,7 +80,8 @@ struct ProfileView: View {
                         PoemCardView(
                             poem: nil,
                             isTranslated: false,
-                            toFarsiNumber: toFarsiNumber
+                            toFarsiNumber: toFarsiNumber,
+                            showMenu: $showMenu
                         )
                     }, currentPage: $currentPage)
                 } else {
@@ -94,7 +96,8 @@ struct ProfileView: View {
                             PoemCardView(
                                 poem: nil,
                                 isTranslated: false,
-                                toFarsiNumber: toFarsiNumber
+                                toFarsiNumber: toFarsiNumber,
+                                showMenu: $showMenu
                             )
                         }, currentPage: $currentPage)
                     } else {
@@ -103,7 +106,8 @@ struct ProfileView: View {
                             PoemCardView(
                                 poem: translatedPoemsList[index],
                                 isTranslated: true,
-                                toFarsiNumber: toFarsiNumber
+                                toFarsiNumber: toFarsiNumber,
+                                showMenu: $showMenu
                             )
                         }, currentPage: $currentPage)
                     }
@@ -111,8 +115,55 @@ struct ProfileView: View {
             }
             .padding(.top, 24)
             .padding(.bottom, 24)
+            
+            // Liquid Glass Menu Overlay
+            if showMenu {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        showMenu = false
+                    }
+                
+                VStack {
+                    HStack {
+                        Spacer()
+                        LiquidGlassMenu(
+                            isPresented: $showMenu,
+                            onSave: {
+                                print("Save tapped")
+                            },
+                            onShare: {
+                                print("Share tapped")
+                            },
+                            onRefresh: {
+                                print("Refresh tapped")
+                            },
+                            onGoToPoet: {
+                                print("Go to poet tapped")
+                            },
+                            onInterpretation: {
+                                print("Interpretation tapped")
+                            },
+                            onLanguage: {
+                                print("Language tapped")
+                            },
+                            onConfigure: {
+                                print("Configure tapped")
+                            },
+                            onThemes: {
+                                print("Themes tapped")
+                            }
+                        )
+                        .padding(.trailing, 24)
+                    }
+                    .padding(.top, 58)
+                    Spacer()
+                }
+                .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .topTrailing)))
+            }
         }
         .navigationBarHidden(true)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showMenu)
         .onAppear {
             // Load initial poems from Ganjoor API
             Task {
@@ -291,6 +342,7 @@ struct PoemCardView: View {
     let poem: PoemData?
     let isTranslated: Bool
     let toFarsiNumber: (Int) -> String
+    @Binding var showMenu: Bool
     
     @State private var versePage = 0 // Current verse page within the poem
     
@@ -329,15 +381,17 @@ struct PoemCardView: View {
                         
                         HStack(spacing: 8) {
                             Button(action: {}) {
-                                Image(systemName: "ellipsis")
+                                Image(systemName: "bookmark")
                                     .font(.system(size: 18, weight: .medium))
                                     .foregroundColor(.primary)
                                     .frame(width: 28, height: 28)
                             }
                             .buttonStyle(.plain)
                             
-                            Button(action: {}) {
-                                Image(systemName: "bookmark")
+                            Button(action: {
+                                showMenu.toggle()
+                            }) {
+                                Image(systemName: "ellipsis")
                                     .font(.system(size: 18, weight: .medium))
                                     .foregroundColor(.primary)
                                     .frame(width: 28, height: 28)
@@ -373,7 +427,6 @@ struct PoemCardView: View {
                         ForEach(startBeytIndex..<endBeytIndex, id: \.self) { beytIndex in
                             if beytIndex < poemData.verses.count {
                                 let beyt = poemData.verses[beytIndex]
-                                let beytNumber = beytIndex + 1
                                 
                                 VStack(alignment: .center, spacing: 10) {
                                     // First line of beyt
