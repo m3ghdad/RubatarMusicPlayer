@@ -29,6 +29,7 @@ struct ProfileView: View {
     @State private var showProfileSheet = false
     @State private var currentPage = 0 // Current page within a poem (verse index)
     @State private var showMenu = false
+    @State private var showToast = false
     @StateObject private var apiManager = GanjoorAPIManager()
     @Environment(\.colorScheme) var colorScheme
     
@@ -64,6 +65,32 @@ struct ProfileView: View {
                 
                 isTranslating = false
             }
+        }
+    }
+    
+    // Refresh poems - load new set of poems
+    private func refreshPoems() {
+        showToast = true
+        
+        Task {
+            // Clear existing poems and translations
+            poems = []
+            translatedPoems = [:]
+            
+            // Fetch new poems
+            let newPoems = await apiManager.fetchMultiplePoems(count: 10)
+            if !newPoems.isEmpty {
+                poems = newPoems
+                currentPage = 0
+                
+                // Automatically translate new poems
+                translatePoemsIfNeeded()
+            }
+        }
+        
+        // Hide toast after 2 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            showToast = false
         }
     }
     
@@ -140,7 +167,7 @@ struct ProfileView: View {
                                 print("Select text tapped")
                             },
                             onRefresh: {
-                                print("Refresh tapped")
+                                refreshPoems()
                             },
                             onGoToPoet: {
                                 print("Go to poet tapped")
@@ -166,6 +193,7 @@ struct ProfileView: View {
                 .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .topTrailing)))
             }
         }
+        .toast(isShowing: $showToast, message: "Stirring the words…")
         .navigationBarHidden(true)
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showMenu)
         .onAppear {

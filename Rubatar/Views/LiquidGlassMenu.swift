@@ -346,29 +346,43 @@ struct LiquidGlassBackground: View {
                 .blur(radius: 20)
                 .offset(y: 5)
             
-            // Main fill with gradient
+            // Liquid Glass Effect
             RoundedRectangle(cornerRadius: cornerRadius)
-                .fill(
-                    LinearGradient(
-                        gradient: Gradient(colors: colorScheme == .dark ? [
-                            Color(red: 72/255, green: 72/255, blue: 74/255, opacity: 0.9),
-                            Color(red: 72/255, green: 72/255, blue: 74/255, opacity: 0.9)
-                        ] : [
-                            Color(red: 245/255, green: 245/255, blue: 245/255, opacity: 0.6),
-                            Color(red: 245/255, green: 245/255, blue: 245/255, opacity: 0.6)
-                        ]),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(colors: colorScheme == .dark ? [
+                                    Color.white.opacity(0.05),
+                                    Color.white.opacity(0.02)
+                                ] : [
+                                    Color.white.opacity(0.7),
+                                    Color.white.opacity(0.5)
+                                ]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: cornerRadius)
-                        .strokeBorder((colorScheme == .dark ? Color.white : Color.white).opacity(colorScheme == .dark ? 0.2 : 0.5), lineWidth: 0.5)
+                        .strokeBorder(
+                            LinearGradient(
+                                gradient: Gradient(colors: colorScheme == .dark ? [
+                                    Color.white.opacity(0.3),
+                                    Color.white.opacity(0.1)
+                                ] : [
+                                    Color.white.opacity(0.8),
+                                    Color.white.opacity(0.4)
+                                ]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1.5
+                        )
                 )
-                .background(
-                    RoundedRectangle(cornerRadius: cornerRadius)
-                        .fill(.ultraThinMaterial)
-                )
+                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.1), radius: 10, x: 0, y: 5)
         }
     }
 }
