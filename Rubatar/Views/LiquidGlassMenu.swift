@@ -11,6 +11,8 @@ struct LiquidGlassMenu: View {
     @Binding var isPresented: Bool
     let selectedLanguage: AppLanguage
     @Binding var showLanguageMenu: Bool
+    let selectedDisplayMode: DisplayMode
+    @Binding var showConfigureMenu: Bool
     let onSave: () -> Void
     let onShare: () -> Void
     let onSelectText: () -> Void
@@ -20,6 +22,7 @@ struct LiquidGlassMenu: View {
     let onLanguage: () -> Void
     let onSelectLanguage: (AppLanguage) -> Void
     let onConfigure: () -> Void
+    let onSelectDisplayMode: (DisplayMode) -> Void
     let onThemes: () -> Void
     
     @State private var hoveredItem: String? = nil
@@ -206,8 +209,65 @@ struct LiquidGlassMenu: View {
                     icon: "textformat",
                     title: "Configure",
                     hasChevron: true,
+                    chevronDown: showConfigureMenu,
                     isHovered: hoveredItem == "configure"
                 )
+                
+                // Configure submenu (shows when expanded)
+                if showConfigureMenu {
+                    VStack(spacing: 0) {
+                        Button {
+                            onSelectDisplayMode(.typewriter)
+                        } label: {
+                            HStack {
+                                Text("Typewriter")
+                                    .font(.system(size: 17, weight: .regular))
+                                    .foregroundColor(colorScheme == .dark ? .white : .black)
+                                Spacer()
+                                if selectedDisplayMode == .typewriter {
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            .padding(.horizontal, 40)
+                            .padding(.vertical, 8)
+                            .background(
+                                hoveredItem == "typewriter" ?
+                                    (colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05)) :
+                                    Color.clear
+                            )
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        
+                        Button {
+                            onSelectDisplayMode(.staticMode)
+                        } label: {
+                            HStack {
+                                Text("Static")
+                                    .font(.system(size: 17, weight: .regular))
+                                    .foregroundColor(colorScheme == .dark ? .white : .black)
+                                Spacer()
+                                if selectedDisplayMode == .staticMode {
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            .padding(.horizontal, 40)
+                            .padding(.vertical, 8)
+                            .background(
+                                hoveredItem == "static" ?
+                                    (colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05)) :
+                                    Color.clear
+                            )
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
                 
                 // Themes
                 MenuItemView(
@@ -478,6 +538,8 @@ extension Color {
             isPresented: .constant(true),
             selectedLanguage: .english,
             showLanguageMenu: .constant(false),
+            selectedDisplayMode: .typewriter,
+            showConfigureMenu: .constant(false),
             onSave: {},
             onShare: {},
             onSelectText: {},
@@ -487,6 +549,7 @@ extension Color {
             onLanguage: {},
             onSelectLanguage: { _ in },
             onConfigure: {},
+            onSelectDisplayMode: { _ in },
             onThemes: {}
         )
     }

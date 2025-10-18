@@ -13,6 +13,12 @@ enum AppLanguage: String {
     case farsi = "Farsi"
 }
 
+// Display mode enum for poem text
+enum DisplayMode: String {
+    case typewriter = "Typewriter"
+    case staticMode = "Static"
+}
+
 // Custom dashed line shape
 struct DashedLine: Shape {
     let dashCount: Int
@@ -31,17 +37,55 @@ struct DashedLine: Shape {
     }
 }
 
+// Calculate cumulative delay for typewriter effect
+private func calculateLineDelay(poemData: PoemData, startBeytIndex: Int, targetBeytIndex: Int, lineIndex: Int) -> TimeInterval {
+    var delay: TimeInterval = 0
+    
+    // Add time for all previous beyts
+    for beytIdx in startBeytIndex..<targetBeytIndex {
+        if beytIdx < poemData.verses.count {
+            let beyt = poemData.verses[beytIdx]
+            if beyt.count > 0 {
+                delay += Double(beyt[0].count) * 0.05 + 0.2
+            }
+            if beyt.count > 1 {
+                delay += Double(beyt[1].count) * 0.05 + 0.2
+            }
+        }
+    }
+    
+    // If this is the second line of the target beyt, add time for the first line
+    if lineIndex == 1 && targetBeytIndex < poemData.verses.count {
+        let beyt = poemData.verses[targetBeytIndex]
+        if beyt.count > 0 {
+            delay += Double(beyt[0].count) * 0.05 + 0.2
+        }
+    }
+    
+    return delay
+}
+
 struct ProfileView: View {
     @State private var showProfileSheet = false
     @State private var currentPage = 0 // Current page within a poem (verse index)
     @State private var showMenu = false
     @State private var showLanguageMenu = false // Language submenu state
     @State private var selectedLanguage: AppLanguage = .english // Current language
+    @State private var showConfigureMenu = false // Configure submenu state
+    @State private var selectedDisplayMode: DisplayMode // Display mode for poem text
     @State private var showToast = false
     @StateObject private var apiManager = GanjoorAPIManager()
     @Environment(\.colorScheme) var colorScheme
     @Namespace private var menuNamespace // For zoom animation
     @State private var activeCardIndex = 0 // Track which card's menu is open
+    @State private var versePage = 0 // Track current page within a poem
+    @State private var typewriterTrigger: [String: Int] = [:] // Trigger for typewriter: "poemId-pageIndex-cardIndex" -> count
+    
+    // Initialize with saved display mode preference
+    init() {
+        let savedMode = UserDefaults.standard.string(forKey: "displayMode") ?? DisplayMode.typewriter.rawValue
+        _selectedDisplayMode = State(initialValue: DisplayMode(rawValue: savedMode) ?? .typewriter)
+    }
     
     // Multiple poems from API
     @State private var poems: [PoemData] = []
@@ -119,9 +163,11 @@ struct ProfileView: View {
                             poem: nil,
                             isTranslated: false,
                             selectedLanguage: selectedLanguage,
+                            displayMode: selectedDisplayMode,
                             toFarsiNumber: toFarsiNumber,
                             showMenu: $showMenu,
                             activeCardIndex: $activeCardIndex,
+                            typewriterTrigger: $typewriterTrigger,
                             menuNamespace: menuNamespace,
                             cardIndex: index
                         )
@@ -133,9 +179,11 @@ struct ProfileView: View {
                             poem: poems[index],
                             isTranslated: false,
                             selectedLanguage: selectedLanguage,
+                            displayMode: selectedDisplayMode,
                             toFarsiNumber: toFarsiNumber,
                             showMenu: $showMenu,
                             activeCardIndex: $activeCardIndex,
+                            typewriterTrigger: $typewriterTrigger,
                             menuNamespace: menuNamespace,
                             cardIndex: index
                         )
@@ -153,9 +201,11 @@ struct ProfileView: View {
                                 poem: nil,
                                 isTranslated: false,
                                 selectedLanguage: selectedLanguage,
+                                displayMode: selectedDisplayMode,
                                 toFarsiNumber: toFarsiNumber,
                                 showMenu: $showMenu,
                                 activeCardIndex: $activeCardIndex,
+                                typewriterTrigger: $typewriterTrigger,
                                 menuNamespace: menuNamespace,
                                 cardIndex: index
                             )
@@ -167,9 +217,11 @@ struct ProfileView: View {
                                 poem: translatedPoemsList[index],
                                 isTranslated: true,
                                 selectedLanguage: selectedLanguage,
+                                displayMode: selectedDisplayMode,
                                 toFarsiNumber: toFarsiNumber,
                                 showMenu: $showMenu,
                                 activeCardIndex: $activeCardIndex,
+                                typewriterTrigger: $typewriterTrigger,
                                 menuNamespace: menuNamespace,
                                 cardIndex: index
                             )
@@ -198,11 +250,14 @@ struct ProfileView: View {
                 MenuPopoverHelper(
                     selectedLanguage: selectedLanguage,
                     showLanguageMenu: $showLanguageMenu,
+                    selectedDisplayMode: selectedDisplayMode,
+                    showConfigureMenu: $showConfigureMenu,
                     onSave: {
                         print("Save tapped")
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
                             showMenu = false
                             showLanguageMenu = false
+                            showConfigureMenu = false
                         }
                     },
                     onShare: {
@@ -210,6 +265,7 @@ struct ProfileView: View {
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
                             showMenu = false
                             showLanguageMenu = false
+                            showConfigureMenu = false
                         }
                     },
                     onSelectText: {
@@ -217,6 +273,7 @@ struct ProfileView: View {
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
                             showMenu = false
                             showLanguageMenu = false
+                            showConfigureMenu = false
                         }
                     },
                     onRefresh: {
@@ -224,6 +281,7 @@ struct ProfileView: View {
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
                             showMenu = false
                             showLanguageMenu = false
+                            showConfigureMenu = false
                         }
                     },
                     onGoToPoet: {
@@ -231,6 +289,7 @@ struct ProfileView: View {
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
                             showMenu = false
                             showLanguageMenu = false
+                            showConfigureMenu = false
                         }
                     },
                     onInterpretation: {
@@ -238,12 +297,14 @@ struct ProfileView: View {
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
                             showMenu = false
                             showLanguageMenu = false
+                            showConfigureMenu = false
                         }
                     },
                     onLanguage: {
                         // Toggle language submenu expansion
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
                             showLanguageMenu.toggle()
+                            showConfigureMenu = false // Close configure menu
                         }
                     },
                     onSelectLanguage: { language in
@@ -252,11 +313,22 @@ struct ProfileView: View {
                             selectedLanguage = language
                             showLanguageMenu = false
                             showMenu = false
+                            showConfigureMenu = false
                         }
                     },
                     onConfigure: {
-                        print("Configure tapped")
+                        // Toggle configure submenu expansion
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showConfigureMenu.toggle()
+                            showLanguageMenu = false // Close language menu
+                        }
+                    },
+                    onSelectDisplayMode: { mode in
+                        // Update display mode, save to UserDefaults, and close menus
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            selectedDisplayMode = mode
+                            UserDefaults.standard.set(mode.rawValue, forKey: "displayMode")
+                            showConfigureMenu = false
                             showMenu = false
                             showLanguageMenu = false
                         }
@@ -266,6 +338,7 @@ struct ProfileView: View {
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
                             showMenu = false
                             showLanguageMenu = false
+                            showConfigureMenu = false
                         }
                     }
                 )
@@ -292,6 +365,12 @@ struct ProfileView: View {
                     // Automatically translate poems
                     translatePoemsIfNeeded()
                 }
+            }
+        }
+        .onChange(of: currentPage) { _, newPage in
+            // Reset verse page when changing cards
+            if newPage < poems.count {
+                versePage = 0
             }
         }
     }
@@ -505,9 +584,11 @@ struct PoemCardView: View {
     let poem: PoemData?
     let isTranslated: Bool
     let selectedLanguage: AppLanguage
+    let displayMode: DisplayMode
     let toFarsiNumber: (Int) -> String
     @Binding var showMenu: Bool
     @Binding var activeCardIndex: Int // Track which card's menu is open
+    @Binding var typewriterTrigger: [String: Int] // For typewriter animation
     var menuNamespace: Namespace.ID // For zoom animation
     var cardIndex: Int // Unique index for each card
     
@@ -520,6 +601,14 @@ struct PoemCardView: View {
             SkeletonLoadingView(selectedLanguage: selectedLanguage)
         } else {
             actualPoemView
+                .onAppear {
+                    // Trigger typewriter animation when this specific card appears (only if typewriter mode)
+                    if displayMode == .typewriter {
+                        guard let poemData = poem else { return }
+                        let key = "\(poemData.id)-\(versePage)-\(cardIndex)"
+                        typewriterTrigger[key] = (typewriterTrigger[key] ?? 0) + 1
+                    }
+                }
         }
     }
     
@@ -646,34 +735,66 @@ struct PoemCardView: View {
                     VStack(alignment: .center, spacing: 0) {
                         let startBeytIndex = pageIndex * beytsPerPage
                         let endBeytIndex = min(startBeytIndex + beytsPerPage, poemData.verses.count)
+                        let triggerKey = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
                         
                         ForEach(startBeytIndex..<endBeytIndex, id: \.self) { beytIndex in
                             if beytIndex < poemData.verses.count {
                                 let beyt = poemData.verses[beytIndex]
+                                let beytOffset = beytIndex - startBeytIndex
+                                
+                                // Calculate delays: Line 1 of Beyt 1 = 0, Line 2 of Beyt 1 = text1.length * 0.05 + 0.2
+                                // Line 1 of Beyt 2 = (text1.length + text2.length) * 0.05 + 0.4, etc.
+                                let lineIndex = beytOffset * 2
                                 
                                 VStack(alignment: .center, spacing: 10) {
                                     // First line of beyt
                                     if beyt.count > 0 {
-                                        Text(beyt[0])
-                                            .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
-                                            .foregroundColor(colorScheme == .dark ? .white : .black)
-                                            .lineSpacing(isTranslated ? 4 : 14 * 2.66)
-                                            .kerning(1)
-                                            .lineLimit(nil)
-                                            .fixedSize(horizontal: false, vertical: true)
-                                            .multilineTextAlignment(.center)
+                                        if displayMode == .typewriter {
+                                            TypewriterText(
+                                                text: beyt[0],
+                                                font: isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14),
+                                                color: colorScheme == .dark ? .white : .black,
+                                                lineSpacing: isTranslated ? 4 : 14 * 2.66,
+                                                kerning: 1,
+                                                alignment: .center,
+                                                delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 0)
+                                            )
+                                            .id("\(triggerKey)-\(beytIndex)-0-\(typewriterTrigger[triggerKey] ?? 0)")
+                                        } else {
+                                            Text(beyt[0])
+                                                .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
+                                                .foregroundColor(colorScheme == .dark ? .white : .black)
+                                                .lineSpacing(isTranslated ? 4 : 14 * 2.66)
+                                                .kerning(1)
+                                                .lineLimit(nil)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                                .multilineTextAlignment(.center)
+                                        }
                                     }
                                     
                                     // Second line of beyt
                                     if beyt.count > 1 {
-                                        Text(beyt[1])
-                                            .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
-                                            .foregroundColor(colorScheme == .dark ? .white : .black)
-                                            .lineSpacing(isTranslated ? 4 : 14 * 2.66)
-                                            .kerning(1)
-                                            .lineLimit(nil)
-                                            .fixedSize(horizontal: false, vertical: true)
-                                            .multilineTextAlignment(.center)
+                                        if displayMode == .typewriter {
+                                            TypewriterText(
+                                                text: beyt[1],
+                                                font: isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14),
+                                                color: colorScheme == .dark ? .white : .black,
+                                                lineSpacing: isTranslated ? 4 : 14 * 2.66,
+                                                kerning: 1,
+                                                alignment: .center,
+                                                delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 1)
+                                            )
+                                            .id("\(triggerKey)-\(beytIndex)-1-\(typewriterTrigger[triggerKey] ?? 0)")
+                                        } else {
+                                            Text(beyt[1])
+                                                .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
+                                                .foregroundColor(colorScheme == .dark ? .white : .black)
+                                                .lineSpacing(isTranslated ? 4 : 14 * 2.66)
+                                                .kerning(1)
+                                                .lineLimit(nil)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                                .multilineTextAlignment(.center)
+                                        }
                                     }
                                 }
                                 .padding(.bottom, beytIndex < endBeytIndex - 1 ? 24 : 0)
@@ -685,8 +806,18 @@ struct PoemCardView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                     .background(colorScheme == .dark ? Color(red: 13/255, green: 13/255, blue: 13/255) : Color.white)
                     .cornerRadius(totalPages > 1 ? 0 : 12, corners: [.bottomLeft, .bottomRight])
+                    .onAppear {
+                        // Trigger typewriter animation when page appears
+                        let key = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
+                        typewriterTrigger[key] = (typewriterTrigger[key] ?? 0) + 1
+                    }
                 }
                 .id(poemData.id)
+                .onChange(of: versePage) { _, newPage in
+                    // Trigger typewriter animation when page changes
+                    let key = "\(poemData.id)-\(newPage)-\(cardIndex)"
+                    typewriterTrigger[key] = (typewriterTrigger[key] ?? 0) + 1
+                }
             } else {
                 VStack(spacing: 16) {
                     ProgressView()
@@ -728,6 +859,8 @@ struct PoemCardView: View {
 struct MenuPopoverHelper: View {
     let selectedLanguage: AppLanguage
     @Binding var showLanguageMenu: Bool
+    let selectedDisplayMode: DisplayMode
+    @Binding var showConfigureMenu: Bool
     let onSave: () -> Void
     let onShare: () -> Void
     let onSelectText: () -> Void
@@ -737,6 +870,7 @@ struct MenuPopoverHelper: View {
     let onLanguage: () -> Void
     let onSelectLanguage: (AppLanguage) -> Void
     let onConfigure: () -> Void
+    let onSelectDisplayMode: (DisplayMode) -> Void
     let onThemes: () -> Void
     
     @State private var isVisible: Bool = false
@@ -747,6 +881,8 @@ struct MenuPopoverHelper: View {
             isPresented: .constant(true),
             selectedLanguage: selectedLanguage,
             showLanguageMenu: $showLanguageMenu,
+            selectedDisplayMode: selectedDisplayMode,
+            showConfigureMenu: $showConfigureMenu,
             onSave: onSave,
             onShare: onShare,
             onSelectText: onSelectText,
@@ -756,6 +892,7 @@ struct MenuPopoverHelper: View {
             onLanguage: onLanguage,
             onSelectLanguage: onSelectLanguage,
             onConfigure: onConfigure,
+            onSelectDisplayMode: onSelectDisplayMode,
             onThemes: onThemes
         )
         .opacity(isVisible ? 1 : 0)
