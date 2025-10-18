@@ -546,12 +546,16 @@ struct PoemCardView: View {
     @State private var typewriterText: [String: String] = [:] // "page_beyt_line" -> displayed text
     @State private var isTypingComplete: [Int: Bool] = [:] // Track if typing is complete for each page
     @State private var typewriterTaskId = UUID() // Used to cancel/restart typewriter on mode change
+    @State private var typewriterUpdateTrigger = 0 // Force view updates
     @Environment(\.colorScheme) var colorScheme
     
     // Typewriter effect function
     private func startTypewriter(for pageIndex: Int, beyts: [[String]], force: Bool = false) {
+        print("🎬 Starting typewriter for page \(pageIndex), force: \(force), mode: \(displayMode)")
+        
         // If already typing complete and not forcing, don't restart
         if !force && isTypingComplete[pageIndex] == true {
+            print("⏭️ Skipping page \(pageIndex) - already complete")
             return
         }
         
@@ -563,6 +567,7 @@ struct PoemCardView: View {
                     typewriterText[key] = nil
                 }
             }
+            print("🧹 Cleared text for page \(pageIndex)")
         }
         
         // Mark as not complete yet
@@ -570,9 +575,12 @@ struct PoemCardView: View {
         
         // Only apply typewriter effect if mode is typewriter
         guard displayMode == .typewriter else {
+            print("⏩ Not in typewriter mode, marking complete")
             isTypingComplete[pageIndex] = true
             return
         }
+        
+        print("✅ Starting typewriter animation for page \(pageIndex) with \(beyts.count) beyts")
         
         // Calculate character delay
         let charDelay = 0.03
@@ -582,10 +590,12 @@ struct PoemCardView: View {
             for (beytIndex, beyt) in beyts.enumerated() {
                 for (lineIndex, line) in beyt.enumerated() {
                     let key = "\(pageIndex)_\(beytIndex)_\(lineIndex)"
+                    print("📝 Animating \(key): '\(line.prefix(30))...'")
                     
                     for (charIndex, _) in line.enumerated() {
                         // Check if task was cancelled (mode changed)
                         if currentTaskId != typewriterTaskId {
+                            print("🛑 Task cancelled for \(key)")
                             return
                         }
                         
@@ -595,13 +605,16 @@ struct PoemCardView: View {
                         
                         // Check again after sleep
                         if currentTaskId != typewriterTaskId {
+                            print("🛑 Task cancelled after sleep for \(key)")
                             return
                         }
                         
                         await MainActor.run {
                             typewriterText[key] = displayText
+                            typewriterUpdateTrigger += 1 // Force view update
                         }
                     }
+                    print("✓ Completed line \(key)")
                 }
             }
             
@@ -609,6 +622,7 @@ struct PoemCardView: View {
             await MainActor.run {
                 if currentTaskId == typewriterTaskId {
                     isTypingComplete[pageIndex] = true
+                    print("🏁 Page \(pageIndex) animation complete")
                 }
             }
         }
@@ -628,7 +642,9 @@ struct PoemCardView: View {
         }
         
         let key = "\(pageIndex)_\(beytIndex)_\(lineIndex)"
-        return typewriterText[key] ?? ""
+        let text = typewriterText[key] ?? ""
+        print("🔤 Getting text for \(key): '\(text)' (full: '\(fullText.prefix(20))...')")
+        return text
     }
     
     var body: some View {
@@ -781,6 +797,7 @@ struct PoemCardView: View {
                                             .lineLimit(nil)
                                             .fixedSize(horizontal: false, vertical: true)
                                             .multilineTextAlignment(.center)
+                                            .id("\(pageIndex)_\(beytIndexInPage)_0_\(typewriterUpdateTrigger)")
                                     }
                                     
                                     // Second line of beyt
@@ -793,6 +810,7 @@ struct PoemCardView: View {
                                             .lineLimit(nil)
                                             .fixedSize(horizontal: false, vertical: true)
                                             .multilineTextAlignment(.center)
+                                            .id("\(pageIndex)_\(beytIndexInPage)_1_\(typewriterUpdateTrigger)")
                                     }
                                 }
                                 .padding(.bottom, beytIndex < endBeytIndex - 1 ? 24 : 0)
@@ -853,6 +871,7 @@ struct PoemCardView: View {
         .background(colorScheme == .dark ? Color.black : Color(red: 244/255, green: 244/255, blue: 244/255))
         .clipShape(RoundedRectangle(cornerRadius: 24))
         .onChange(of: displayMode) { _, newMode in
+            print("🔄 Display mode changed to: \(newMode)")
             // Reset and restart typewriter when mode changes
             resetTypewriter()
             
@@ -862,10 +881,10 @@ struct PoemCardView: View {
                 let startBeytIndex = versePage * beytsPerPage
                 let endBeytIndex = min(startBeytIndex + beytsPerPage, poemData.verses.count)
                 let beytsOnPage = Array(poemData.verses[startBeytIndex..<endBeytIndex])
+                print("🚀 Triggering typewriter for current page \(versePage)")
                 startTypewriter(for: versePage, beyts: beytsOnPage, force: true)
             }
         }
-        .id("\(poem?.id ?? 0)_\(displayMode.rawValue)") // Force re-render on mode change
     }
 }
 
