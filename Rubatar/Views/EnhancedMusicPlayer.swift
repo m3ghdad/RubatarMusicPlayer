@@ -95,12 +95,15 @@ struct EnhancedMusicPlayer: View {
         }
         .ignoresSafeArea(.all)
         .onAppear {
-            // Generate gradient from artwork or use clear fallback
-            if let artworkURL = audioPlayer.currentArtwork,
-               let imageData = try? Data(contentsOf: artworkURL),
-               let image = UIImage(data: imageData),
-               let avgColor = image.averageColor {
-                gradient = Color(avgColor).gradient
+            if let artworkURL = audioPlayer.currentArtwork {
+                loadArtworkGradient(from: artworkURL)
+            } else {
+                gradient = Color.clear.gradient
+            }
+        }
+        .onChange(of: audioPlayer.currentArtwork) { _, newURL in
+            if let url = newURL {
+                loadArtworkGradient(from: url)
             } else {
                 gradient = Color.clear.gradient
             }
@@ -478,6 +481,58 @@ struct EnhancedMusicPlayer: View {
     }
     
     // MARK: - Helper Functions
+    func loadArtworkGradient(from url: URL) {
+        // Fetch image data asynchronously to avoid blocking the main thread
+        Task.detached(priority: .utility) {
+            do {
+                let (data, response) = try await URLSession.shared.data(from: url)
+                guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+                    await MainActor.run { self.gradient = Color.clear.gradient }
+                    return
+                }
+                guard let avgColor = await self.computeAverageColor(from: data) else {
+                    await MainActor.run { self.gradient = Color.clear.gradient }
+                    return
+                }
+                await MainActor.run {
+                    self.gradient = Color(avgColor).gradient
+                }
+            } catch {
+                // On failure, fall back to clear gradient
+                await MainActor.run { self.gradient = Color.clear.gradient }
+            }
+        }
+    }
+    
+    /// Computes the average color for the given image data using Core Image, safe to call off the main actor.
+    private func computeAverageColor(from data: Data) -> UIColor? {
+        // Create a CIImage from data; avoid UIImage to keep this off the main actor
+        guard let ciImage = CIImage(data: data) else { return nil }
+        let extent = ciImage.extent
+        guard !extent.isEmpty else { return nil }
+
+        // Use CIAreaAverage to compute the mean color
+        let extentVector = CIVector(x: extent.origin.x, y: extent.origin.y, z: extent.size.width, w: extent.size.height)
+        guard let filter = CIFilter(name: "CIAreaAverage", parameters: [kCIInputImageKey: ciImage, kCIInputExtentKey: extentVector]),
+              let outputImage = filter.outputImage else {
+            return nil
+        }
+
+        var bitmap = [UInt8](repeating: 0, count: 4)
+        let context = CIContext(options: nil)
+        context.render(outputImage,
+                       toBitmap: &bitmap,
+                       rowBytes: 4,
+                       bounds: CGRect(x: 0, y: 0, width: 1, height: 1),
+                       format: .RGBA8,
+                       colorSpace: nil)
+
+        return UIColor(red: CGFloat(bitmap[0]) / 255.0,
+                       green: CGFloat(bitmap[1]) / 255.0,
+                       blue: CGFloat(bitmap[2]) / 255.0,
+                       alpha: CGFloat(bitmap[3]) / 255.0)
+    }
+    
     func timeString(_ time: Double) -> String {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
