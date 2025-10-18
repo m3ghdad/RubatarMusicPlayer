@@ -15,6 +15,8 @@ struct TypewriterText: View {
     let kerning: CGFloat
     let alignment: TextAlignment
     let delay: TimeInterval
+    let isCompleted: Bool // Whether this page has already been typed
+    let onComplete: () -> Void // Callback when typing finishes
     
     @State private var displayedText: String = ""
     @State private var currentIndex: Int = 0
@@ -29,7 +31,13 @@ struct TypewriterText: View {
             .fixedSize(horizontal: false, vertical: true)
             .multilineTextAlignment(alignment)
             .onAppear {
-                startTypewriter()
+                if isCompleted {
+                    // If already completed, show all text immediately
+                    displayedText = text
+                } else {
+                    // Otherwise, start typewriter animation
+                    startTypewriter()
+                }
             }
     }
     
@@ -44,7 +52,11 @@ struct TypewriterText: View {
     }
     
     private func typeNextCharacter() {
-        guard currentIndex < text.count else { return }
+        guard currentIndex < text.count else {
+            // Typing complete, call completion handler
+            onComplete()
+            return
+        }
         
         let index = text.index(text.startIndex, offsetBy: currentIndex)
         displayedText.append(text[index])

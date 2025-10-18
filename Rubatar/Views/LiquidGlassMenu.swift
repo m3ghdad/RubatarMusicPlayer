@@ -208,6 +208,7 @@ struct LiquidGlassMenu: View {
                     id: "configure",
                     icon: "textformat",
                     title: "Configure",
+                    subtitle: selectedDisplayMode.rawValue,
                     hasChevron: true,
                     chevronDown: showConfigureMenu,
                     isHovered: hoveredItem == "configure"
@@ -216,51 +217,73 @@ struct LiquidGlassMenu: View {
                 // Configure submenu (shows when expanded)
                 if showConfigureMenu {
                     VStack(spacing: 0) {
-                        Button {
+                        // Typewriter option
+                        Button(action: {
                             onSelectDisplayMode(.typewriter)
-                        } label: {
-                            HStack {
-                                Text("Typewriter")
-                                    .font(.system(size: 17, weight: .regular))
-                                    .foregroundColor(colorScheme == .dark ? .white : .black)
-                                Spacer()
-                                if selectedDisplayMode == .typewriter {
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(.blue)
+                        }) {
+                            HStack(spacing: 8) {
+                                // Checkmark (24x24 frame with centered icon)
+                                ZStack {
+                                    if selectedDisplayMode == .typewriter {
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 17, weight: .semibold))
+                                            .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                                    }
                                 }
+                                .frame(width: 24, height: 22)
+                                
+                                // Label
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Typewriter")
+                                        .font(.system(size: 17))
+                                        .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                            .padding(.horizontal, 40)
-                            .padding(.vertical, 8)
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 16)
+                            .padding(.leading, 28) // Indent for sub-items
                             .background(
-                                hoveredItem == "typewriter" ?
-                                    (colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05)) :
-                                    Color.clear
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(hoveredItem == "typewriter" ? (colorScheme == .dark ? Color.white.opacity(0.15) : Color(hex: "EDEDED")) : Color.clear)
+                                    .padding(.horizontal, 8)
                             )
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                         
-                        Button {
+                        // Static option
+                        Button(action: {
                             onSelectDisplayMode(.staticMode)
-                        } label: {
-                            HStack {
-                                Text("Static")
-                                    .font(.system(size: 17, weight: .regular))
-                                    .foregroundColor(colorScheme == .dark ? .white : .black)
-                                Spacer()
-                                if selectedDisplayMode == .staticMode {
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(.blue)
+                        }) {
+                            HStack(spacing: 8) {
+                                // Checkmark (24x24 frame with centered icon)
+                                ZStack {
+                                    if selectedDisplayMode == .staticMode {
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 17, weight: .semibold))
+                                            .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                                    }
                                 }
+                                .frame(width: 24, height: 22)
+                                
+                                // Label
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Static")
+                                        .font(.system(size: 17))
+                                        .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                            .padding(.horizontal, 40)
-                            .padding(.vertical, 8)
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 16)
+                            .padding(.leading, 28) // Indent for sub-items
                             .background(
-                                hoveredItem == "static" ?
-                                    (colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05)) :
-                                    Color.clear
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(hoveredItem == "static" ? (colorScheme == .dark ? Color.white.opacity(0.15) : Color(hex: "EDEDED")) : Color.clear)
+                                    .padding(.horizontal, 8)
                             )
                             .contentShape(Rectangle())
                         }

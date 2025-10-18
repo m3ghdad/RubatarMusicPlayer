@@ -74,17 +74,19 @@ struct ProfileView: View {
     @State private var showConfigureMenu = false // Configure submenu state
     @State private var selectedDisplayMode: DisplayMode // Display mode for poem text
     @State private var showToast = false
+    @State private var toastMessage = ""
     @StateObject private var apiManager = GanjoorAPIManager()
     @Environment(\.colorScheme) var colorScheme
     @Namespace private var menuNamespace // For zoom animation
     @State private var activeCardIndex = 0 // Track which card's menu is open
     @State private var versePage = 0 // Track current page within a poem
     @State private var typewriterTrigger: [String: Int] = [:] // Trigger for typewriter: "poemId-pageIndex-cardIndex" -> count
+    @State private var completedTypewriterPages: Set<String> = [] // Track pages that have completed typing
     
     // Initialize with saved display mode preference
     init() {
-        let savedMode = UserDefaults.standard.string(forKey: "displayMode") ?? DisplayMode.typewriter.rawValue
-        _selectedDisplayMode = State(initialValue: DisplayMode(rawValue: savedMode) ?? .typewriter)
+        let savedMode = UserDefaults.standard.string(forKey: "displayMode") ?? DisplayMode.staticMode.rawValue
+        _selectedDisplayMode = State(initialValue: DisplayMode(rawValue: savedMode) ?? .staticMode)
     }
     
     // Multiple poems from API
@@ -124,12 +126,14 @@ struct ProfileView: View {
     
     // Refresh poems - load new set of poems
     private func refreshPoems() {
+        toastMessage = "Stirring the words…"
         showToast = true
         
         Task {
             // Clear existing poems and translations
             poems = []
             translatedPoems = [:]
+            completedTypewriterPages.removeAll() // Clear completed pages on refresh
             
             // Fetch new poems
             let newPoems = await apiManager.fetchMultiplePoems(count: 10)
@@ -168,6 +172,7 @@ struct ProfileView: View {
                             showMenu: $showMenu,
                             activeCardIndex: $activeCardIndex,
                             typewriterTrigger: $typewriterTrigger,
+                            completedPages: $completedTypewriterPages,
                             menuNamespace: menuNamespace,
                             cardIndex: index
                         )
@@ -184,6 +189,7 @@ struct ProfileView: View {
                             showMenu: $showMenu,
                             activeCardIndex: $activeCardIndex,
                             typewriterTrigger: $typewriterTrigger,
+                            completedPages: $completedTypewriterPages,
                             menuNamespace: menuNamespace,
                             cardIndex: index
                         )
@@ -206,6 +212,7 @@ struct ProfileView: View {
                                 showMenu: $showMenu,
                                 activeCardIndex: $activeCardIndex,
                                 typewriterTrigger: $typewriterTrigger,
+                                completedPages: $completedTypewriterPages,
                                 menuNamespace: menuNamespace,
                                 cardIndex: index
                             )
@@ -222,6 +229,7 @@ struct ProfileView: View {
                                 showMenu: $showMenu,
                                 activeCardIndex: $activeCardIndex,
                                 typewriterTrigger: $typewriterTrigger,
+                                completedPages: $completedTypewriterPages,
                                 menuNamespace: menuNamespace,
                                 cardIndex: index
                             )
@@ -331,6 +339,18 @@ struct ProfileView: View {
                             showConfigureMenu = false
                             showMenu = false
                             showLanguageMenu = false
+                            
+                            // Clear completed pages when switching modes
+                            completedTypewriterPages.removeAll()
+                            
+                            // Show toast message
+                            toastMessage = mode == .typewriter ? "Typewriter mode enabled" : "Static mode enabled"
+                            showToast = true
+                        }
+                        
+                        // Hide toast after 2 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            showToast = false
                         }
                     },
                     onThemes: {
@@ -351,7 +371,7 @@ struct ProfileView: View {
                 ))
             }
         }
-        .toast(isShowing: $showToast, message: "Stirring the words…")
+        .toast(isShowing: $showToast, message: toastMessage)
         .navigationBarHidden(true)
         .animation(.snappy(duration: 0.3, extraBounce: 0), value: showMenu)
         .onAppear {
@@ -589,6 +609,7 @@ struct PoemCardView: View {
     @Binding var showMenu: Bool
     @Binding var activeCardIndex: Int // Track which card's menu is open
     @Binding var typewriterTrigger: [String: Int] // For typewriter animation
+    @Binding var completedPages: Set<String> // Track completed typewriter pages
     var menuNamespace: Namespace.ID // For zoom animation
     var cardIndex: Int // Unique index for each card
     
@@ -606,7 +627,11 @@ struct PoemCardView: View {
                     if displayMode == .typewriter {
                         guard let poemData = poem else { return }
                         let key = "\(poemData.id)-\(versePage)-\(cardIndex)"
-                        typewriterTrigger[key] = (typewriterTrigger[key] ?? 0) + 1
+                        
+                        // Only trigger if page hasn't been completed yet
+                        if !completedPages.contains(key) {
+                            typewriterTrigger[key] = (typewriterTrigger[key] ?? 0) + 1
+                        }
                     }
                 }
         }
@@ -750,6 +775,10 @@ struct PoemCardView: View {
                                     // First line of beyt
                                     if beyt.count > 0 {
                                         if displayMode == .typewriter {
+                                            let pageKey = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
+                                            let isPageCompleted = completedPages.contains(pageKey)
+                                            let isLastLine = beytIndex == endBeytIndex - 1 && beyt.count == 1
+                                            
                                             TypewriterText(
                                                 text: beyt[0],
                                                 font: isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14),
@@ -757,7 +786,13 @@ struct PoemCardView: View {
                                                 lineSpacing: isTranslated ? 4 : 14 * 2.66,
                                                 kerning: 1,
                                                 alignment: .center,
-                                                delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 0)
+                                                delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 0),
+                                                isCompleted: isPageCompleted,
+                                                onComplete: {
+                                                    if isLastLine {
+                                                        completedPages.insert(pageKey)
+                                                    }
+                                                }
                                             )
                                             .id("\(triggerKey)-\(beytIndex)-0-\(typewriterTrigger[triggerKey] ?? 0)")
                                         } else {
@@ -775,6 +810,10 @@ struct PoemCardView: View {
                                     // Second line of beyt
                                     if beyt.count > 1 {
                                         if displayMode == .typewriter {
+                                            let pageKey = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
+                                            let isPageCompleted = completedPages.contains(pageKey)
+                                            let isLastLine = beytIndex == endBeytIndex - 1
+                                            
                                             TypewriterText(
                                                 text: beyt[1],
                                                 font: isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14),
@@ -782,7 +821,13 @@ struct PoemCardView: View {
                                                 lineSpacing: isTranslated ? 4 : 14 * 2.66,
                                                 kerning: 1,
                                                 alignment: .center,
-                                                delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 1)
+                                                delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 1),
+                                                isCompleted: isPageCompleted,
+                                                onComplete: {
+                                                    if isLastLine {
+                                                        completedPages.insert(pageKey)
+                                                    }
+                                                }
                                             )
                                             .id("\(triggerKey)-\(beytIndex)-1-\(typewriterTrigger[triggerKey] ?? 0)")
                                         } else {
