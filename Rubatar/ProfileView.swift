@@ -478,7 +478,7 @@ struct PoemCardView: View {
                                     .foregroundColor(.primary)
                                     .frame(width: 28, height: 28)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(ElegantButtonStyle())
                             .matchedTransitionSource(id: "MENUCONTENT\(cardIndex)", in: menuNamespace)
                         }
                     }
@@ -618,6 +618,21 @@ struct MenuPopoverHelper: View {
             }
         }
         .presentationCompactAdaptation(.popover)
+    }
+}
+
+// Elegant button style with press feedback
+struct ElegantButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(
+                Circle()
+                    .fill(Color.primary.opacity(configuration.isPressed ? 0.15 : 0))
+                    .frame(width: 28, height: 28)
+                    .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+            )
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 
