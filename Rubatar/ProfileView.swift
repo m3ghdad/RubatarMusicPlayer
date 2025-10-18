@@ -545,13 +545,24 @@ struct PoemCardView: View {
     @State private var versePage = 0 // Current verse page within the poem
     @State private var typewriterText: [String: String] = [:] // "page_beyt_line" -> displayed text
     @State private var isTypingComplete: [Int: Bool] = [:] // Track if typing is complete for each page
+    @State private var typewriterTaskId = UUID() // Used to cancel/restart typewriter on mode change
     @Environment(\.colorScheme) var colorScheme
     
     // Typewriter effect function
-    private func startTypewriter(for pageIndex: Int, beyts: [[String]]) {
-        // If already typing complete, don't restart
-        if isTypingComplete[pageIndex] == true {
+    private func startTypewriter(for pageIndex: Int, beyts: [[String]], force: Bool = false) {
+        // If already typing complete and not forcing, don't restart
+        if !force && isTypingComplete[pageIndex] == true {
             return
+        }
+        
+        // Clear previous text for this page if forcing
+        if force {
+            for beytIndex in 0..<beyts.count {
+                for lineIndex in 0..<2 {
+                    let key = "\(pageIndex)_\(beytIndex)_\(lineIndex)"
+                    typewriterText[key] = nil
+                }
+            }
         }
         
         // Mark as not complete yet
@@ -565,6 +576,7 @@ struct PoemCardView: View {
         
         // Calculate character delay
         let charDelay = 0.03
+        let currentTaskId = typewriterTaskId
         
         Task {
             for (beytIndex, beyt) in beyts.enumerated() {
@@ -572,9 +584,19 @@ struct PoemCardView: View {
                     let key = "\(pageIndex)_\(beytIndex)_\(lineIndex)"
                     
                     for (charIndex, _) in line.enumerated() {
+                        // Check if task was cancelled (mode changed)
+                        if currentTaskId != typewriterTaskId {
+                            return
+                        }
+                        
                         let displayText = String(line.prefix(charIndex + 1))
                         
                         try? await Task.sleep(for: .seconds(charDelay))
+                        
+                        // Check again after sleep
+                        if currentTaskId != typewriterTaskId {
+                            return
+                        }
                         
                         await MainActor.run {
                             typewriterText[key] = displayText
@@ -585,9 +607,18 @@ struct PoemCardView: View {
             
             // Mark as complete
             await MainActor.run {
-                isTypingComplete[pageIndex] = true
+                if currentTaskId == typewriterTaskId {
+                    isTypingComplete[pageIndex] = true
+                }
             }
         }
+    }
+    
+    // Reset typewriter state
+    private func resetTypewriter() {
+        typewriterText = [:]
+        isTypingComplete = [:]
+        typewriterTaskId = UUID() // This cancels any running tasks
     }
     
     // Get display text for a line (typewriter or full)
@@ -821,6 +852,20 @@ struct PoemCardView: View {
         }
         .background(colorScheme == .dark ? Color.black : Color(red: 244/255, green: 244/255, blue: 244/255))
         .clipShape(RoundedRectangle(cornerRadius: 24))
+        .onChange(of: displayMode) { _, newMode in
+            // Reset and restart typewriter when mode changes
+            resetTypewriter()
+            
+            // If switching to typewriter, start animation for current page
+            if newMode == .typewriter, let poemData = poem {
+                let beytsPerPage = 2
+                let startBeytIndex = versePage * beytsPerPage
+                let endBeytIndex = min(startBeytIndex + beytsPerPage, poemData.verses.count)
+                let beytsOnPage = Array(poemData.verses[startBeytIndex..<endBeytIndex])
+                startTypewriter(for: versePage, beyts: beytsOnPage, force: true)
+            }
+        }
+        .id("\(poem?.id ?? 0)_\(displayMode.rawValue)") // Force re-render on mode change
     }
 }
 
