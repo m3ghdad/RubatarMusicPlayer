@@ -9,6 +9,7 @@ import SwiftUI
 
 struct LiquidGlassMenu: View {
     @Binding var isPresented: Bool
+    let selectedLanguage: AppLanguage
     let onSave: () -> Void
     let onShare: () -> Void
     let onSelectText: () -> Void
@@ -113,7 +114,7 @@ struct LiquidGlassMenu: View {
                     id: "language",
                     icon: "globe.fill",
                     title: "Language",
-                    subtitle: "English",
+                    subtitle: selectedLanguage.rawValue,
                     hasChevron: true,
                     isHovered: hoveredItem == "language"
                 )
@@ -393,6 +394,7 @@ extension Color {
         
         LiquidGlassMenu(
             isPresented: .constant(true),
+            selectedLanguage: .english,
             onSave: {},
             onShare: {},
             onSelectText: {},

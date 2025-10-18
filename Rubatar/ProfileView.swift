@@ -7,6 +7,12 @@
 
 import SwiftUI
 
+// Language enum
+enum AppLanguage: String {
+    case english = "English"
+    case farsi = "Farsi"
+}
+
 // Custom dashed line shape
 struct DashedLine: Shape {
     let dashCount: Int
@@ -29,6 +35,8 @@ struct ProfileView: View {
     @State private var showProfileSheet = false
     @State private var currentPage = 0 // Current page within a poem (verse index)
     @State private var showMenu = false
+    @State private var showLanguageMenu = false // Language submenu state
+    @State private var selectedLanguage: AppLanguage = .english // Current language
     @State private var showToast = false
     @StateObject private var apiManager = GanjoorAPIManager()
     @Environment(\.colorScheme) var colorScheme
@@ -104,12 +112,27 @@ struct ProfileView: View {
             
             // Paging carousel with peek of adjacent cards
             VStack(spacing: 0) {
-                if poems.isEmpty || translatedPoems.isEmpty {
-                    // Show loading skeleton cards until translations are ready
+                if poems.isEmpty {
+                    // Show loading skeleton cards until poems are fetched
                     PagingScrollView(pageCount: 3, content: { index in
                         PoemCardView(
                             poem: nil,
                             isTranslated: false,
+                            selectedLanguage: selectedLanguage,
+                            toFarsiNumber: toFarsiNumber,
+                            showMenu: $showMenu,
+                            activeCardIndex: $activeCardIndex,
+                            menuNamespace: menuNamespace,
+                            cardIndex: index
+                        )
+                    }, currentPage: $currentPage)
+                } else if selectedLanguage == .farsi {
+                    // Show original Farsi poems
+                    PagingScrollView(pageCount: poems.count, content: { index in
+                        PoemCardView(
+                            poem: poems[index],
+                            isTranslated: false,
+                            selectedLanguage: selectedLanguage,
                             toFarsiNumber: toFarsiNumber,
                             showMenu: $showMenu,
                             activeCardIndex: $activeCardIndex,
@@ -118,7 +141,7 @@ struct ProfileView: View {
                         )
                     }, currentPage: $currentPage)
                 } else {
-                    // Show only translated poem cards
+                    // Show translated English poems
                     let translatedPoemsList = poems.compactMap { poem -> PoemData? in
                         translatedPoems[poem.id]
                     }
@@ -129,6 +152,7 @@ struct ProfileView: View {
                             PoemCardView(
                                 poem: nil,
                                 isTranslated: false,
+                                selectedLanguage: selectedLanguage,
                                 toFarsiNumber: toFarsiNumber,
                                 showMenu: $showMenu,
                                 activeCardIndex: $activeCardIndex,
@@ -142,6 +166,7 @@ struct ProfileView: View {
                             PoemCardView(
                                 poem: translatedPoemsList[index],
                                 isTranslated: true,
+                                selectedLanguage: selectedLanguage,
                                 toFarsiNumber: toFarsiNumber,
                                 showMenu: $showMenu,
                                 activeCardIndex: $activeCardIndex,
@@ -156,7 +181,7 @@ struct ProfileView: View {
             .padding(.bottom, 24)
         }
         .overlay {
-            if showMenu {
+            if showMenu && !showLanguageMenu {
                 Color.black.opacity(0.3)
                     .ignoresSafeArea()
                     .onTapGesture {
@@ -168,8 +193,9 @@ struct ProfileView: View {
             }
         }
         .overlay(alignment: .topTrailing) {
-            if showMenu {
+            if showMenu && !showLanguageMenu {
                 MenuPopoverHelper(
+                    selectedLanguage: selectedLanguage,
                     onSave: {
                         print("Save tapped")
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
@@ -207,9 +233,9 @@ struct ProfileView: View {
                         }
                     },
                     onLanguage: {
-                        print("Language tapped")
+                        // Show language submenu
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                            showMenu = false
+                            showLanguageMenu = true
                         }
                     },
                     onConfigure: {
@@ -228,6 +254,25 @@ struct ProfileView: View {
                 .padding(.trailing, 32)
                 .padding(.top, 58)
                 .matchedGeometryEffect(id: "MENUCONTENT\(activeCardIndex)", in: menuNamespace)
+                .transition(.asymmetric(
+                    insertion: .scale(scale: 0.01, anchor: .topTrailing).combined(with: .opacity),
+                    removal: .scale(scale: 0.01, anchor: .topTrailing).combined(with: .opacity)
+                ))
+            }
+            
+            // Language submenu
+            if showLanguageMenu {
+                LanguageMenuPopover(
+                    selectedLanguage: $selectedLanguage,
+                    onDismiss: {
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showLanguageMenu = false
+                            showMenu = false
+                        }
+                    }
+                )
+                .padding(.trailing, 32)
+                .padding(.top, 58)
                 .transition(.asymmetric(
                     insertion: .scale(scale: 0.01, anchor: .topTrailing).combined(with: .opacity),
                     removal: .scale(scale: 0.01, anchor: .topTrailing).combined(with: .opacity)
@@ -416,6 +461,7 @@ struct SkeletonLoadingView: View {
 struct PoemCardView: View {
     let poem: PoemData?
     let isTranslated: Bool
+    let selectedLanguage: AppLanguage
     let toFarsiNumber: (Int) -> String
     @Binding var showMenu: Bool
     @Binding var activeCardIndex: Int // Track which card's menu is open
@@ -584,6 +630,7 @@ struct PoemCardView: View {
 
 // Menu Popover Helper with fade-in animation
 struct MenuPopoverHelper: View {
+    let selectedLanguage: AppLanguage
     let onSave: () -> Void
     let onShare: () -> Void
     let onSelectText: () -> Void
@@ -600,6 +647,7 @@ struct MenuPopoverHelper: View {
     var body: some View {
         LiquidGlassMenu(
             isPresented: .constant(true),
+            selectedLanguage: selectedLanguage,
             onSave: onSave,
             onShare: onShare,
             onSelectText: onSelectText,
@@ -618,6 +666,203 @@ struct MenuPopoverHelper: View {
             }
         }
         .presentationCompactAdaptation(.popover)
+    }
+}
+
+// Language Menu Popover
+struct LanguageMenuPopover: View {
+    @Binding var selectedLanguage: AppLanguage
+    let onDismiss: () -> Void
+    
+    @State private var isVisible: Bool = false
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Quick Actions - Top Section (same as main menu)
+            HStack(spacing: 6) {
+                // Save Quick Action
+                QuickActionButton(
+                    id: "save",
+                    icon: "bookmark",
+                    title: "Save",
+                    isHovered: false
+                )
+                .opacity(0.5)
+                
+                // Share Quick Action
+                QuickActionButton(
+                    id: "share",
+                    icon: "square.and.arrow.up",
+                    title: "Share",
+                    isHovered: false
+                )
+                .opacity(0.5)
+            }
+            .padding(.horizontal, 10)
+            .padding(.top, 10)
+            .padding(.bottom, 0)
+            
+            // Menu Items
+            VStack(spacing: 0) {
+                // Separator
+                HStack {
+                    Rectangle()
+                        .fill(colorScheme == .dark ? Color.white.opacity(0.2) : Color(hex: "E6E6E6"))
+                        .frame(height: 1)
+                }
+                .frame(height: 21)
+                .padding(.horizontal, 24)
+                
+                // Refresh (disabled)
+                MenuItemView(
+                    id: "refresh",
+                    icon: "arrow.clockwise",
+                    title: "Refresh",
+                    isHovered: false
+                )
+                .opacity(0.5)
+                
+                // Select text (disabled)
+                MenuItemView(
+                    id: "selecttext",
+                    icon: "document.on.clipboard",
+                    title: "Select text",
+                    isHovered: false
+                )
+                .opacity(0.5)
+                
+                // Go to poet (disabled)
+                MenuItemView(
+                    id: "poet",
+                    icon: "text.page.badge.magnifyingglass",
+                    title: "Go to poet",
+                    isHovered: false
+                )
+                .opacity(0.5)
+                
+                // Separator
+                HStack {
+                    Rectangle()
+                        .fill(colorScheme == .dark ? Color.white.opacity(0.2) : Color(hex: "E6E6E6"))
+                        .frame(height: 1)
+                }
+                .frame(height: 21)
+                .padding(.horizontal, 24)
+                
+                // Interpretation (disabled)
+                MenuItemView(
+                    id: "interpretation",
+                    icon: "book.pages",
+                    title: "Interpretation",
+                    isHovered: false
+                )
+                .opacity(0.5)
+                
+                // Separator
+                HStack {
+                    Rectangle()
+                        .fill(colorScheme == .dark ? Color.white.opacity(0.2) : Color(hex: "E6E6E6"))
+                        .frame(height: 1)
+                }
+                .frame(height: 21)
+                .padding(.horizontal, 24)
+                
+                // English option
+                Button(action: {
+                    selectedLanguage = .english
+                    onDismiss()
+                }) {
+                    HStack(spacing: 8) {
+                        // Checkmark (24x24 frame with centered icon)
+                        ZStack {
+                            if selectedLanguage == .english {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                            }
+                        }
+                        .frame(width: 24, height: 22)
+                        
+                        // Label
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("English")
+                                .font(.system(size: 17))
+                                .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 16)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                
+                // Farsi option
+                Button(action: {
+                    selectedLanguage = .farsi
+                    onDismiss()
+                }) {
+                    HStack(spacing: 8) {
+                        // Checkmark (24x24 frame with centered icon)
+                        ZStack {
+                            if selectedLanguage == .farsi {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                            }
+                        }
+                        .frame(width: 24, height: 22)
+                        
+                        // Label
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Farsi")
+                                .font(.system(size: 17))
+                                .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 16)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                
+                // Configure (disabled)
+                MenuItemView(
+                    id: "configure",
+                    icon: "textformat",
+                    title: "Configure",
+                    hasChevron: true,
+                    isHovered: false
+                )
+                .opacity(0.5)
+                
+                // Themes (disabled)
+                MenuItemView(
+                    id: "themes",
+                    icon: "square.text.square",
+                    title: "Themes",
+                    hasChevron: true,
+                    isHovered: false
+                )
+                .opacity(0.5)
+            }
+            .padding(.bottom, 10)
+        }
+        .frame(width: 238)
+        .background(
+            LiquidGlassBackground(cornerRadius: 34)
+        )
+        .opacity(isVisible ? 1 : 0)
+        .task {
+            try? await Task.sleep(for: .seconds(0.1))
+            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                isVisible = true
+            }
+        }
     }
 }
 
