@@ -642,7 +642,7 @@ struct PoemCardView: View {
                 let beytsPerPage = 2
                 let totalPages = (poemData.verses.count + beytsPerPage - 1) / beytsPerPage
                 
-                PageCurlView(currentPage: $versePage, pageCount: totalPages) { pageIndex in
+                PageCurlView(currentPage: $versePage, pageCount: totalPages, isRTL: selectedLanguage == .farsi) { pageIndex in
                     VStack(alignment: .center, spacing: 0) {
                         let startBeytIndex = pageIndex * beytsPerPage
                         let endBeytIndex = min(startBeytIndex + beytsPerPage, poemData.verses.count)
@@ -706,7 +706,9 @@ struct PoemCardView: View {
             
             if totalPages > 1 {
                 HStack(spacing: 8) {
-                    ForEach(0..<totalPages, id: \.self) { pageIndex in
+                    // Reverse the order for Farsi (RTL)
+                    let pageRange = selectedLanguage == .farsi ? Array((0..<totalPages).reversed()) : Array(0..<totalPages)
+                    ForEach(pageRange, id: \.self) { pageIndex in
                         Circle()
                             .fill(pageIndex == versePage ? (colorScheme == .dark ? Color.white : Color.black) : (colorScheme == .dark ? Color.white : Color.black).opacity(0.3))
                             .frame(width: 8, height: 8)

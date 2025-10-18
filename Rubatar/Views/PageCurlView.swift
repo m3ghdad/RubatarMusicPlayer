@@ -11,6 +11,7 @@ import UIKit
 struct PageCurlView<Content: View>: View {
     @Binding var currentPage: Int
     let pageCount: Int
+    let isRTL: Bool // Add RTL support
     let content: (Int) -> Content
     @Environment(\.colorScheme) var colorScheme
     
@@ -18,6 +19,7 @@ struct PageCurlView<Content: View>: View {
         PageCurlViewControllerWrapper(
             currentPage: $currentPage,
             pageCount: pageCount,
+            isRTL: isRTL,
             colorScheme: colorScheme,
             content: content
         )
@@ -27,6 +29,7 @@ struct PageCurlView<Content: View>: View {
 struct PageCurlViewControllerWrapper<Content: View>: UIViewControllerRepresentable {
     @Binding var currentPage: Int
     let pageCount: Int
+    let isRTL: Bool
     let colorScheme: ColorScheme
     let content: (Int) -> Content
     
@@ -34,6 +37,7 @@ struct PageCurlViewControllerWrapper<Content: View>: UIViewControllerRepresentab
         let controller = PageCurlHostController(
             pageCount: pageCount,
             currentPage: currentPage,
+            isRTL: isRTL,
             colorScheme: colorScheme,
             contentBuilder: content
         )
@@ -54,6 +58,9 @@ struct PageCurlViewControllerWrapper<Content: View>: UIViewControllerRepresentab
         
         // Update background color when color scheme changes
         uiViewController.updateColorScheme(colorScheme)
+        
+        // Update RTL mode if it changed
+        uiViewController.updateRTL(isRTL)
     }
     
     func makeCoordinator() -> Coordinator {
@@ -70,21 +77,23 @@ class PageCurlHostController<Content: View>: UIViewController, UIPageViewControl
     private var viewControllers: [UIHostingController<Content>] = []
     private var isReverse: Bool = false
     private var colorScheme: ColorScheme
+    private var isRTL: Bool
     
     let pageCount: Int
     var currentPage: Int
     var onPageChange: ((Int) -> Void)?
     private let contentBuilder: (Int) -> Content
     
-    init(pageCount: Int, currentPage: Int, colorScheme: ColorScheme, contentBuilder: @escaping (Int) -> Content) {
+    init(pageCount: Int, currentPage: Int, isRTL: Bool, colorScheme: ColorScheme, contentBuilder: @escaping (Int) -> Content) {
         self.pageCount = pageCount
         self.currentPage = currentPage
+        self.isRTL = isRTL
         self.colorScheme = colorScheme
         self.contentBuilder = contentBuilder
         super.init(nibName: nil, bundle: nil)
         
         setupViewControllers()
-        setupPageViewController(isReverse: false)
+        setupPageViewController(isReverse: isRTL) // Start with RTL state
     }
     
     required init?(coder: NSCoder) {
@@ -133,6 +142,30 @@ class PageCurlHostController<Content: View>: UIViewController, UIPageViewControl
         }
     }
     
+    func updateRTL(_ newRTL: Bool) {
+        guard isRTL != newRTL else { return }
+        isRTL = newRTL
+        
+        // Rebuild page view controller with new direction
+        setupPageViewController(isReverse: isRTL)
+        
+        addChild(pageViewController)
+        view.addSubview(pageViewController.view)
+        pageViewController.view.frame = view.bounds
+        pageViewController.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        pageViewController.didMove(toParent: self)
+        
+        // Reset to current page
+        if currentPage < viewControllers.count {
+            pageViewController.setViewControllers(
+                [viewControllers[currentPage]],
+                direction: .forward,
+                animated: false,
+                completion: nil
+            )
+        }
+    }
+    
     private func setupPageViewController(isReverse: Bool) {
         // Remove old page view controller if exists
         if let oldPageVC = pageViewController {
@@ -142,7 +175,9 @@ class PageCurlHostController<Content: View>: UIViewController, UIPageViewControl
         }
         
         // Create new page view controller with appropriate spine location
-        let spineLocation: UIPageViewController.SpineLocation = isReverse ? .max : .min
+        // For RTL: spine on max (right side), so page flips from left
+        // For LTR: spine on min (left side), so page flips from right
+        let spineLocation: UIPageViewController.SpineLocation = isRTL ? .max : .min
         
         pageViewController = UIPageViewController(
             transitionStyle: .pageCurl,
@@ -262,14 +297,22 @@ class PageCurlHostController<Content: View>: UIViewController, UIPageViewControl
     
     // MARK: - UIPageViewControllerDataSource
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
-        guard let index = viewControllers.firstIndex(of: viewController as! UIHostingController<Content>),
-              index > 0 else {
+        guard let index = viewControllers.firstIndex(of: viewController as! UIHostingController<Content>) else {
             return nil
         }
         
-        // Going backward - ensure we're using reverse spine
-        if !isReverse {
-            setupPageViewController(isReverse: true)
+        // In RTL mode (spine on right), "before" means higher index (next page)
+        // In LTR mode (spine on left), "before" means lower index (previous page)
+        let targetIndex = isRTL ? index + 1 : index - 1
+        
+        guard targetIndex >= 0 && targetIndex < viewControllers.count else {
+            return nil
+        }
+        
+        // Ensure we're using the correct spine direction
+        let shouldBeReverse = isRTL
+        if isReverse != shouldBeReverse {
+            setupPageViewController(isReverse: shouldBeReverse)
             addChild(self.pageViewController)
             view.addSubview(self.pageViewController.view)
             self.pageViewController.view.frame = view.bounds
@@ -285,18 +328,26 @@ class PageCurlHostController<Content: View>: UIViewController, UIPageViewControl
             )
         }
         
-        return viewControllers[index - 1]
+        return viewControllers[targetIndex]
     }
     
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
-        guard let index = viewControllers.firstIndex(of: viewController as! UIHostingController<Content>),
-              index < viewControllers.count - 1 else {
+        guard let index = viewControllers.firstIndex(of: viewController as! UIHostingController<Content>) else {
             return nil
         }
         
-        // Going forward - ensure we're using forward spine
-        if isReverse {
-            setupPageViewController(isReverse: false)
+        // In RTL mode (spine on right), "after" means lower index (previous page)
+        // In LTR mode (spine on left), "after" means higher index (next page)
+        let targetIndex = isRTL ? index - 1 : index + 1
+        
+        guard targetIndex >= 0 && targetIndex < viewControllers.count else {
+            return nil
+        }
+        
+        // Ensure we're using the correct spine direction
+        let shouldBeReverse = isRTL
+        if isReverse != shouldBeReverse {
+            setupPageViewController(isReverse: shouldBeReverse)
             addChild(self.pageViewController)
             view.addSubview(self.pageViewController.view)
             self.pageViewController.view.frame = view.bounds
@@ -312,7 +363,7 @@ class PageCurlHostController<Content: View>: UIViewController, UIPageViewControl
             )
         }
         
-        return viewControllers[index + 1]
+        return viewControllers[targetIndex]
     }
     
     func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
