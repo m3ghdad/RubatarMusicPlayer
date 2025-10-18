@@ -339,51 +339,23 @@ struct LiquidGlassBackground: View {
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-        ZStack {
-            // Shadow layer
-            RoundedRectangle(cornerRadius: cornerRadius)
-                .fill(Color.black.opacity(colorScheme == .dark ? 0.3 : 0.08))
-                .blur(radius: 20)
-                .offset(y: 5)
-            
-            // Liquid Glass Effect
-            RoundedRectangle(cornerRadius: cornerRadius)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: cornerRadius)
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(colors: colorScheme == .dark ? [
-                                    Color.white.opacity(0.05),
-                                    Color.white.opacity(0.02)
-                                ] : [
-                                    Color.white.opacity(0.7),
-                                    Color.white.opacity(0.5)
-                                ]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: cornerRadius)
-                        .strokeBorder(
-                            LinearGradient(
-                                gradient: Gradient(colors: colorScheme == .dark ? [
-                                    Color.white.opacity(0.3),
-                                    Color.white.opacity(0.1)
-                                ] : [
-                                    Color.white.opacity(0.8),
-                                    Color.white.opacity(0.4)
-                                ]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1.5
-                        )
-                )
-                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.1), radius: 10, x: 0, y: 5)
-        }
+        // Figma-exact Liquid Glass Effect
+        RoundedRectangle(cornerRadius: cornerRadius)
+            .fill(.ultraThinMaterial)
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(
+                        colorScheme == .dark ?
+                        Color(red: 44/255, green: 44/255, blue: 46/255).opacity(0.8) :
+                        Color(red: 245/255, green: 245/255, blue: 245/255).opacity(0.6)
+                    )
+            )
+            .shadow(
+                color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.08),
+                radius: 20,
+                x: 0,
+                y: 10
+            )
     }
 }
 

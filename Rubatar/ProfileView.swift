@@ -32,17 +32,16 @@ struct ProfileView: View {
     @State private var showToast = false
     @StateObject private var apiManager = GanjoorAPIManager()
     @Environment(\.colorScheme) var colorScheme
+    @Namespace private var menuNamespace // For zoom animation
+    @State private var activeCardIndex = 0 // Track which card's menu is open
     
     // Multiple poems from API
     @State private var poems: [PoemData] = []
     @State private var translatedPoems: [Int: PoemData] = [:] // Cache: poem.id -> translated poem
     @State private var isTranslating = false
     
-    // Translation manager (API key loaded from Info.plist to avoid Config dependency)
-    private let translationManager: TranslationManager = {
-        let key = Bundle.main.object(forInfoDictionaryKey: "OPENAI_API_KEY") as? String ?? ""
-        return TranslationManager(apiKey: key)
-    }()
+    // Translation manager
+    private let translationManager = TranslationManager(apiKey: Config.openAIAPIKey)
     
     // Helper function to convert numbers to Farsi numerals
     private func toFarsiNumber(_ number: Int) -> String {
@@ -107,12 +106,15 @@ struct ProfileView: View {
             VStack(spacing: 0) {
                 if poems.isEmpty || translatedPoems.isEmpty {
                     // Show loading skeleton cards until translations are ready
-                    PagingScrollView(pageCount: 3, content: { _ in
+                    PagingScrollView(pageCount: 3, content: { index in
                         PoemCardView(
                             poem: nil,
                             isTranslated: false,
                             toFarsiNumber: toFarsiNumber,
-                            showMenu: $showMenu
+                            showMenu: $showMenu,
+                            activeCardIndex: $activeCardIndex,
+                            menuNamespace: menuNamespace,
+                            cardIndex: index
                         )
                     }, currentPage: $currentPage)
                 } else {
@@ -123,12 +125,15 @@ struct ProfileView: View {
                     
                     if translatedPoemsList.isEmpty {
                         // Still translating, show skeleton
-                        PagingScrollView(pageCount: 3, content: { _ in
+                        PagingScrollView(pageCount: 3, content: { index in
                             PoemCardView(
                                 poem: nil,
                                 isTranslated: false,
                                 toFarsiNumber: toFarsiNumber,
-                                showMenu: $showMenu
+                                showMenu: $showMenu,
+                                activeCardIndex: $activeCardIndex,
+                                menuNamespace: menuNamespace,
+                                cardIndex: index
                             )
                         }, currentPage: $currentPage)
                     } else {
@@ -138,7 +143,10 @@ struct ProfileView: View {
                                 poem: translatedPoemsList[index],
                                 isTranslated: true,
                                 toFarsiNumber: toFarsiNumber,
-                                showMenu: $showMenu
+                                showMenu: $showMenu,
+                                activeCardIndex: $activeCardIndex,
+                                menuNamespace: menuNamespace,
+                                cardIndex: index
                             )
                         }, currentPage: $currentPage)
                     }
@@ -146,59 +154,89 @@ struct ProfileView: View {
             }
             .padding(.top, 24)
             .padding(.bottom, 24)
-            
-            // Liquid Glass Menu Overlay
+        }
+        .overlay {
             if showMenu {
                 Color.black.opacity(0.3)
                     .ignoresSafeArea()
                     .onTapGesture {
-                        showMenu = false
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                        }
                     }
-                
-                VStack {
-                    HStack {
-                        Spacer()
-                        LiquidGlassMenu(
-                            isPresented: $showMenu,
-                            onSave: {
-                                print("Save tapped")
-                            },
-                            onShare: {
-                                print("Share tapped")
-                            },
-                            onSelectText: {
-                                print("Select text tapped")
-                            },
-                            onRefresh: {
-                                refreshPoems()
-                            },
-                            onGoToPoet: {
-                                print("Go to poet tapped")
-                            },
-                            onInterpretation: {
-                                print("Interpretation tapped")
-                            },
-                            onLanguage: {
-                                print("Language tapped")
-                            },
-                            onConfigure: {
-                                print("Configure tapped")
-                            },
-                            onThemes: {
-                                print("Themes tapped")
-                            }
-                        )
-                        .padding(.trailing, 24)
+                    .transition(.opacity)
+            }
+        }
+        .overlay(alignment: .topTrailing) {
+            if showMenu {
+                MenuPopoverHelper(
+                    onSave: {
+                        print("Save tapped")
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                        }
+                    },
+                    onShare: {
+                        print("Share tapped")
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                        }
+                    },
+                    onSelectText: {
+                        print("Select text tapped")
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                        }
+                    },
+                    onRefresh: {
+                        refreshPoems()
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                        }
+                    },
+                    onGoToPoet: {
+                        print("Go to poet tapped")
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                        }
+                    },
+                    onInterpretation: {
+                        print("Interpretation tapped")
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                        }
+                    },
+                    onLanguage: {
+                        print("Language tapped")
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                        }
+                    },
+                    onConfigure: {
+                        print("Configure tapped")
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                        }
+                    },
+                    onThemes: {
+                        print("Themes tapped")
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                        }
                     }
-                    .padding(.top, 58)
-                    Spacer()
-                }
-                .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .topTrailing)))
+                )
+                .padding(.trailing, 32)
+                .padding(.top, 58)
+                .matchedGeometryEffect(id: "MENUCONTENT\(activeCardIndex)", in: menuNamespace)
+                .transition(.asymmetric(
+                    insertion: .scale(scale: 0.01, anchor: .topTrailing).combined(with: .opacity),
+                    removal: .scale(scale: 0.01, anchor: .topTrailing).combined(with: .opacity)
+                ))
             }
         }
         .toast(isShowing: $showToast, message: "Stirring the words…")
         .navigationBarHidden(true)
-        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showMenu)
+        .animation(.snappy(duration: 0.3, extraBounce: 0), value: showMenu)
         .onAppear {
             // Load initial poems from Ganjoor API
             Task {
@@ -301,7 +339,7 @@ struct SkeletonLoadingView: View {
                 .background(colorScheme == .dark ? Color(red: 44/255, green: 44/255, blue: 46/255) : Color.white)
                 .overlay(
                     VStack {
-                        Spacer()
+                    Spacer()
                         DashedLine(dashCount: 12)
                             .stroke((colorScheme == .dark ? Color.white : Color.black).opacity(0.1), lineWidth: 1)
                             .frame(height: 1)
@@ -380,6 +418,9 @@ struct PoemCardView: View {
     let isTranslated: Bool
     let toFarsiNumber: (Int) -> String
     @Binding var showMenu: Bool
+    @Binding var activeCardIndex: Int // Track which card's menu is open
+    var menuNamespace: Namespace.ID // For zoom animation
+    var cardIndex: Int // Unique index for each card
     
     @State private var versePage = 0 // Current verse page within the poem
     @Environment(\.colorScheme) var colorScheme
@@ -427,7 +468,10 @@ struct PoemCardView: View {
                             .buttonStyle(.plain)
                             
                             Button(action: {
-                                showMenu.toggle()
+                                activeCardIndex = cardIndex
+                                withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                    showMenu.toggle()
+                                }
                             }) {
                                 Image(systemName: "ellipsis")
                                     .font(.system(size: 18, weight: .medium))
@@ -435,6 +479,7 @@ struct PoemCardView: View {
                                     .frame(width: 28, height: 28)
                             }
                             .buttonStyle(.plain)
+                            .matchedTransitionSource(id: "MENUCONTENT\(cardIndex)", in: menuNamespace)
                         }
                     }
                     .padding(.top, 48)
@@ -537,6 +582,46 @@ struct PoemCardView: View {
     }
 }
 
+// Menu Popover Helper with fade-in animation
+struct MenuPopoverHelper: View {
+    let onSave: () -> Void
+    let onShare: () -> Void
+    let onSelectText: () -> Void
+    let onRefresh: () -> Void
+    let onGoToPoet: () -> Void
+    let onInterpretation: () -> Void
+    let onLanguage: () -> Void
+    let onConfigure: () -> Void
+    let onThemes: () -> Void
+    
+    @State private var isVisible: Bool = false
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        LiquidGlassMenu(
+            isPresented: .constant(true),
+            onSave: onSave,
+            onShare: onShare,
+            onSelectText: onSelectText,
+            onRefresh: onRefresh,
+            onGoToPoet: onGoToPoet,
+            onInterpretation: onInterpretation,
+            onLanguage: onLanguage,
+            onConfigure: onConfigure,
+            onThemes: onThemes
+        )
+        .opacity(isVisible ? 1 : 0)
+        .task {
+            try? await Task.sleep(for: .seconds(0.1))
+            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                isVisible = true
+            }
+        }
+        .presentationCompactAdaptation(.popover)
+    }
+}
+
 #Preview {
     ProfileView()
 }
+
