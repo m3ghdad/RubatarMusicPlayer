@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 // Language enum
 enum AppLanguage: String {
@@ -530,6 +531,12 @@ struct SkeletonLoadingView: View {
     }
 }
 
+// Observable class for typewriter text to ensure SwiftUI detects changes
+class TypewriterState: ObservableObject {
+    @Published var text: [String: String] = [:]
+    @Published var isComplete: [Int: Bool] = [:]
+}
+
 // Individual Poem Card Component
 struct PoemCardView: View {
     let poem: PoemData?
@@ -543,10 +550,8 @@ struct PoemCardView: View {
     var cardIndex: Int // Unique index for each card
     
     @State private var versePage = 0 // Current verse page within the poem
-    @State private var typewriterText: [String: String] = [:] // "page_beyt_line" -> displayed text
-    @State private var isTypingComplete: [Int: Bool] = [:] // Track if typing is complete for each page
+    @StateObject private var typewriterState = TypewriterState()
     @State private var typewriterTaskId = UUID() // Used to cancel/restart typewriter on mode change
-    @State private var typewriterUpdateTrigger = 0 // Force view updates
     @Environment(\.colorScheme) var colorScheme
     
     // Typewriter effect function
@@ -554,7 +559,7 @@ struct PoemCardView: View {
         print("🎬 Starting typewriter for page \(pageIndex), force: \(force), mode: \(displayMode)")
         
         // If already typing complete and not forcing, don't restart
-        if !force && isTypingComplete[pageIndex] == true {
+        if !force && typewriterState.isComplete[pageIndex] == true {
             print("⏭️ Skipping page \(pageIndex) - already complete")
             return
         }
@@ -564,29 +569,54 @@ struct PoemCardView: View {
             for beytIndex in 0..<beyts.count {
                 for lineIndex in 0..<2 {
                     let key = "\(pageIndex)_\(beytIndex)_\(lineIndex)"
-                    typewriterText[key] = nil
+                    typewriterState.text[key] = nil
                 }
             }
             print("🧹 Cleared text for page \(pageIndex)")
         }
         
         // Mark as not complete yet
-        isTypingComplete[pageIndex] = false
+        typewriterState.isComplete[pageIndex] = false
         
         // Only apply typewriter effect if mode is typewriter
         guard displayMode == .typewriter else {
             print("⏩ Not in typewriter mode, marking complete")
-            isTypingComplete[pageIndex] = true
+            typewriterState.isComplete[pageIndex] = true
             return
         }
         
         print("✅ Starting typewriter animation for page \(pageIndex) with \(beyts.count) beyts")
+        
+        // First, show full text briefly (500ms) so user sees content before animation
+        Task { @MainActor in
+            // Set all text to full initially
+            for (beytIndex, beyt) in beyts.enumerated() {
+                for (lineIndex, line) in beyt.enumerated() {
+                    let key = "\(pageIndex)_\(beytIndex)_\(lineIndex)"
+                    typewriterState.text[key] = line
+                }
+            }
+            
+            // Wait briefly so user sees the full text
+            try? await Task.sleep(for: .seconds(0.5))
+            
+            // Now clear and start typewriter animation
+            for (beytIndex, beyt) in beyts.enumerated() {
+                for (lineIndex, _) in beyt.enumerated() {
+                    let key = "\(pageIndex)_\(beytIndex)_\(lineIndex)"
+                    typewriterState.text[key] = ""
+                }
+            }
+        }
         
         // Calculate character delay
         let charDelay = 0.03
         let currentTaskId = typewriterTaskId
         
         Task {
+            // Wait for the initial display + clear
+            try? await Task.sleep(for: .seconds(0.5))
+            
             for (beytIndex, beyt) in beyts.enumerated() {
                 for (lineIndex, line) in beyt.enumerated() {
                     let key = "\(pageIndex)_\(beytIndex)_\(lineIndex)"
@@ -610,8 +640,7 @@ struct PoemCardView: View {
                         }
                         
                         await MainActor.run {
-                            typewriterText[key] = displayText
-                            typewriterUpdateTrigger += 1 // Force view update
+                            typewriterState.text[key] = displayText
                         }
                     }
                     print("✓ Completed line \(key)")
@@ -621,7 +650,7 @@ struct PoemCardView: View {
             // Mark as complete
             await MainActor.run {
                 if currentTaskId == typewriterTaskId {
-                    isTypingComplete[pageIndex] = true
+                    typewriterState.isComplete[pageIndex] = true
                     print("🏁 Page \(pageIndex) animation complete")
                 }
             }
@@ -630,21 +659,180 @@ struct PoemCardView: View {
     
     // Reset typewriter state
     private func resetTypewriter() {
-        typewriterText = [:]
-        isTypingComplete = [:]
+        typewriterState.text = [:]
+        typewriterState.isComplete = [:]
         typewriterTaskId = UUID() // This cancels any running tasks
     }
     
     // Get display text for a line (typewriter or full)
     private func getDisplayText(pageIndex: Int, beytIndex: Int, lineIndex: Int, fullText: String) -> String {
+        // If not in typewriter mode, always show full text
         if displayMode == .default {
             return fullText
         }
-        
+
         let key = "\(pageIndex)_\(beytIndex)_\(lineIndex)"
-        let text = typewriterText[key] ?? ""
-        print("🔤 Getting text for \(key): '\(text)' (full: '\(fullText.prefix(20))...')")
-        return text
+        
+        // If typing for this page is complete, show full text
+        if typewriterState.isComplete[pageIndex] == true {
+            return fullText
+        }
+        
+        // Return typewriter text (will be empty initially, then fill character by character)
+        return typewriterState.text[key] ?? ""
+    }
+    
+    // Extracted header to reduce type-checking complexity
+    private func headerView(poemData: PoemData) -> some View {
+        VStack(spacing: 0) {
+            VStack(spacing: 4) {
+                HStack(alignment: .top) {
+                    if selectedLanguage == .farsi {
+                        HStack(spacing: 8) {
+                            Button(action: {
+                                activeCardIndex = cardIndex
+                                withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                    showMenu.toggle()
+                                }
+                            }) {
+                                Image(systemName: "ellipsis")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundColor(.primary)
+                                    .frame(width: 28, height: 28)
+                            }
+                            .buttonStyle(ElegantButtonStyle())
+                            .matchedTransitionSource(id: "MENUCONTENT\(cardIndex)", in: menuNamespace)
+
+                            Button(action: {}) {
+                                Image(systemName: "bookmark")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundColor(.primary)
+                                    .frame(width: 28, height: 28)
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        Spacer()
+
+                        VStack(alignment: .trailing, spacing: 8) {
+                            Text(poemData.title)
+                                .font(.custom("Palatino-Roman", size: 24))
+                                .foregroundColor(colorScheme == .dark ? .white : Color(red: 60/255, green: 60/255, blue: 67/255, opacity: 0.6))
+                                .kerning(-0.43)
+                                .lineSpacing(22)
+                                .multilineTextAlignment(.trailing)
+
+                            Text(poemData.poet.name)
+                                .font(.custom("Palatino-Roman", size: 16))
+                                .foregroundColor(colorScheme == .dark ? Color(hex: "E3B887") : Color(red: 122/255, green: 92/255, blue: 57/255))
+                                .kerning(-0.23)
+                                .lineSpacing(20)
+                                .multilineTextAlignment(.trailing)
+                        }
+                    } else {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(poemData.title)
+                                .font(.custom("Palatino-Roman", size: 24))
+                                .foregroundColor(colorScheme == .dark ? .white : Color(red: 60/255, green: 60/255, blue: 67/255, opacity: 0.6))
+                                .kerning(-0.43)
+                                .lineSpacing(22)
+
+                            Text(poemData.poet.name)
+                                .font(.custom("Palatino-Roman", size: 16))
+                                .foregroundColor(colorScheme == .dark ? Color(hex: "E3B887") : Color(red: 122/255, green: 92/255, blue: 57/255))
+                                .kerning(-0.23)
+                                .lineSpacing(20)
+                        }
+                        
+                        Spacer()
+                        
+                        HStack(spacing: 8) {
+                            Button(action: {}) {
+                                Image(systemName: "bookmark")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundColor(.primary)
+                                    .frame(width: 28, height: 28)
+                            }
+                            .buttonStyle(.plain)
+
+                            Button(action: {
+                                activeCardIndex = cardIndex
+                                withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                    showMenu.toggle()
+                                }
+                            }) {
+                                Image(systemName: "ellipsis")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundColor(.primary)
+                                    .frame(width: 28, height: 28)
+                            }
+                            .buttonStyle(ElegantButtonStyle())
+                            .matchedTransitionSource(id: "MENUCONTENT\(cardIndex)", in: menuNamespace)
+                        }
+                    }
+                }
+                .padding(.top, 48)
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 16)
+            .background(colorScheme == .dark ? Color(red: 13/255, green: 13/255, blue: 13/255) : Color.white)
+            .overlay(
+                VStack {
+                    Spacer()
+                    DashedLine(dashCount: 12)
+                        .stroke((colorScheme == .dark ? Color.white : Color.black).opacity(0.1), lineWidth: 1)
+                        .frame(height: 1)
+                }
+            )
+        }
+    }
+    
+    // Extracted page content to reduce type-checking complexity
+    private func pageContent(poemData: PoemData, pageIndex: Int, beytsPerPage: Int) -> some View {
+        let startBeytIndex = pageIndex * beytsPerPage
+        let endBeytIndex = min(startBeytIndex + beytsPerPage, poemData.verses.count)
+        let beytsOnPage = Array(poemData.verses[startBeytIndex..<endBeytIndex])
+
+        return VStack(alignment: .center, spacing: 0) {
+            ForEach(Array(startBeytIndex..<endBeytIndex), id: \.self) { beytIndex in
+                if beytIndex < poemData.verses.count {
+                    let beyt = poemData.verses[beytIndex]
+                    let beytIndexInPage = beytIndex - startBeytIndex
+
+                    VStack(alignment: .center, spacing: 10) {
+                        if beyt.count > 0 {
+                            Text(getDisplayText(pageIndex: pageIndex, beytIndex: beytIndexInPage, lineIndex: 0, fullText: beyt[0]))
+                                .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
+                                .foregroundColor(colorScheme == .dark ? .white : .black)
+                                .lineSpacing(isTranslated ? 4 : 14 * 2.66)
+                                .kerning(1)
+                                .lineLimit(nil)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .multilineTextAlignment(.center)
+                        }
+                        if beyt.count > 1 {
+                            Text(getDisplayText(pageIndex: pageIndex, beytIndex: beytIndexInPage, lineIndex: 1, fullText: beyt[1]))
+                                .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
+                                .foregroundColor(colorScheme == .dark ? .white : .black)
+                                .lineSpacing(isTranslated ? 4 : 14 * 2.66)
+                                .kerning(1)
+                                .lineLimit(nil)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .multilineTextAlignment(.center)
+                        }
+                    }
+                    .padding(.bottom, beytIndex < endBeytIndex - 1 ? 24 : 0)
+                }
+            }
+        }
+        .padding(.horizontal, 24)
+                    .padding(.vertical, 16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        .background(colorScheme == .dark ? Color(red: 13/255, green: 13/255, blue: 13/255) : Color.white)
+        .cornerRadius(((poemData.verses.count + beytsPerPage - 1) / beytsPerPage) > 1 ? 0 : 12, corners: [.bottomLeft, .bottomRight])
+        .onAppear {
+            startTypewriter(for: pageIndex, beyts: beytsOnPage)
+        }
     }
     
     var body: some View {
@@ -660,115 +848,7 @@ struct PoemCardView: View {
         let poemData = poem! // Force unwrap since we checked for nil
         
         return VStack(spacing: 8) {
-            // Header
-            VStack(spacing: 0) {
-                VStack(spacing: 4) {
-                    HStack(alignment: .top) {
-                        // In Farsi mode: buttons on left, title/poet on right
-                        // In English mode: title/poet on left, buttons on right
-                        
-                        if selectedLanguage == .farsi {
-                            // Buttons first (left side in Farsi)
-                            HStack(spacing: 8) {
-                                Button(action: {
-                                    activeCardIndex = cardIndex
-                                    withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                                        showMenu.toggle()
-                                    }
-                                }) {
-                                    Image(systemName: "ellipsis")
-                                        .font(.system(size: 18, weight: .medium))
-                                        .foregroundColor(.primary)
-                                        .frame(width: 28, height: 28)
-                                }
-                                .buttonStyle(ElegantButtonStyle())
-                                .matchedTransitionSource(id: "MENUCONTENT\(cardIndex)", in: menuNamespace)
-                                
-                                Button(action: {}) {
-                                    Image(systemName: "bookmark")
-                                        .font(.system(size: 18, weight: .medium))
-                                        .foregroundColor(.primary)
-                                        .frame(width: 28, height: 28)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                            
-                            Spacer()
-                            
-                            // Title and poet (right side in Farsi)
-                            VStack(alignment: .trailing, spacing: 8) {
-                                Text(poemData.title)
-                                    .font(.custom("Palatino-Roman", size: 24))
-                                    .foregroundColor(colorScheme == .dark ? .white : Color(red: 60/255, green: 60/255, blue: 67/255, opacity: 0.6))
-                                    .kerning(-0.43)
-                                    .lineSpacing(22)
-                                    .multilineTextAlignment(.trailing)
-                                
-                                Text(poemData.poet.name)
-                                    .font(.custom("Palatino-Roman", size: 16))
-                                    .foregroundColor(colorScheme == .dark ? Color(hex: "E3B887") : Color(red: 122/255, green: 92/255, blue: 57/255))
-                                    .kerning(-0.23)
-                                    .lineSpacing(20)
-                                    .multilineTextAlignment(.trailing)
-                            }
-                        } else {
-                            // Title and poet (left side in English)
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(poemData.title)
-                                    .font(.custom("Palatino-Roman", size: 24))
-                                    .foregroundColor(colorScheme == .dark ? .white : Color(red: 60/255, green: 60/255, blue: 67/255, opacity: 0.6))
-                                    .kerning(-0.43)
-                                    .lineSpacing(22)
-                                
-                                Text(poemData.poet.name)
-                                    .font(.custom("Palatino-Roman", size: 16))
-                                    .foregroundColor(colorScheme == .dark ? Color(hex: "E3B887") : Color(red: 122/255, green: 92/255, blue: 57/255))
-                                    .kerning(-0.23)
-                                    .lineSpacing(20)
-                            }
-                            
-                            Spacer()
-                            
-                            // Buttons (right side in English)
-                            HStack(spacing: 8) {
-                                Button(action: {}) {
-                                    Image(systemName: "bookmark")
-                                        .font(.system(size: 18, weight: .medium))
-                                        .foregroundColor(.primary)
-                                        .frame(width: 28, height: 28)
-                                }
-                                .buttonStyle(.plain)
-                                
-                                Button(action: {
-                                    activeCardIndex = cardIndex
-                                    withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                                        showMenu.toggle()
-                                    }
-                                }) {
-                                    Image(systemName: "ellipsis")
-                                        .font(.system(size: 18, weight: .medium))
-                                        .foregroundColor(.primary)
-                                        .frame(width: 28, height: 28)
-                                }
-                                .buttonStyle(ElegantButtonStyle())
-                                .matchedTransitionSource(id: "MENUCONTENT\(cardIndex)", in: menuNamespace)
-                            }
-                        }
-                    }
-                    .padding(.top, 48)
-                }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 16)
-                .background(colorScheme == .dark ? Color(red: 13/255, green: 13/255, blue: 13/255) : Color.white)
-                        .overlay(
-                    VStack {
-                        Spacer()
-                        DashedLine(dashCount: 12)
-                            .stroke((colorScheme == .dark ? Color.white : Color.black).opacity(0.1), lineWidth: 1)
-                            .frame(height: 1)
-                    }
-                )
-            }
+            headerView(poemData: poemData)
             
             // Pages section with page curl
             if !poemData.verses.isEmpty {
@@ -776,59 +856,7 @@ struct PoemCardView: View {
                 let totalPages = (poemData.verses.count + beytsPerPage - 1) / beytsPerPage
                 
                 PageCurlView(currentPage: $versePage, pageCount: totalPages) { pageIndex in
-                    VStack(alignment: .center, spacing: 0) {
-                        let startBeytIndex = pageIndex * beytsPerPage
-                        let endBeytIndex = min(startBeytIndex + beytsPerPage, poemData.verses.count)
-                        let beytsOnPage = Array(poemData.verses[startBeytIndex..<endBeytIndex])
-                        
-                        ForEach(startBeytIndex..<endBeytIndex, id: \.self) { beytIndex in
-                            if beytIndex < poemData.verses.count {
-                                let beyt = poemData.verses[beytIndex]
-                                let beytIndexInPage = beytIndex - startBeytIndex
-                                
-                                VStack(alignment: .center, spacing: 10) {
-                                    // First line of beyt
-                                    if beyt.count > 0 {
-                                        Text(getDisplayText(pageIndex: pageIndex, beytIndex: beytIndexInPage, lineIndex: 0, fullText: beyt[0]))
-                                            .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
-                                            .foregroundColor(colorScheme == .dark ? .white : .black)
-                                            .lineSpacing(isTranslated ? 4 : 14 * 2.66)
-                                            .kerning(1)
-                                            .lineLimit(nil)
-                                            .fixedSize(horizontal: false, vertical: true)
-                                            .multilineTextAlignment(.center)
-                                            .id("\(pageIndex)_\(beytIndexInPage)_0_\(typewriterUpdateTrigger)")
-                                    }
-                                    
-                                    // Second line of beyt
-                                    if beyt.count > 1 {
-                                        Text(getDisplayText(pageIndex: pageIndex, beytIndex: beytIndexInPage, lineIndex: 1, fullText: beyt[1]))
-                                            .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
-                                            .foregroundColor(colorScheme == .dark ? .white : .black)
-                                            .lineSpacing(isTranslated ? 4 : 14 * 2.66)
-                                            .kerning(1)
-                                            .lineLimit(nil)
-                                            .fixedSize(horizontal: false, vertical: true)
-                                            .multilineTextAlignment(.center)
-                                            .id("\(pageIndex)_\(beytIndexInPage)_1_\(typewriterUpdateTrigger)")
-                                    }
-                                }
-                                .padding(.bottom, beytIndex < endBeytIndex - 1 ? 24 : 0)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 16)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    .background(colorScheme == .dark ? Color(red: 13/255, green: 13/255, blue: 13/255) : Color.white)
-                    .cornerRadius(totalPages > 1 ? 0 : 12, corners: [.bottomLeft, .bottomRight])
-                    .onAppear {
-                        // Start typewriter effect when page appears
-                        let startBeytIndex = pageIndex * beytsPerPage
-                        let endBeytIndex = min(startBeytIndex + beytsPerPage, poemData.verses.count)
-                        let beytsOnPage = Array(poemData.verses[startBeytIndex..<endBeytIndex])
-                        startTypewriter(for: pageIndex, beyts: beytsOnPage)
-                    }
+                    pageContent(poemData: poemData, pageIndex: pageIndex, beytsPerPage: beytsPerPage)
                 }
                 .id(poemData.id)
                 .onChange(of: versePage) { _, newPage in
@@ -836,6 +864,7 @@ struct PoemCardView: View {
                     let startBeytIndex = newPage * beytsPerPage
                     let endBeytIndex = min(startBeytIndex + beytsPerPage, poemData.verses.count)
                     let beytsOnPage = Array(poemData.verses[startBeytIndex..<endBeytIndex])
+                    
                     startTypewriter(for: newPage, beyts: beytsOnPage)
                 }
             } else {
@@ -875,12 +904,32 @@ struct PoemCardView: View {
             // Reset and restart typewriter when mode changes
             resetTypewriter()
             
-            // If switching to typewriter, start animation for current page
+            // If switching to typewriter, start animation for ALL pages
             if newMode == .typewriter, let poemData = poem {
                 let beytsPerPage = 2
+                let totalPages = (poemData.verses.count + beytsPerPage - 1) / beytsPerPage
+                
+                // Seed display keys for ALL pages first
+                for pageIdx in 0..<totalPages {
+                    let startBeytIndex = pageIdx * beytsPerPage
+                    let endBeytIndex = min(startBeytIndex + beytsPerPage, poemData.verses.count)
+                    
+                    for beytIndex in startBeytIndex..<endBeytIndex {
+                        let beyt = poemData.verses[beytIndex]
+                        let beytIndexInPage = beytIndex - startBeytIndex
+                        
+                        for lineIndex in 0..<min(2, beyt.count) {
+                            let key = "\(pageIdx)_\(beytIndexInPage)_\(lineIndex)"
+                            typewriterState.text[key] = ""
+                        }
+                    }
+                }
+                
+                // Now start typewriter for current page
                 let startBeytIndex = versePage * beytsPerPage
                 let endBeytIndex = min(startBeytIndex + beytsPerPage, poemData.verses.count)
                 let beytsOnPage = Array(poemData.verses[startBeytIndex..<endBeytIndex])
+                
                 print("🚀 Triggering typewriter for current page \(versePage)")
                 startTypewriter(for: versePage, beyts: beytsOnPage, force: true)
             }
