@@ -27,6 +27,7 @@ struct ContentView: View {
     @State private var shouldShowMiniPlayer = false
     @State private var showProfileSheet = false
     @StateObject private var audioPlayer = AudioPlayer()
+    @Namespace private var animation
     
     // MARK: - Video Configuration
     private let videoURL = URL(string: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")!
@@ -95,7 +96,8 @@ struct ContentView: View {
             if showEnhancedPlayer {
                 EnhancedMusicPlayer(
                     show: $showEnhancedPlayer,
-                    hideMiniPlayer: .constant(false)
+                    hideMiniPlayer: .constant(false),
+                    animation: animation
                 )
                 .environmentObject(audioPlayer)
                 .zIndex(1000)
