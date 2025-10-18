@@ -10,6 +10,7 @@ import SwiftUI
 struct LiquidGlassMenu: View {
     @Binding var isPresented: Bool
     let selectedLanguage: AppLanguage
+    @Binding var showLanguageMenu: Bool
     let onSave: () -> Void
     let onShare: () -> Void
     let onSelectText: () -> Void
@@ -17,6 +18,7 @@ struct LiquidGlassMenu: View {
     let onGoToPoet: () -> Void
     let onInterpretation: () -> Void
     let onLanguage: () -> Void
+    let onSelectLanguage: (AppLanguage) -> Void
     let onConfigure: () -> Void
     let onThemes: () -> Void
     
@@ -116,8 +118,87 @@ struct LiquidGlassMenu: View {
                     title: "Language",
                     subtitle: selectedLanguage.rawValue,
                     hasChevron: true,
+                    chevronDown: showLanguageMenu,
                     isHovered: hoveredItem == "language"
                 )
+                
+                // Expandable language options
+                if showLanguageMenu {
+                    VStack(spacing: 0) {
+                        // English option
+                        Button(action: {
+                            onSelectLanguage(.english)
+                        }) {
+                            HStack(spacing: 8) {
+                                // Checkmark (24x24 frame with centered icon)
+                                ZStack {
+                                    if selectedLanguage == .english {
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 17, weight: .semibold))
+                                            .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                                    }
+                                }
+                                .frame(width: 24, height: 22)
+                                
+                                // Label
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("English")
+                                        .font(.system(size: 17))
+                                        .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 16)
+                            .padding(.leading, 28) // Indent for sub-items
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(hoveredItem == "english" ? (colorScheme == .dark ? Color.white.opacity(0.15) : Color(hex: "EDEDED")) : Color.clear)
+                                    .padding(.horizontal, 8)
+                            )
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        
+                        // Farsi option
+                        Button(action: {
+                            onSelectLanguage(.farsi)
+                        }) {
+                            HStack(spacing: 8) {
+                                // Checkmark (24x24 frame with centered icon)
+                                ZStack {
+                                    if selectedLanguage == .farsi {
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 17, weight: .semibold))
+                                            .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                                    }
+                                }
+                                .frame(width: 24, height: 22)
+                                
+                                // Label
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Farsi")
+                                        .font(.system(size: 17))
+                                        .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 16)
+                            .padding(.leading, 28) // Indent for sub-items
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(hoveredItem == "farsi" ? (colorScheme == .dark ? Color.white.opacity(0.15) : Color(hex: "EDEDED")) : Color.clear)
+                                    .padding(.horizontal, 8)
+                            )
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
                 
                 // Configure
                 MenuItemView(
@@ -258,6 +339,7 @@ struct MenuItemView: View {
     let title: String
     var subtitle: String? = nil
     var hasChevron: Bool = false
+    var chevronDown: Bool = false
     var isHovered: Bool = false
     @Environment(\.colorScheme) var colorScheme
     
@@ -287,7 +369,7 @@ struct MenuItemView: View {
             
             // Chevron
             if hasChevron {
-                Image(systemName: "chevron.right")
+                Image(systemName: chevronDown ? "chevron.down" : "chevron.right")
                     .font(.system(size: 15, weight: .bold))
                     .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
                     .frame(width: 14)
@@ -395,6 +477,7 @@ extension Color {
         LiquidGlassMenu(
             isPresented: .constant(true),
             selectedLanguage: .english,
+            showLanguageMenu: .constant(false),
             onSave: {},
             onShare: {},
             onSelectText: {},
@@ -402,6 +485,7 @@ extension Color {
             onGoToPoet: {},
             onInterpretation: {},
             onLanguage: {},
+            onSelectLanguage: { _ in },
             onConfigure: {},
             onThemes: {}
         )

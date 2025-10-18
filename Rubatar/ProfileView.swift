@@ -193,102 +193,88 @@ struct ProfileView: View {
                     .transition(.opacity)
             }
         }
-        .overlay(alignment: .topTrailing) {
+        .overlay(alignment: selectedLanguage == .farsi ? .topLeading : .topTrailing) {
             if showMenu {
-                ZStack(alignment: .topTrailing) {
-                    // Main menu - always visible when showMenu is true
-                    MenuPopoverHelper(
-                        selectedLanguage: selectedLanguage,
-                        onSave: {
-                            print("Save tapped")
-                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                                showMenu = false
-                                showLanguageMenu = false
-                            }
-                        },
-                        onShare: {
-                            print("Share tapped")
-                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                                showMenu = false
-                                showLanguageMenu = false
-                            }
-                        },
-                        onSelectText: {
-                            print("Select text tapped")
-                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                                showMenu = false
-                                showLanguageMenu = false
-                            }
-                        },
-                        onRefresh: {
-                            refreshPoems()
-                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                                showMenu = false
-                                showLanguageMenu = false
-                            }
-                        },
-                        onGoToPoet: {
-                            print("Go to poet tapped")
-                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                                showMenu = false
-                                showLanguageMenu = false
-                            }
-                        },
-                        onInterpretation: {
-                            print("Interpretation tapped")
-                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                                showMenu = false
-                                showLanguageMenu = false
-                            }
-                        },
-                        onLanguage: {
-                            // Toggle language submenu
-                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                                showLanguageMenu.toggle()
-                            }
-                        },
-                        onConfigure: {
-                            print("Configure tapped")
-                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                                showMenu = false
-                                showLanguageMenu = false
-                            }
-                        },
-                        onThemes: {
-                            print("Themes tapped")
-                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                                showMenu = false
-                                showLanguageMenu = false
-                            }
+                MenuPopoverHelper(
+                    selectedLanguage: selectedLanguage,
+                    showLanguageMenu: $showLanguageMenu,
+                    onSave: {
+                        print("Save tapped")
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                            showLanguageMenu = false
                         }
-                    )
-                    .padding(.trailing, 32)
-                    .padding(.top, 58)
-                    .matchedGeometryEffect(id: "MENUCONTENT\(activeCardIndex)", in: menuNamespace)
-                    .opacity(showLanguageMenu ? 0 : 1)
-                    
-                    // Language submenu - slides in from the right
-                    if showLanguageMenu {
-                        LanguageMenuPopover(
-                            selectedLanguage: $selectedLanguage,
-                            onDismiss: {
-                                withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                                    showLanguageMenu = false
-                                    showMenu = false
-                                }
-                            }
-                        )
-                        .padding(.trailing, 32)
-                        .padding(.top, 58)
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .trailing).combined(with: .opacity)
-                        ))
+                    },
+                    onShare: {
+                        print("Share tapped")
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                            showLanguageMenu = false
+                        }
+                    },
+                    onSelectText: {
+                        print("Select text tapped")
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                            showLanguageMenu = false
+                        }
+                    },
+                    onRefresh: {
+                        refreshPoems()
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                            showLanguageMenu = false
+                        }
+                    },
+                    onGoToPoet: {
+                        print("Go to poet tapped")
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                            showLanguageMenu = false
+                        }
+                    },
+                    onInterpretation: {
+                        print("Interpretation tapped")
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                            showLanguageMenu = false
+                        }
+                    },
+                    onLanguage: {
+                        // Toggle language submenu expansion
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showLanguageMenu.toggle()
+                        }
+                    },
+                    onSelectLanguage: { language in
+                        // Update selected language and close menus
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            selectedLanguage = language
+                            showLanguageMenu = false
+                            showMenu = false
+                        }
+                    },
+                    onConfigure: {
+                        print("Configure tapped")
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                            showLanguageMenu = false
+                        }
+                    },
+                    onThemes: {
+                        print("Themes tapped")
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                            showLanguageMenu = false
+                        }
                     }
-                }
+                )
+                .padding(selectedLanguage == .farsi ? .leading : .trailing, 32)
+                .padding(.top, 58)
+                .matchedGeometryEffect(id: "MENUCONTENT\(activeCardIndex)", in: menuNamespace)
                 .transition(.asymmetric(
-                    insertion: .scale(scale: 0.01, anchor: .topTrailing).combined(with: .opacity),
-                    removal: .scale(scale: 0.01, anchor: .topTrailing).combined(with: .opacity)
+                    insertion: .scale(scale: 0.01, anchor: selectedLanguage == .farsi ? .topLeading : .topTrailing).combined(with: .opacity),
+                    removal: .scale(scale: 0.01, anchor: selectedLanguage == .farsi ? .topLeading : .topTrailing).combined(with: .opacity)
                 ))
             }
         }
@@ -739,6 +725,7 @@ struct PoemCardView: View {
 // Menu Popover Helper with fade-in animation
 struct MenuPopoverHelper: View {
     let selectedLanguage: AppLanguage
+    @Binding var showLanguageMenu: Bool
     let onSave: () -> Void
     let onShare: () -> Void
     let onSelectText: () -> Void
@@ -746,6 +733,7 @@ struct MenuPopoverHelper: View {
     let onGoToPoet: () -> Void
     let onInterpretation: () -> Void
     let onLanguage: () -> Void
+    let onSelectLanguage: (AppLanguage) -> Void
     let onConfigure: () -> Void
     let onThemes: () -> Void
     
@@ -756,6 +744,7 @@ struct MenuPopoverHelper: View {
         LiquidGlassMenu(
             isPresented: .constant(true),
             selectedLanguage: selectedLanguage,
+            showLanguageMenu: $showLanguageMenu,
             onSave: onSave,
             onShare: onShare,
             onSelectText: onSelectText,
@@ -763,6 +752,7 @@ struct MenuPopoverHelper: View {
             onGoToPoet: onGoToPoet,
             onInterpretation: onInterpretation,
             onLanguage: onLanguage,
+            onSelectLanguage: onSelectLanguage,
             onConfigure: onConfigure,
             onThemes: onThemes
         )
