@@ -99,7 +99,7 @@ struct ProfileView: View {
     var body: some View {
         ZStack {
             // Background - adapts to dark mode
-            (colorScheme == .dark ? Color(red: 28/255, green: 28/255, blue: 30/255) : Color(red: 244/255, green: 244/255, blue: 244/255))
+            (colorScheme == .dark ? Color.black : Color(red: 244/255, green: 244/255, blue: 244/255))
                 .ignoresSafeArea()
             
             // Paging carousel with peek of adjacent cards
@@ -336,7 +336,7 @@ struct SkeletonLoadingView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 16)
-                .background(colorScheme == .dark ? Color(red: 44/255, green: 44/255, blue: 46/255) : Color.white)
+                .background(colorScheme == .dark ? Color(red: 13/255, green: 13/255, blue: 13/255) : Color.white)
                 .overlay(
                     VStack {
                     Spacer()
@@ -403,11 +403,11 @@ struct SkeletonLoadingView: View {
             }
             .padding(.horizontal, 24)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-            .background(colorScheme == .dark ? Color(red: 44/255, green: 44/255, blue: 46/255) : Color.white)
+            .background(colorScheme == .dark ? Color(red: 13/255, green: 13/255, blue: 13/255) : Color.white)
             .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
             
         }
-        .background(colorScheme == .dark ? Color(red: 28/255, green: 28/255, blue: 30/255) : Color(red: 244/255, green: 244/255, blue: 244/255))
+        .background(colorScheme == .dark ? Color.black : Color(red: 244/255, green: 244/255, blue: 244/255))
         .clipShape(RoundedRectangle(cornerRadius: 24))
     }
 }
@@ -486,7 +486,7 @@ struct PoemCardView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 16)
-                .background(colorScheme == .dark ? Color(red: 44/255, green: 44/255, blue: 46/255) : Color.white)
+                .background(colorScheme == .dark ? Color(red: 13/255, green: 13/255, blue: 13/255) : Color.white)
                         .overlay(
                     VStack {
                         Spacer()
@@ -499,7 +499,7 @@ struct PoemCardView: View {
             
             // Pages section with page curl
             if !poemData.verses.isEmpty {
-                let beytsPerPage = 4
+                let beytsPerPage = 2
                 let totalPages = (poemData.verses.count + beytsPerPage - 1) / beytsPerPage
                 
                 PageCurlView(currentPage: $versePage, pageCount: totalPages) { pageIndex in
@@ -543,7 +543,7 @@ struct PoemCardView: View {
                     .padding(.horizontal, 24)
                     .padding(.vertical, 16)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    .background(colorScheme == .dark ? Color(red: 44/255, green: 44/255, blue: 46/255) : Color.white)
+                    .background(colorScheme == .dark ? Color(red: 13/255, green: 13/255, blue: 13/255) : Color.white)
                     .cornerRadius(totalPages > 1 ? 0 : 12, corners: [.bottomLeft, .bottomRight])
                 }
                 .id(poemData.id)
@@ -556,12 +556,12 @@ struct PoemCardView: View {
                 }
                 .frame(height: 300)
                 .frame(maxWidth: .infinity)
-                .background(colorScheme == .dark ? Color(red: 44/255, green: 44/255, blue: 46/255) : Color.white)
+                .background(colorScheme == .dark ? Color(red: 13/255, green: 13/255, blue: 13/255) : Color.white)
                 .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
             }
             
             // Page control with bottom corners rounded (only show if more than 1 page)
-            let beytsPerPage = 4
+            let beytsPerPage = 2
             let totalPages = (poemData.verses.count + beytsPerPage - 1) / beytsPerPage
             
             if totalPages > 1 {
@@ -573,11 +573,11 @@ struct PoemCardView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, minHeight: 44)
-                .background(colorScheme == .dark ? Color(red: 44/255, green: 44/255, blue: 46/255) : Color.white)
+                .background(colorScheme == .dark ? Color(red: 13/255, green: 13/255, blue: 13/255) : Color.white)
                 .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
             }
         }
-        .background(colorScheme == .dark ? Color(red: 28/255, green: 28/255, blue: 30/255) : Color(red: 244/255, green: 244/255, blue: 244/255))
+        .background(colorScheme == .dark ? Color.black : Color(red: 244/255, green: 244/255, blue: 244/255))
         .clipShape(RoundedRectangle(cornerRadius: 24))
     }
 }
