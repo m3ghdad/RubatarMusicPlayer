@@ -10,6 +10,11 @@ import Foundation
 class TranslationManager {
     private let openAIAPIKey: String
     
+    // Translation settings (inlined to avoid Config dependency)
+    private let translationModel: String = "gpt-4o-mini"
+    private let translationTemperature: Double = 0.7
+    private let translationMaxTokens: Int = 1000
+    
     init(apiKey: String) {
         self.openAIAPIKey = apiKey
     }
@@ -62,7 +67,7 @@ class TranslationManager {
             request.timeoutInterval = 30.0
             
             let requestBody: [String: Any] = [
-                "model": Config.translationModel,
+                "model": translationModel,
                 "messages": [
                     [
                         "role": "system",
@@ -73,8 +78,8 @@ class TranslationManager {
                         "content": prompt
                     ]
                 ],
-                "temperature": Config.translationTemperature,
-                "max_tokens": Config.translationMaxTokens
+                "temperature": translationTemperature,
+                "max_tokens": translationMaxTokens
             ]
             
             request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)

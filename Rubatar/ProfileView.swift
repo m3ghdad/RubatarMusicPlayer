@@ -38,8 +38,11 @@ struct ProfileView: View {
     @State private var translatedPoems: [Int: PoemData] = [:] // Cache: poem.id -> translated poem
     @State private var isTranslating = false
     
-    // Translation manager
-    private let translationManager = TranslationManager(apiKey: Config.openAIAPIKey)
+    // Translation manager (API key loaded from Info.plist to avoid Config dependency)
+    private let translationManager: TranslationManager = {
+        let key = Bundle.main.object(forInfoDictionaryKey: "OPENAI_API_KEY") as? String ?? ""
+        return TranslationManager(apiKey: key)
+    }()
     
     // Helper function to convert numbers to Farsi numerals
     private func toFarsiNumber(_ number: Int) -> String {
