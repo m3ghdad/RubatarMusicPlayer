@@ -181,11 +181,12 @@ struct ProfileView: View {
             .padding(.bottom, 24)
         }
         .overlay {
-            if showMenu && !showLanguageMenu {
+            if showMenu {
                 Color.black.opacity(0.3)
                     .ignoresSafeArea()
                     .onTapGesture {
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showLanguageMenu = false
                             showMenu = false
                         }
                     }
@@ -193,86 +194,98 @@ struct ProfileView: View {
             }
         }
         .overlay(alignment: .topTrailing) {
-            if showMenu && !showLanguageMenu {
-                MenuPopoverHelper(
-                    selectedLanguage: selectedLanguage,
-                    onSave: {
-                        print("Save tapped")
-                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                            showMenu = false
+            if showMenu {
+                ZStack(alignment: .topTrailing) {
+                    // Main menu - always visible when showMenu is true
+                    MenuPopoverHelper(
+                        selectedLanguage: selectedLanguage,
+                        onSave: {
+                            print("Save tapped")
+                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                showMenu = false
+                                showLanguageMenu = false
+                            }
+                        },
+                        onShare: {
+                            print("Share tapped")
+                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                showMenu = false
+                                showLanguageMenu = false
+                            }
+                        },
+                        onSelectText: {
+                            print("Select text tapped")
+                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                showMenu = false
+                                showLanguageMenu = false
+                            }
+                        },
+                        onRefresh: {
+                            refreshPoems()
+                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                showMenu = false
+                                showLanguageMenu = false
+                            }
+                        },
+                        onGoToPoet: {
+                            print("Go to poet tapped")
+                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                showMenu = false
+                                showLanguageMenu = false
+                            }
+                        },
+                        onInterpretation: {
+                            print("Interpretation tapped")
+                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                showMenu = false
+                                showLanguageMenu = false
+                            }
+                        },
+                        onLanguage: {
+                            // Toggle language submenu
+                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                showLanguageMenu.toggle()
+                            }
+                        },
+                        onConfigure: {
+                            print("Configure tapped")
+                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                showMenu = false
+                                showLanguageMenu = false
+                            }
+                        },
+                        onThemes: {
+                            print("Themes tapped")
+                            withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                showMenu = false
+                                showLanguageMenu = false
+                            }
                         }
-                    },
-                    onShare: {
-                        print("Share tapped")
-                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                            showMenu = false
-                        }
-                    },
-                    onSelectText: {
-                        print("Select text tapped")
-                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                            showMenu = false
-                        }
-                    },
-                    onRefresh: {
-                        refreshPoems()
-                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                            showMenu = false
-                        }
-                    },
-                    onGoToPoet: {
-                        print("Go to poet tapped")
-                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                            showMenu = false
-                        }
-                    },
-                    onInterpretation: {
-                        print("Interpretation tapped")
-                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                            showMenu = false
-                        }
-                    },
-                    onLanguage: {
-                        // Show language submenu
-                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                            showLanguageMenu = true
-                        }
-                    },
-                    onConfigure: {
-                        print("Configure tapped")
-                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                            showMenu = false
-                        }
-                    },
-                    onThemes: {
-                        print("Themes tapped")
-                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                            showMenu = false
-                        }
+                    )
+                    .padding(.trailing, 32)
+                    .padding(.top, 58)
+                    .matchedGeometryEffect(id: "MENUCONTENT\(activeCardIndex)", in: menuNamespace)
+                    .opacity(showLanguageMenu ? 0 : 1)
+                    
+                    // Language submenu - slides in from the right
+                    if showLanguageMenu {
+                        LanguageMenuPopover(
+                            selectedLanguage: $selectedLanguage,
+                            onDismiss: {
+                                withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                    showLanguageMenu = false
+                                    showMenu = false
+                                }
+                            }
+                        )
+                        .padding(.trailing, 32)
+                        .padding(.top, 58)
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .trailing).combined(with: .opacity),
+                            removal: .move(edge: .trailing).combined(with: .opacity)
+                        ))
                     }
-                )
-                .padding(.trailing, 32)
-                .padding(.top, 58)
-                .matchedGeometryEffect(id: "MENUCONTENT\(activeCardIndex)", in: menuNamespace)
-                .transition(.asymmetric(
-                    insertion: .scale(scale: 0.01, anchor: .topTrailing).combined(with: .opacity),
-                    removal: .scale(scale: 0.01, anchor: .topTrailing).combined(with: .opacity)
-                ))
-            }
-            
-            // Language submenu
-            if showLanguageMenu {
-                LanguageMenuPopover(
-                    selectedLanguage: $selectedLanguage,
-                    onDismiss: {
-                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                            showLanguageMenu = false
-                            showMenu = false
-                        }
-                    }
-                )
-                .padding(.trailing, 32)
-                .padding(.top, 58)
+                }
                 .transition(.asymmetric(
                     insertion: .scale(scale: 0.01, anchor: .topTrailing).combined(with: .opacity),
                     removal: .scale(scale: 0.01, anchor: .topTrailing).combined(with: .opacity)
@@ -335,6 +348,7 @@ extension View {
 
 // Skeleton Loading View
 struct SkeletonLoadingView: View {
+    let selectedLanguage: AppLanguage
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
@@ -343,38 +357,81 @@ struct SkeletonLoadingView: View {
             VStack(spacing: 0) {
                 VStack(spacing: 4) {
                     HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            // Title placeholder
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(colorScheme == .dark ? Color(red: 58/255, green: 58/255, blue: 60/255) : Color(red: 246/255, green: 242/255, blue: 242/255))
-                                .frame(width: 135, height: 32)
-                                .shimmer()
-                            
-                            // Poet name placeholder
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(colorScheme == .dark ? Color(red: 58/255, green: 58/255, blue: 60/255) : Color(red: 246/255, green: 242/255, blue: 242/255))
-                                .frame(width: 87, height: 16)
-                                .shimmer()
-                        }
+                        // In Farsi mode: buttons on left, placeholders on right
+                        // In English mode: placeholders on left, buttons on right
                         
-                        Spacer()
-                        
-                        HStack(spacing: 8) {
-                            Button(action: {}) {
-                                Image(systemName: "bookmark")
-                                    .font(.system(size: 18, weight: .medium))
-                                    .foregroundColor(.primary)
-                                    .frame(width: 28, height: 28)
+                        if selectedLanguage == .farsi {
+                            // Buttons first (left side in Farsi)
+                            HStack(spacing: 8) {
+                                Button(action: {}) {
+                                    Image(systemName: "ellipsis")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(.primary)
+                                        .frame(width: 28, height: 28)
+                                }
+                                .buttonStyle(.plain)
+                                
+                                Button(action: {}) {
+                                    Image(systemName: "bookmark")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(.primary)
+                                        .frame(width: 28, height: 28)
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
                             
-                            Button(action: {}) {
-                                Image(systemName: "ellipsis")
-                                    .font(.system(size: 18, weight: .medium))
-                                    .foregroundColor(.primary)
-                                    .frame(width: 28, height: 28)
+                            Spacer()
+                            
+                            // Placeholders (right side in Farsi)
+                            VStack(alignment: .trailing, spacing: 8) {
+                                // Title placeholder
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(colorScheme == .dark ? Color(red: 58/255, green: 58/255, blue: 60/255) : Color(red: 246/255, green: 242/255, blue: 242/255))
+                                    .frame(width: 135, height: 32)
+                                    .shimmer()
+                                
+                                // Poet name placeholder
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(colorScheme == .dark ? Color(red: 58/255, green: 58/255, blue: 60/255) : Color(red: 246/255, green: 242/255, blue: 242/255))
+                                    .frame(width: 87, height: 16)
+                                    .shimmer()
                             }
-                            .buttonStyle(.plain)
+                        } else {
+                            // Placeholders (left side in English)
+                            VStack(alignment: .leading, spacing: 8) {
+                                // Title placeholder
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(colorScheme == .dark ? Color(red: 58/255, green: 58/255, blue: 60/255) : Color(red: 246/255, green: 242/255, blue: 242/255))
+                                    .frame(width: 135, height: 32)
+                                    .shimmer()
+                                
+                                // Poet name placeholder
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(colorScheme == .dark ? Color(red: 58/255, green: 58/255, blue: 60/255) : Color(red: 246/255, green: 242/255, blue: 242/255))
+                                    .frame(width: 87, height: 16)
+                                    .shimmer()
+                            }
+                            
+                            Spacer()
+                            
+                            // Buttons (right side in English)
+                            HStack(spacing: 8) {
+                                Button(action: {}) {
+                                    Image(systemName: "bookmark")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(.primary)
+                                        .frame(width: 28, height: 28)
+                                }
+                                .buttonStyle(.plain)
+                                
+                                Button(action: {}) {
+                                    Image(systemName: "ellipsis")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(.primary)
+                                        .frame(width: 28, height: 28)
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
                     }
                     .padding(.top, 48)
@@ -474,7 +531,7 @@ struct PoemCardView: View {
     var body: some View {
         // Show skeleton if no poem data
         if poem == nil {
-            SkeletonLoadingView()
+            SkeletonLoadingView(selectedLanguage: selectedLanguage)
         } else {
             actualPoemView
         }
@@ -488,44 +545,95 @@ struct PoemCardView: View {
             VStack(spacing: 0) {
                 VStack(spacing: 4) {
                     HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(poemData.title)
-                                .font(.custom("Palatino-Roman", size: 24))
-                                .foregroundColor(colorScheme == .dark ? .white : Color(red: 60/255, green: 60/255, blue: 67/255, opacity: 0.6))
-                                .kerning(-0.43)
-                                .lineSpacing(22)
-                            
-                            Text(poemData.poet.name)
-                                .font(.custom("Palatino-Roman", size: 16))
-                                .foregroundColor(colorScheme == .dark ? Color(hex: "E3B887") : Color(red: 122/255, green: 92/255, blue: 57/255))
-                                .kerning(-0.23)
-                                .lineSpacing(20)
-                        }
+                        // In Farsi mode: buttons on left, title/poet on right
+                        // In English mode: title/poet on left, buttons on right
                         
-                        Spacer()
-                        
-                        HStack(spacing: 8) {
-                            Button(action: {}) {
-                                Image(systemName: "bookmark")
-                                    .font(.system(size: 18, weight: .medium))
-                                    .foregroundColor(.primary)
-                                    .frame(width: 28, height: 28)
-                            }
-                            .buttonStyle(.plain)
-                            
-                            Button(action: {
-                                activeCardIndex = cardIndex
-                                withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                                    showMenu.toggle()
+                        if selectedLanguage == .farsi {
+                            // Buttons first (left side in Farsi)
+                            HStack(spacing: 8) {
+                                Button(action: {
+                                    activeCardIndex = cardIndex
+                                    withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                        showMenu.toggle()
+                                    }
+                                }) {
+                                    Image(systemName: "ellipsis")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(.primary)
+                                        .frame(width: 28, height: 28)
                                 }
-                            }) {
-                                Image(systemName: "ellipsis")
-                                    .font(.system(size: 18, weight: .medium))
-                                    .foregroundColor(.primary)
-                                    .frame(width: 28, height: 28)
+                                .buttonStyle(ElegantButtonStyle())
+                                .matchedTransitionSource(id: "MENUCONTENT\(cardIndex)", in: menuNamespace)
+                                
+                                Button(action: {}) {
+                                    Image(systemName: "bookmark")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(.primary)
+                                        .frame(width: 28, height: 28)
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(ElegantButtonStyle())
-                            .matchedTransitionSource(id: "MENUCONTENT\(cardIndex)", in: menuNamespace)
+                            
+                            Spacer()
+                            
+                            // Title and poet (right side in Farsi)
+                            VStack(alignment: .trailing, spacing: 8) {
+                                Text(poemData.title)
+                                    .font(.custom("Palatino-Roman", size: 24))
+                                    .foregroundColor(colorScheme == .dark ? .white : Color(red: 60/255, green: 60/255, blue: 67/255, opacity: 0.6))
+                                    .kerning(-0.43)
+                                    .lineSpacing(22)
+                                    .multilineTextAlignment(.trailing)
+                                
+                                Text(poemData.poet.name)
+                                    .font(.custom("Palatino-Roman", size: 16))
+                                    .foregroundColor(colorScheme == .dark ? Color(hex: "E3B887") : Color(red: 122/255, green: 92/255, blue: 57/255))
+                                    .kerning(-0.23)
+                                    .lineSpacing(20)
+                                    .multilineTextAlignment(.trailing)
+                            }
+                        } else {
+                            // Title and poet (left side in English)
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(poemData.title)
+                                    .font(.custom("Palatino-Roman", size: 24))
+                                    .foregroundColor(colorScheme == .dark ? .white : Color(red: 60/255, green: 60/255, blue: 67/255, opacity: 0.6))
+                                    .kerning(-0.43)
+                                    .lineSpacing(22)
+                                
+                                Text(poemData.poet.name)
+                                    .font(.custom("Palatino-Roman", size: 16))
+                                    .foregroundColor(colorScheme == .dark ? Color(hex: "E3B887") : Color(red: 122/255, green: 92/255, blue: 57/255))
+                                    .kerning(-0.23)
+                                    .lineSpacing(20)
+                            }
+                            
+                            Spacer()
+                            
+                            // Buttons (right side in English)
+                            HStack(spacing: 8) {
+                                Button(action: {}) {
+                                    Image(systemName: "bookmark")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(.primary)
+                                        .frame(width: 28, height: 28)
+                                }
+                                .buttonStyle(.plain)
+                                
+                                Button(action: {
+                                    activeCardIndex = cardIndex
+                                    withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                        showMenu.toggle()
+                                    }
+                                }) {
+                                    Image(systemName: "ellipsis")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(.primary)
+                                        .frame(width: 28, height: 28)
+                                }
+                                .buttonStyle(ElegantButtonStyle())
+                                .matchedTransitionSource(id: "MENUCONTENT\(cardIndex)", in: menuNamespace)
+                            }
                         }
                     }
                     .padding(.top, 48)
