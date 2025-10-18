@@ -13,6 +13,12 @@ enum AppLanguage: String {
     case farsi = "Farsi"
 }
 
+// Display mode enum
+enum DisplayMode: String {
+    case `default` = "Default"
+    case typewriter = "Typewriter"
+}
+
 // Custom dashed line shape
 struct DashedLine: Shape {
     let dashCount: Int
@@ -36,7 +42,9 @@ struct ProfileView: View {
     @State private var currentPage = 0 // Current page within a poem (verse index)
     @State private var showMenu = false
     @State private var showLanguageMenu = false // Language submenu state
+    @State private var showConfigureMenu = false // Configure submenu state
     @State private var selectedLanguage: AppLanguage = .english // Current language
+    @State private var selectedDisplayMode: DisplayMode = .default // Display mode
     @State private var showToast = false
     @StateObject private var apiManager = GanjoorAPIManager()
     @Environment(\.colorScheme) var colorScheme
@@ -119,6 +127,7 @@ struct ProfileView: View {
                             poem: nil,
                             isTranslated: false,
                             selectedLanguage: selectedLanguage,
+                            displayMode: selectedDisplayMode,
                             toFarsiNumber: toFarsiNumber,
                             showMenu: $showMenu,
                             activeCardIndex: $activeCardIndex,
@@ -133,6 +142,7 @@ struct ProfileView: View {
                             poem: poems[index],
                             isTranslated: false,
                             selectedLanguage: selectedLanguage,
+                            displayMode: selectedDisplayMode,
                             toFarsiNumber: toFarsiNumber,
                             showMenu: $showMenu,
                             activeCardIndex: $activeCardIndex,
@@ -153,6 +163,7 @@ struct ProfileView: View {
                                 poem: nil,
                                 isTranslated: false,
                                 selectedLanguage: selectedLanguage,
+                                displayMode: selectedDisplayMode,
                                 toFarsiNumber: toFarsiNumber,
                                 showMenu: $showMenu,
                                 activeCardIndex: $activeCardIndex,
@@ -167,6 +178,7 @@ struct ProfileView: View {
                                 poem: translatedPoemsList[index],
                                 isTranslated: true,
                                 selectedLanguage: selectedLanguage,
+                                displayMode: selectedDisplayMode,
                                 toFarsiNumber: toFarsiNumber,
                                 showMenu: $showMenu,
                                 activeCardIndex: $activeCardIndex,
@@ -197,12 +209,15 @@ struct ProfileView: View {
             if showMenu {
                 MenuPopoverHelper(
                     selectedLanguage: selectedLanguage,
+                    selectedDisplayMode: selectedDisplayMode,
                     showLanguageMenu: $showLanguageMenu,
+                    showConfigureMenu: $showConfigureMenu,
                     onSave: {
                         print("Save tapped")
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
                             showMenu = false
                             showLanguageMenu = false
+                            showConfigureMenu = false
                         }
                     },
                     onShare: {
@@ -210,6 +225,7 @@ struct ProfileView: View {
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
                             showMenu = false
                             showLanguageMenu = false
+                            showConfigureMenu = false
                         }
                     },
                     onSelectText: {
@@ -217,6 +233,7 @@ struct ProfileView: View {
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
                             showMenu = false
                             showLanguageMenu = false
+                            showConfigureMenu = false
                         }
                     },
                     onRefresh: {
@@ -224,6 +241,7 @@ struct ProfileView: View {
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
                             showMenu = false
                             showLanguageMenu = false
+                            showConfigureMenu = false
                         }
                     },
                     onGoToPoet: {
@@ -231,6 +249,7 @@ struct ProfileView: View {
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
                             showMenu = false
                             showLanguageMenu = false
+                            showConfigureMenu = false
                         }
                     },
                     onInterpretation: {
@@ -238,11 +257,13 @@ struct ProfileView: View {
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
                             showMenu = false
                             showLanguageMenu = false
+                            showConfigureMenu = false
                         }
                     },
                     onLanguage: {
                         // Toggle language submenu expansion
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showConfigureMenu = false // Close configure if open
                             showLanguageMenu.toggle()
                         }
                     },
@@ -255,10 +276,18 @@ struct ProfileView: View {
                         }
                     },
                     onConfigure: {
-                        print("Configure tapped")
+                        // Toggle configure submenu expansion
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showLanguageMenu = false // Close language if open
+                            showConfigureMenu.toggle()
+                        }
+                    },
+                    onSelectDisplayMode: { mode in
+                        // Update selected display mode and close menus
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            selectedDisplayMode = mode
+                            showConfigureMenu = false
                             showMenu = false
-                            showLanguageMenu = false
                         }
                     },
                     onThemes: {
@@ -266,6 +295,7 @@ struct ProfileView: View {
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
                             showMenu = false
                             showLanguageMenu = false
+                            showConfigureMenu = false
                         }
                     }
                 )
@@ -505,6 +535,7 @@ struct PoemCardView: View {
     let poem: PoemData?
     let isTranslated: Bool
     let selectedLanguage: AppLanguage
+    let displayMode: DisplayMode
     let toFarsiNumber: (Int) -> String
     @Binding var showMenu: Bool
     @Binding var activeCardIndex: Int // Track which card's menu is open
@@ -512,7 +543,62 @@ struct PoemCardView: View {
     var cardIndex: Int // Unique index for each card
     
     @State private var versePage = 0 // Current verse page within the poem
+    @State private var typewriterText: [String: String] = [:] // "page_beyt_line" -> displayed text
+    @State private var isTypingComplete: [Int: Bool] = [:] // Track if typing is complete for each page
     @Environment(\.colorScheme) var colorScheme
+    
+    // Typewriter effect function
+    private func startTypewriter(for pageIndex: Int, beyts: [[String]]) {
+        // If already typing complete, don't restart
+        if isTypingComplete[pageIndex] == true {
+            return
+        }
+        
+        // Mark as not complete yet
+        isTypingComplete[pageIndex] = false
+        
+        // Only apply typewriter effect if mode is typewriter
+        guard displayMode == .typewriter else {
+            isTypingComplete[pageIndex] = true
+            return
+        }
+        
+        // Calculate character delay
+        let charDelay = 0.03
+        
+        Task {
+            for (beytIndex, beyt) in beyts.enumerated() {
+                for (lineIndex, line) in beyt.enumerated() {
+                    let key = "\(pageIndex)_\(beytIndex)_\(lineIndex)"
+                    
+                    for (charIndex, _) in line.enumerated() {
+                        let displayText = String(line.prefix(charIndex + 1))
+                        
+                        try? await Task.sleep(for: .seconds(charDelay))
+                        
+                        await MainActor.run {
+                            typewriterText[key] = displayText
+                        }
+                    }
+                }
+            }
+            
+            // Mark as complete
+            await MainActor.run {
+                isTypingComplete[pageIndex] = true
+            }
+        }
+    }
+    
+    // Get display text for a line (typewriter or full)
+    private func getDisplayText(pageIndex: Int, beytIndex: Int, lineIndex: Int, fullText: String) -> String {
+        if displayMode == .default {
+            return fullText
+        }
+        
+        let key = "\(pageIndex)_\(beytIndex)_\(lineIndex)"
+        return typewriterText[key] ?? ""
+    }
     
     var body: some View {
         // Show skeleton if no poem data
@@ -646,15 +732,17 @@ struct PoemCardView: View {
                     VStack(alignment: .center, spacing: 0) {
                         let startBeytIndex = pageIndex * beytsPerPage
                         let endBeytIndex = min(startBeytIndex + beytsPerPage, poemData.verses.count)
+                        let beytsOnPage = Array(poemData.verses[startBeytIndex..<endBeytIndex])
                         
                         ForEach(startBeytIndex..<endBeytIndex, id: \.self) { beytIndex in
                             if beytIndex < poemData.verses.count {
                                 let beyt = poemData.verses[beytIndex]
+                                let beytIndexInPage = beytIndex - startBeytIndex
                                 
                                 VStack(alignment: .center, spacing: 10) {
                                     // First line of beyt
                                     if beyt.count > 0 {
-                                        Text(beyt[0])
+                                        Text(getDisplayText(pageIndex: pageIndex, beytIndex: beytIndexInPage, lineIndex: 0, fullText: beyt[0]))
                                             .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
                                             .foregroundColor(colorScheme == .dark ? .white : .black)
                                             .lineSpacing(isTranslated ? 4 : 14 * 2.66)
@@ -666,7 +754,7 @@ struct PoemCardView: View {
                                     
                                     // Second line of beyt
                                     if beyt.count > 1 {
-                                        Text(beyt[1])
+                                        Text(getDisplayText(pageIndex: pageIndex, beytIndex: beytIndexInPage, lineIndex: 1, fullText: beyt[1]))
                                             .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
                                             .foregroundColor(colorScheme == .dark ? .white : .black)
                                             .lineSpacing(isTranslated ? 4 : 14 * 2.66)
@@ -685,8 +773,22 @@ struct PoemCardView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                     .background(colorScheme == .dark ? Color(red: 13/255, green: 13/255, blue: 13/255) : Color.white)
                     .cornerRadius(totalPages > 1 ? 0 : 12, corners: [.bottomLeft, .bottomRight])
+                    .onAppear {
+                        // Start typewriter effect when page appears
+                        let startBeytIndex = pageIndex * beytsPerPage
+                        let endBeytIndex = min(startBeytIndex + beytsPerPage, poemData.verses.count)
+                        let beytsOnPage = Array(poemData.verses[startBeytIndex..<endBeytIndex])
+                        startTypewriter(for: pageIndex, beyts: beytsOnPage)
+                    }
                 }
                 .id(poemData.id)
+                .onChange(of: versePage) { _, newPage in
+                    // Start typewriter for new page
+                    let startBeytIndex = newPage * beytsPerPage
+                    let endBeytIndex = min(startBeytIndex + beytsPerPage, poemData.verses.count)
+                    let beytsOnPage = Array(poemData.verses[startBeytIndex..<endBeytIndex])
+                    startTypewriter(for: newPage, beyts: beytsOnPage)
+                }
             } else {
                 VStack(spacing: 16) {
                     ProgressView()
@@ -725,7 +827,9 @@ struct PoemCardView: View {
 // Menu Popover Helper with fade-in animation
 struct MenuPopoverHelper: View {
     let selectedLanguage: AppLanguage
+    let selectedDisplayMode: DisplayMode
     @Binding var showLanguageMenu: Bool
+    @Binding var showConfigureMenu: Bool
     let onSave: () -> Void
     let onShare: () -> Void
     let onSelectText: () -> Void
@@ -735,6 +839,7 @@ struct MenuPopoverHelper: View {
     let onLanguage: () -> Void
     let onSelectLanguage: (AppLanguage) -> Void
     let onConfigure: () -> Void
+    let onSelectDisplayMode: (DisplayMode) -> Void
     let onThemes: () -> Void
     
     @State private var isVisible: Bool = false
@@ -744,7 +849,9 @@ struct MenuPopoverHelper: View {
         LiquidGlassMenu(
             isPresented: .constant(true),
             selectedLanguage: selectedLanguage,
+            selectedDisplayMode: selectedDisplayMode,
             showLanguageMenu: $showLanguageMenu,
+            showConfigureMenu: $showConfigureMenu,
             onSave: onSave,
             onShare: onShare,
             onSelectText: onSelectText,
@@ -754,6 +861,7 @@ struct MenuPopoverHelper: View {
             onLanguage: onLanguage,
             onSelectLanguage: onSelectLanguage,
             onConfigure: onConfigure,
+            onSelectDisplayMode: onSelectDisplayMode,
             onThemes: onThemes
         )
         .opacity(isVisible ? 1 : 0)

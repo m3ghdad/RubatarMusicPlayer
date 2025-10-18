@@ -10,7 +10,9 @@ import SwiftUI
 struct LiquidGlassMenu: View {
     @Binding var isPresented: Bool
     let selectedLanguage: AppLanguage
+    let selectedDisplayMode: DisplayMode
     @Binding var showLanguageMenu: Bool
+    @Binding var showConfigureMenu: Bool
     let onSave: () -> Void
     let onShare: () -> Void
     let onSelectText: () -> Void
@@ -20,6 +22,7 @@ struct LiquidGlassMenu: View {
     let onLanguage: () -> Void
     let onSelectLanguage: (AppLanguage) -> Void
     let onConfigure: () -> Void
+    let onSelectDisplayMode: (DisplayMode) -> Void
     let onThemes: () -> Void
     
     @State private var hoveredItem: String? = nil
@@ -205,9 +208,89 @@ struct LiquidGlassMenu: View {
                     id: "configure",
                     icon: "textformat",
                     title: "Configure",
+                    subtitle: selectedDisplayMode.rawValue,
                     hasChevron: true,
+                    chevronDown: showConfigureMenu,
                     isHovered: hoveredItem == "configure"
                 )
+                
+                // Expandable configure options
+                if showConfigureMenu {
+                    VStack(spacing: 0) {
+                        // Default option
+                        Button(action: {
+                            onSelectDisplayMode(.default)
+                        }) {
+                            HStack(spacing: 8) {
+                                // Checkmark (24x24 frame with centered icon)
+                                ZStack {
+                                    if selectedDisplayMode == .default {
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 17, weight: .semibold))
+                                            .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                                    }
+                                }
+                                .frame(width: 24, height: 22)
+                                
+                                // Label
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Default")
+                                        .font(.system(size: 17))
+                                        .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 16)
+                            .padding(.leading, 28) // Indent for sub-items
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(hoveredItem == "default" ? (colorScheme == .dark ? Color.white.opacity(0.15) : Color(hex: "EDEDED")) : Color.clear)
+                                    .padding(.horizontal, 8)
+                            )
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        
+                        // Typewriter option
+                        Button(action: {
+                            onSelectDisplayMode(.typewriter)
+                        }) {
+                            HStack(spacing: 8) {
+                                // Checkmark (24x24 frame with centered icon)
+                                ZStack {
+                                    if selectedDisplayMode == .typewriter {
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 17, weight: .semibold))
+                                            .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                                    }
+                                }
+                                .frame(width: 24, height: 22)
+                                
+                                // Label
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Typewriter")
+                                        .font(.system(size: 17))
+                                        .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 16)
+                            .padding(.leading, 28) // Indent for sub-items
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(hoveredItem == "typewriter" ? (colorScheme == .dark ? Color.white.opacity(0.15) : Color(hex: "EDEDED")) : Color.clear)
+                                    .padding(.horizontal, 8)
+                            )
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
                 
                 // Themes
                 MenuItemView(
@@ -256,6 +339,10 @@ struct LiquidGlassMenu: View {
         else if location.y > 97 { // After separator
             let menuY = location.y - 97
             
+            // Calculate expanded section heights
+            let languageExpandedHeight: CGFloat = showLanguageMenu ? 80 : 0 // 2 items * 40
+            let configureExpandedHeight: CGFloat = showConfigureMenu ? 80 : 0 // 2 items * 40
+            
             // Select text: 0-40
             if menuY >= 0 && menuY < 40 {
                 setHoveredItem("selecttext")
@@ -276,12 +363,30 @@ struct LiquidGlassMenu: View {
             else if menuY >= 202 && menuY < 242 {
                 setHoveredItem("language")
             }
-            // Configure: 242-282
-            else if menuY >= 242 && menuY < 282 {
+            // Language submenu items: 242-(242 + languageExpandedHeight)
+            else if showLanguageMenu && menuY >= 242 && menuY < 242 + languageExpandedHeight {
+                let subMenuY = menuY - 242
+                if subMenuY < 40 {
+                    setHoveredItem("english")
+                } else {
+                    setHoveredItem("farsi")
+                }
+            }
+            // Configure: (242 + languageExpandedHeight)-(282 + languageExpandedHeight)
+            else if menuY >= 242 + languageExpandedHeight && menuY < 282 + languageExpandedHeight {
                 setHoveredItem("configure")
             }
-            // Themes: 282-322
-            else if menuY >= 282 && menuY < 322 {
+            // Configure submenu items: (282 + languageExpandedHeight)-(282 + languageExpandedHeight + configureExpandedHeight)
+            else if showConfigureMenu && menuY >= 282 + languageExpandedHeight && menuY < 282 + languageExpandedHeight + configureExpandedHeight {
+                let subMenuY = menuY - (282 + languageExpandedHeight)
+                if subMenuY < 40 {
+                    setHoveredItem("default")
+                } else {
+                    setHoveredItem("typewriter")
+                }
+            }
+            // Themes: (282 + languageExpandedHeight + configureExpandedHeight)-(322 + languageExpandedHeight + configureExpandedHeight)
+            else if menuY >= 282 + languageExpandedHeight + configureExpandedHeight && menuY < 322 + languageExpandedHeight + configureExpandedHeight {
                 setHoveredItem("themes")
             }
             else {
@@ -323,8 +428,16 @@ struct LiquidGlassMenu: View {
             onInterpretation()
         case "language":
             onLanguage()
+        case "english":
+            onSelectLanguage(.english)
+        case "farsi":
+            onSelectLanguage(.farsi)
         case "configure":
             onConfigure()
+        case "default":
+            onSelectDisplayMode(.default)
+        case "typewriter":
+            onSelectDisplayMode(.typewriter)
         case "themes":
             onThemes()
         default:
@@ -477,7 +590,9 @@ extension Color {
         LiquidGlassMenu(
             isPresented: .constant(true),
             selectedLanguage: .english,
+            selectedDisplayMode: .default,
             showLanguageMenu: .constant(false),
+            showConfigureMenu: .constant(false),
             onSave: {},
             onShare: {},
             onSelectText: {},
@@ -487,6 +602,7 @@ extension Color {
             onLanguage: {},
             onSelectLanguage: { _ in },
             onConfigure: {},
+            onSelectDisplayMode: { _ in },
             onThemes: {}
         )
     }
