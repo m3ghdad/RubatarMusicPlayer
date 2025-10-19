@@ -166,10 +166,10 @@ class MusicManager: ObservableObject {
     }
     
     func loadSampleMusic() {
-        // Load your curated Persian music albums and playlists
+        // Load albums with real Apple Music IDs
         albums = [
             Album(
-                id: "1",
+                id: "1791770486",
                 title: "Gypsy Wind",
                 artist: "Sohrab Pournazeri",
                 artwork: CustomArtwork(url: URL(string: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop")!),
@@ -177,7 +177,7 @@ class MusicManager: ObservableObject {
                 releaseDate: Calendar.current.date(from: DateComponents(year: 2020, month: 1, day: 1)) ?? Date()
             ),
             Album(
-                id: "2",
+                id: "441355991",
                 title: "Voices of the Shades (Saamaan-e-saayeh'haa)",
                 artist: "Kayhan Kalhor & Madjid Khaladj",
                 artwork: CustomArtwork(url: URL(string: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=400&h=400&fit=crop")!),
@@ -185,7 +185,7 @@ class MusicManager: ObservableObject {
                 releaseDate: Calendar.current.date(from: DateComponents(year: 2019, month: 6, day: 15)) ?? Date()
             ),
             Album(
-                id: "3",
+                id: "1570201002",
                 title: "Setar Improvisation",
                 artist: "Keivan Saket",
                 artwork: CustomArtwork(url: URL(string: "https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=400&h=400&fit=crop")!),

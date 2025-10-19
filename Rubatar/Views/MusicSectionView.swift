@@ -227,16 +227,16 @@ struct MusicSectionView: View {
         let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
         impactFeedback.impactOccurred()
         
-        // Play the album (simulate first track)
-        let firstTrack = "\(album.title) - Track 1"
-        onMusicSelected(firstTrack, album.artist, album.artworkURL)
+        // Play the album using its ID - format: "albumId:albumTitle"
+        let albumIdentifier = "\(album.id):\(album.title)"
+        onMusicSelected(albumIdentifier, album.artist, album.artworkURL)
         
         // Show album alert
         selectedAlbum = album
         showingAlbumAlert = true
         
         // Also print to console
-        print("🎵 Tapped album: \(album.title) by \(album.artist)")
+        print("🎵 Tapped album: \(album.title) by \(album.artist) (ID: \(album.id))")
         print("   📅 Released: \(album.formattedReleaseDate)")
         print("   🎶 Tracks: \(album.trackCount)")
     }

@@ -1,6 +1,8 @@
 import SwiftUI
 import AVFoundation
 import MediaPlayer
+import MusicKit
+import Combine
 
 struct EnhancedMusicPlayer: View {
     @Binding var show: Bool
@@ -9,6 +11,10 @@ struct EnhancedMusicPlayer: View {
     
     // Pass the existing audio player from ContentView
     @EnvironmentObject var audioPlayer: AudioPlayer
+    
+    @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("LastPlaybackPositions") private var lastPlaybackPositionsData: Data = Data()
+    @AppStorage("WasPlayingOnBackground") private var wasPlayingOnBackground: Bool = false
     
     // View Properties
     @State private var expandPlayer: Bool = true
@@ -26,6 +32,84 @@ struct EnhancedMusicPlayer: View {
     @State private var isSeekingTime: Bool = false
     @State private var isAdjustingVolume: Bool = false
     @State private var volumeObserver: NSObjectProtocol?
+    @State private var isRestoringPlaybackPosition: Bool = false
+    @State private var shouldRestoreOnReturn: Bool = false
+    
+    private var lastPlaybackPositions: [String: Double] {
+        get {
+            guard let dict = try? JSONDecoder().decode([String: Double].self, from: lastPlaybackPositionsData) else { return [:] }
+            return dict
+        }
+        set {
+            lastPlaybackPositionsData = (try? JSONEncoder().encode(newValue)) ?? Data()
+        }
+    }
+    
+    private func trackKey() -> String? {
+        // Use the MusicKit Song id if available, otherwise fall back to track name+artist
+        let player = ApplicationMusicPlayer.shared
+        if let entry = player.queue.currentEntry, let song = entry.item as? Song {
+            if let id = song.id.rawValue as String? { return id }
+        }
+        let title = audioPlayer.currentTrack
+        let artist = audioPlayer.currentArtist
+        guard !title.isEmpty || !artist.isEmpty else { return nil }
+        return "\(title)|\(artist)"
+    }
+    
+    private func saveCurrentPlaybackPosition() {
+        guard let key = trackKey() else { return }
+
+        // Read existing positions directly from UserDefaults
+        let defaults = UserDefaults.standard
+        let data = defaults.data(forKey: "LastPlaybackPositions") ?? Data()
+        var dict = (try? JSONDecoder().decode([String: Double].self, from: data)) ?? [:]
+
+        // Current live time from MusicKit
+        let liveTime = ApplicationMusicPlayer.shared.playbackTime
+
+        // Avoid saving clearly invalid/zero values
+        guard liveTime > 0 else {
+            // Keep the previous saved time if any
+            return
+        }
+
+        // Only overwrite if we’re moving forward significantly to avoid regressions
+        let previous = dict[key] ?? 0
+        if liveTime >= previous + 0.25 {
+            dict[key] = liveTime
+            if let newData = try? JSONEncoder().encode(dict) {
+                defaults.set(newData, forKey: "LastPlaybackPositions")
+            }
+        }
+    }
+    
+    private func restorePlaybackPositionIfAvailable() {
+        guard let key = trackKey() else { return }
+        // Read positions directly from UserDefaults to avoid mutating self
+        let defaults = UserDefaults.standard
+        let data = defaults.data(forKey: "LastPlaybackPositions") ?? Data()
+        let dict = (try? JSONDecoder().decode([String: Double].self, from: data)) ?? [:]
+        guard let t = dict[key], t > 0 else { return }
+
+        // Update UI immediately
+        self.currentTime = t
+
+        // Seek directly on ApplicationMusicPlayer to avoid wrapper-induced resets
+        let player = ApplicationMusicPlayer.shared
+        player.playbackTime = t
+
+        // Retry a couple of times to outlast any late resets from the player
+        let retries = [0.05, 0.15, 0.30]
+        for delay in retries {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                ApplicationMusicPlayer.shared.playbackTime = t
+            }
+        }
+    }
+    
+    // Timer publisher for updating playback progress
+    private let _timeTimer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
     
     // Bottom Tab Selection
     @State private var selectedBottomTab: BottomTab = .booklet
@@ -59,18 +143,23 @@ struct EnhancedMusicPlayer: View {
             let safeArea = geometry.safeAreaInsets
             
             ZStack(alignment: .top) {
-                // Background with Liquid Glass Effect
-                ZStack {
-                    Rectangle()
-                        .fill(Color.black)
-                    
-                    Rectangle()
-                        .fill(gradient)
+                VStack(spacing: 0) {
+                    Spacer(minLength: safeArea.top + 16)
+                    ZStack {
+                        Rectangle()
+                            .fill(Color.black)
+                        Rectangle()
+                            .fill(gradient)
+                    }
+                    .clipShape(.rect(cornerRadius: 24))
+                    .overlay(
+                        ExpandedPlayer(size, safeArea)
+                            .clipShape(.rect(cornerRadius: 24))
+                    )
+                    .padding(.horizontal, 8)
+                    .padding(.bottom, 8)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .ignoresSafeArea(.all)
-                
-                ExpandedPlayer(size, safeArea)
             }
             .offset(y: offsetY)
             .gesture(
@@ -94,18 +183,50 @@ struct EnhancedMusicPlayer: View {
             )
         }
         .ignoresSafeArea(.all)
-        .onAppear {
-            if let artworkURL = audioPlayer.currentArtwork {
-                loadArtworkGradient(from: artworkURL)
-            } else {
-                gradient = Color.clear.gradient
-            }
-        }
-        .onChange(of: audioPlayer.currentArtwork) { _, newURL in
-            if let url = newURL {
-                loadArtworkGradient(from: url)
-            } else {
-                gradient = Color.clear.gradient
+        .onChange(of: scenePhase) { _, phase in
+            switch phase {
+            case .background, .inactive:
+                // Save current position and mark that we should restore on next activation
+                saveCurrentPlaybackPosition()
+                wasPlayingOnBackground = audioPlayer.isPlaying
+                shouldRestoreOnReturn = true
+            case .active:
+                // Only restore when returning to the app, once
+                guard shouldRestoreOnReturn else { return }
+                shouldRestoreOnReturn = false
+                isRestoringPlaybackPosition = true
+                // Defer slightly to allow the player to settle, then restore
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    // Ensure we have a current entry before restoring
+                    let player = ApplicationMusicPlayer.shared
+                    guard player.queue.currentEntry != nil else {
+                        // Try again a bit later if not ready
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            restorePlaybackPositionIfAvailable()
+                            // Reinforce once
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                // Optionally resume playback if it was playing before background
+                                if wasPlayingOnBackground {
+                                    Task { try? await ApplicationMusicPlayer.shared.play() }
+                                }
+                                isRestoringPlaybackPosition = false
+                            }
+                        }
+                        return
+                    }
+
+                    restorePlaybackPositionIfAvailable()
+                    // Reinforce once
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        // Optionally resume playback if it was playing before background
+                        if wasPlayingOnBackground {
+                            Task { try? await ApplicationMusicPlayer.shared.play() }
+                        }
+                        isRestoringPlaybackPosition = false
+                    }
+                }
+            @unknown default:
+                break
             }
         }
     }
@@ -114,11 +235,11 @@ struct EnhancedMusicPlayer: View {
     // MARK: - Expanded Player
     @ViewBuilder
     func ExpandedPlayer(_ size: CGSize, _ safeArea: EdgeInsets) -> some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             Capsule()
                 .fill(.white.secondary)
                 .frame(width: 35, height: 5)
-                .offset(y: -10)
+                .padding(.top, 12)
             
             // Header with Album Art and Info
             HStack(spacing: 12) {
@@ -170,6 +291,7 @@ struct EnhancedMusicPlayer: View {
                 .foregroundStyle(.white, .white.tertiary)
                 .font(.title2)
             }
+            .padding(.top, 8)
             
             // Conditional Segmented Control - Only show for booklet
             if selectedBottomTab == .booklet {
@@ -207,7 +329,16 @@ struct EnhancedMusicPlayer: View {
                 Slider(value: $currentTime, in: 0...totalTime) { isEditing in
                     isSeekingTime = isEditing
                     if !isEditing {
+                        // Seek directly on MusicKit player so timer reflects immediately
+                        let player = ApplicationMusicPlayer.shared
+                        player.playbackTime = currentTime
+                        // Reinforce on next runloop to avoid quick resets
+                        DispatchQueue.main.async {
+                            ApplicationMusicPlayer.shared.playbackTime = currentTime
+                        }
+                        // Mirror to your audioPlayer for non-MusicKit sources
                         audioPlayer.seekTo(currentTime)
+                        saveCurrentPlaybackPosition()
                     }
                 }
                 .tint(.white)
@@ -223,6 +354,30 @@ struct EnhancedMusicPlayer: View {
                         .font(.caption2)
                         .foregroundStyle(.white.secondary)
                 }
+            }
+            .onReceive(_timeTimer) { _ in
+                // Update slider even when paused, but don't fight user while dragging
+                guard !isSeekingTime, !isRestoringPlaybackPosition else { return }
+                let player = ApplicationMusicPlayer.shared
+                self.currentTime = player.playbackTime
+                // Try updating totalTime from current song if available
+                if let entry = player.queue.currentEntry, let song = entry.item as? Song, let duration = song.duration {
+                    self.totalTime = duration
+                }
+            }
+            .onAppear {
+                let player = ApplicationMusicPlayer.shared
+                self.currentTime = player.playbackTime
+                if let entry = player.queue.currentEntry, let song = entry.item as? Song, let duration = song.duration {
+                    self.totalTime = duration
+                }
+            }
+            .onChange(of: audioPlayer.currentTrack) { _, _ in
+                let player = ApplicationMusicPlayer.shared
+                if let entry = player.queue.currentEntry, let song = entry.item as? Song, let duration = song.duration {
+                    self.totalTime = duration
+                }
+                self.currentTime = player.playbackTime
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 15)
@@ -243,6 +398,7 @@ struct EnhancedMusicPlayer: View {
                     
                     Button(action: {
                         audioPlayer.togglePlayPause()
+                        if !audioPlayer.isPlaying { saveCurrentPlaybackPosition() }
                     }) {
                         Image(systemName: audioPlayer.isPlaying ? "pause.fill" : "play.fill")
                             .font(.system(size: 30))
@@ -339,7 +495,7 @@ struct EnhancedMusicPlayer: View {
             .padding(.bottom, safeArea.bottom + 10)
         }
         .padding(15)
-        .padding(.top, safeArea.top)
+        .padding(.top, safeArea.top + 12)
     }
     
     // MARK: - Content Views
@@ -704,3 +860,4 @@ struct PanGesture: UIGestureRecognizerRepresentable {
 #Preview {
     ContentView()
 }
+

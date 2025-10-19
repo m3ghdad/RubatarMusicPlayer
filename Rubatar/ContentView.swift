@@ -121,7 +121,8 @@ struct ContentView: View {
     // MARK: - Computed Views
     @ViewBuilder
     private var miniPlayerView: some View {
-        if showMiniPlayer && !showEnhancedPlayer {
+        // Always show mini player if user has ever played a track
+        if audioPlayer.hasPlayedTrack && !showEnhancedPlayer {
             PlayBackView(
                 onTap: { 
                     showEnhancedPlayer = true
