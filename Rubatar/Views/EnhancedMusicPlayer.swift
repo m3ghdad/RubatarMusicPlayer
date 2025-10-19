@@ -13,6 +13,7 @@ struct EnhancedMusicPlayer: View {
     @EnvironmentObject var audioPlayer: AudioPlayer
     
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("LastPlaybackPositions") private var lastPlaybackPositionsData: Data = Data()
     @AppStorage("WasPlayingOnBackground") private var wasPlayingOnBackground: Bool = false
     
@@ -170,37 +171,42 @@ struct EnhancedMusicPlayer: View {
             let safeArea = geometry.safeAreaInsets
             
             ZStack(alignment: .top) {
-                VStack(spacing: 0) {
-                    Spacer(minLength: safeArea.top + 16)
-                    ZStack {
-                        Rectangle()
-                            .fill(Color.black)
-                        Rectangle()
-                            .fill(gradient)
-                    }
-                    .clipShape(.rect(cornerRadius: 24))
-                    .overlay(
-                        ExpandedPlayer(size, safeArea)
-                            .clipShape(.rect(cornerRadius: 24))
-                    )
-                    .padding(.horizontal, 8)
-                    .padding(.bottom, 8)
+                ZStack {
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                colors: colorScheme == .dark ? [
+                                    Color(red: 0x1D/255.0, green: 0x1C/255.0, blue: 0x1C/255.0),
+                                    Color(red: 0x13/255.0, green: 0x0F/255.0, blue: 0x0F/255.0)
+                                ] : [
+                                    Color(red: 0xBD/255.0, green: 0xB8/255.0, blue: 0xB2/255.0),
+                                    Color(red: 0xD7/255.0, green: 0xD1/255.0, blue: 0xCB/255.0)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                 }
+                .clipShape(.rect(cornerRadius: 24))
+                .overlay(
+                ExpandedPlayer(size, safeArea)
+                        .clipShape(.rect(cornerRadius: 24))
+                )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .offset(y: offsetY)
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { value in
-                        let translation = max(value.translation.height, 0)
-                        offsetY = translation
+                    let translation = max(value.translation.height, 0)
+                    offsetY = translation
                     }
                     .onEnded { value in
-                        let translation = max(value.translation.height, 0)
-                        let velocity = value.velocity.height / 5
-                        
-                        withAnimation(.smooth(duration: 0.3, extraBounce: 0)) {
-                            if (translation + velocity) > (size.height * 0.5) {
+                    let translation = max(value.translation.height, 0)
+                    let velocity = value.velocity.height / 5
+                    
+                    withAnimation(.smooth(duration: 0.3, extraBounce: 0)) {
+                        if (translation + velocity) > (size.height * 0.5) {
                                 // Closing View - dismiss fullScreenCover
                                 show = false
                             }
@@ -259,78 +265,134 @@ struct EnhancedMusicPlayer: View {
     }
     
     
+    // MARK: - Layered Background Card
+    @ViewBuilder
+    func LayeredBackgroundCard() -> some View {
+        GeometryReader { geometry in
+            ZStack {
+                // Layer 3 (bottom): Linear gradient from #DDDDDD to #777777 at 50% opacity
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0xDD/255.0, green: 0xDD/255.0, blue: 0xDD/255.0),
+                                Color(red: 0x77/255.0, green: 0x77/255.0, blue: 0x77/255.0)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .opacity(0.5)
+                
+                // Layer 2: Paper texture folded at 80% opacity - fills the card
+                Image("paperTextureFolded")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: geometry.size.width, height: geometry.size.width)
+                    .clipped()
+                    .opacity(0.8)
+                
+                // Layer 1 (top): Setar image at 20% opacity - fills the card
+                Image("Setaar")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: geometry.size.width, height: geometry.size.width)
+                    .clipped()
+                    .opacity(0.2)
+            }
+            .frame(width: geometry.size.width, height: geometry.size.width)
+        }
+        .aspectRatio(1.0, contentMode: .fit)
+    }
+    
+    // MARK: - Track Info Card
+    @ViewBuilder
+    func TrackInfoCard() -> some View {
+        HStack(spacing: 12) {
+            // Album artwork - 48x48 with 12px border radius
+            AsyncImage(url: audioPlayer.currentArtwork) { image in
+                image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Rectangle()
+                    .fill(Color(white: 0.8))
+                    .overlay(
+                        Image(systemName: "music.note")
+                            .font(.system(size: 20))
+                            .foregroundColor(Color(white: 0.5))
+                    )
+            }
+            .frame(width: 48, height: 48)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            
+            // Track info
+            VStack(alignment: .leading, spacing: 4) {
+                Text(audioPlayer.currentTrack != "No track selected" ? audioPlayer.currentTrack : "Shabgard")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color(red: 0.2, green: 0.15, blue: 0.1))
+                    .lineLimit(1)
+                
+                Text(audioPlayer.currentArtist.isEmpty ? "Sohrab Pournazeri" : audioPlayer.currentArtist)
+                    .font(.system(size: 14))
+                    .foregroundStyle(Color(red: 0.72, green: 0.38, blue: 0.22))
+                    .lineLimit(1)
+            }
+            
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0xDD/255.0, green: 0xDD/255.0, blue: 0xDD/255.0),
+                            Color(red: 0x77/255.0, green: 0x77/255.0, blue: 0x77/255.0)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .opacity(0.5)
+        )
+    }
+    
     // MARK: - Expanded Player
     @ViewBuilder
     func ExpandedPlayer(_ size: CGSize, _ safeArea: EdgeInsets) -> some View {
-        VStack(spacing: 16) {
-            Capsule()
-                .fill(.white.secondary)
-                .frame(width: 35, height: 5)
-                .padding(.top, 12)
-            
-            // Header with Album Art and Info
-            HStack(spacing: 12) {
-                AsyncImage(url: audioPlayer.currentArtwork) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .overlay(
-                            Image(systemName: "music.note")
-                                .font(.title)
-                                .foregroundColor(.white.opacity(0.7))
-                        )
-                }
-                .frame(width: 80, height: 80)
-                .clipShape(.rect(cornerRadius: 10))
+        VStack(spacing: 0) {
+            // Top Card with Layered Background Image - at the very top
+            ZStack(alignment: .top) {
+                LayeredBackgroundCard()
+                    .frame(maxWidth: .infinity)
                 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(audioPlayer.currentTrack != "No track selected" ? audioPlayer.currentTrack : "Calm Down")
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                    
-                    Text(audioPlayer.currentArtist.isEmpty ? "Rema, Selena Gomez" : audioPlayer.currentArtist)
-                        .font(.caption2)
-                        .foregroundStyle(.white.secondary)
-                        .lineLimit(1)
-                }
-                
-                Spacer(minLength: 0)
-                
-                HStack(spacing: 0) {
-                    Button("", systemImage: "heart.circle.fill") {
-                        // Favorite action
-                    }
-                    
-                    Button("", systemImage: "ellipsis.circle.fill") {
-                        // More options
-                    }
-                }
-                .foregroundStyle(.white, .white.tertiary)
-                .font(.title2)
+                // Drag handle on top of the image card
+                Capsule()
+                    .fill(.white.secondary)
+                    .frame(width: 35, height: 5)
+                    .padding(.top, 64)
             }
-            .padding(.top, 8)
+            
+            // Track Information Card
+            TrackInfoCard()
+            .padding(.horizontal, 20)
+                .padding(.top, 16)
             
             // Conditional Segmented Control - Only show for booklet
+            // COMMENTED OUT - Segmented controls and content
+            /*
             if selectedBottomTab == .booklet {
-                Picker("Content", selection: $selectedSegment) {
-                    ForEach(SegmentTab.allCases, id: \.self) { tab in
-                        Text(tab.rawValue)
-                            .tag(tab)
-                    }
+            Picker("Content", selection: $selectedSegment) {
+                ForEach(SegmentTab.allCases, id: \.self) { tab in
+                    Text(tab.rawValue)
+                        .tag(tab)
                 }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 20)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 20)
             }
             
             // Content Area
@@ -348,6 +410,7 @@ struct EnhancedMusicPlayer: View {
                 .padding(.horizontal, 20)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            */
             
             Spacer()
             
@@ -426,7 +489,7 @@ struct EnhancedMusicPlayer: View {
             
             // Playback Controls with Glass Container
             GlassEffectContainer(spacing: 40.0) {
-                HStack(spacing: 40) {
+            HStack(spacing: 40) {
                     Button(action: {
                         audioPlayer.playPreviousTrack()
                     }) {
@@ -466,7 +529,7 @@ struct EnhancedMusicPlayer: View {
             
             // Volume Control - Enhanced implementation
             VStack(spacing: 8) {
-                HStack(spacing: 15) {
+            HStack(spacing: 15) {
                     Button(action: {
                         // Mute/unmute functionality
                         withAnimation(.easeInOut(duration: 0.2)) {
@@ -479,7 +542,7 @@ struct EnhancedMusicPlayer: View {
                         }
                     }) {
                         Image(systemName: volume <= 0 ? "speaker.slash.fill" : (volume < 0.3 ? "speaker.fill" : (volume < 0.7 ? "speaker.wave.1.fill" : "speaker.wave.3.fill")))
-                            .foregroundStyle(.white.secondary)
+                    .foregroundStyle(.white.secondary)
                             .font(.caption)
                     }
                     
@@ -491,7 +554,7 @@ struct EnhancedMusicPlayer: View {
                             print("🔊 Final volume set to: \(volume)")
                         }
                     })
-                    .tint(.white)
+                .tint(.white)
                     .onChange(of: volume) { oldValue, newValue in
                         // Update system volume whenever slider changes
                         if isAdjustingVolume {
@@ -509,8 +572,8 @@ struct EnhancedMusicPlayer: View {
                             setSystemVolume(Float(volume))
                         }
                     }) {
-                        Image(systemName: "speaker.wave.3.fill")
-                            .foregroundStyle(.white.secondary)
+                Image(systemName: "speaker.wave.3.fill")
+                    .foregroundStyle(.white.secondary)
                             .font(.caption)
                     }
                 }
@@ -524,8 +587,8 @@ struct EnhancedMusicPlayer: View {
                     Button(action: {
                         selectedBottomTab = tab
                     }) {
-                        Image(systemName: tab.iconName)
-                            .font(.title2)
+                            Image(systemName: tab.iconName)
+                                .font(.title2)
                             .foregroundStyle(selectedBottomTab == tab ? .white : .gray)
                             .frame(width: 50, height: 50)
                     }
@@ -536,8 +599,6 @@ struct EnhancedMusicPlayer: View {
             .padding(.horizontal, 20)
             .padding(.bottom, safeArea.bottom + 10)
         }
-        .padding(15)
-        .padding(.top, safeArea.top + 12)
     }
     
     // MARK: - Content Views
@@ -900,28 +961,28 @@ struct PanGesture: UIGestureRecognizerRepresentable {
         self.onChange = onChange
         self.onEnd = onEnd
     }
-
+    
     func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
         let gesture = UIPanGestureRecognizer()
         gesture.addTarget(context.coordinator, action: #selector(Coordinator.handlePan(_:)))
         return gesture
     }
-
+    
     func updateUIGestureRecognizer(_ recognizer: UIPanGestureRecognizer, context: Context) {
         // No dynamic updates needed per state; coordinator handles events.
     }
-
+    
     func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator {
         Coordinator(self)
     }
-
+    
     class Coordinator: NSObject {
         var parent: PanGesture
-
+        
         init(_ parent: PanGesture) {
             self.parent = parent
         }
-
+        
         @objc func handlePan(_ sender: UIPanGestureRecognizer) {
             // Use the recognizer's view to compute translation and velocity in the correct coordinate space.
             let inView = sender.view
@@ -942,6 +1003,6 @@ struct PanGesture: UIGestureRecognizerRepresentable {
 }
 
 #Preview {
-    ContentView()
-}
+        ContentView()
+    }
 
