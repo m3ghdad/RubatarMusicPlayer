@@ -348,14 +348,13 @@ struct EnhancedMusicPlayer: View {
                 .fill(
                     LinearGradient(
                         colors: [
-                            Color(red: 0xDD/255.0, green: 0xDD/255.0, blue: 0xDD/255.0),
-                            Color(red: 0x77/255.0, green: 0x77/255.0, blue: 0x77/255.0)
+                            Color(red: 0xEA/255.0, green: 0xEA/255.0, blue: 0xEA/255.0),
+                            Color(red: 0xC6/255.0, green: 0xC0/255.0, blue: 0xBA/255.0)
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
-                .opacity(0.5)
         )
     }
     
@@ -375,10 +374,10 @@ struct EnhancedMusicPlayer: View {
                     .padding(.top, 64)
             }
             
-            // Track Information Card
+            // Track Information Card - positioned to overlap the image card
             TrackInfoCard()
-            .padding(.horizontal, 20)
-                .padding(.top, 16)
+                .padding(.horizontal, 20)
+                .offset(y: -40)
             
             // Conditional Segmented Control - Only show for booklet
             // COMMENTED OUT - Segmented controls and content
