@@ -369,9 +369,9 @@ struct EnhancedMusicPlayer: View {
                     .frame(maxWidth: .infinity)
                 
                 // Drag handle on top of the image card
-                Capsule()
-                    .fill(.white.secondary)
-                    .frame(width: 35, height: 5)
+            Capsule()
+                .fill(.white.secondary)
+                .frame(width: 35, height: 5)
                     .padding(.top, 64)
             }
             
@@ -414,6 +414,8 @@ struct EnhancedMusicPlayer: View {
             
             Spacer()
             
+            // Controls Container with gradient background
+            VStack(spacing: 12) {
             // Progress Bar
             VStack(spacing: 8) {
                 Slider(value: $currentTime, in: 0...totalTime) { isEditing in
@@ -436,16 +438,16 @@ struct EnhancedMusicPlayer: View {
                 HStack {
                     Text(timeString(currentTime))
                         .font(.caption2)
-                        .foregroundStyle(.white.secondary)
+                        .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.6) : Color(red: 0x6E/255.0, green: 0x6E/255.0, blue: 0x6E/255.0))
                     
                     Spacer()
                     
                     Text("-\(timeString(totalTime - currentTime))")
                         .font(.caption2)
-                        .foregroundStyle(.white.secondary)
+                        .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.6) : Color(red: 0x6E/255.0, green: 0x6E/255.0, blue: 0x6E/255.0))
                 }
-            }
-            .onReceive(_timeTimer) { _ in
+                }
+                .onReceive(_timeTimer) { _ in
                 // Update slider even when paused, but don't fight user while dragging
                 guard !isSeekingTime, !isRestoringPlaybackPosition else { return }
                 
@@ -484,51 +486,46 @@ struct EnhancedMusicPlayer: View {
                 }
                 self.stopVolumeMonitoring()
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 15)
-            
-            // Playback Controls with Glass Container
-            GlassEffectContainer(spacing: 40.0) {
-            HStack(spacing: 40) {
+                
+                // Playback Controls
+                HStack {
+                    // Previous button - hugs left
                     Button(action: {
                         audioPlayer.playPreviousTrack()
                     }) {
                         Image(systemName: "backward.fill")
-                            .font(.title)
-                            .foregroundStyle(.white)
+                            .font(.system(size: 32))
+                            .foregroundStyle(colorScheme == .dark ? .white : Color(red: 0x6E/255.0, green: 0x6E/255.0, blue: 0x6E/255.0))
                     }
-                    .frame(width: 54, height: 54)
-                    .background(.clear)
-                    .glassEffect(.regular.tint(.white.opacity(0.1)).interactive(), in: .circle)
                     
+                    Spacer()
+                    
+                    // Play/Pause button - centered
                     Button(action: {
                         audioPlayer.togglePlayPause()
                         if !audioPlayer.isPlaying { saveCurrentPlaybackPosition() }
                     }) {
                         Image(systemName: audioPlayer.isPlaying ? "pause.fill" : "play.fill")
-                            .font(.system(size: 30))
-                            .foregroundStyle(.white)
+                            .font(.system(size: 32))
+                            .foregroundStyle(colorScheme == .dark ? .white : Color(red: 0x6E/255.0, green: 0x6E/255.0, blue: 0x6E/255.0))
                     }
-                    .frame(width: 80, height: 80)
-                    .background(.clear)
-                    .glassEffect(.regular.tint(.white.opacity(0.15)).interactive(), in: .circle)
                     
+                    Spacer()
+                    
+                    // Next button - hugs right
                     Button(action: {
                         audioPlayer.playNextTrack()
                     }) {
                         Image(systemName: "forward.fill")
-                            .font(.title)
-                            .foregroundStyle(.white)
+                            .font(.system(size: 32))
+                            .foregroundStyle(colorScheme == .dark ? .white : Color(red: 0x6E/255.0, green: 0x6E/255.0, blue: 0x6E/255.0))
                     }
-                    .frame(width: 54, height: 54)
-                    .background(.clear)
-                    .glassEffect(.regular.tint(.white.opacity(0.1)).interactive(), in: .circle)
                 }
-            }
-            .padding(.bottom, 15)
+                .padding(.horizontal, 48)
+                .padding(.vertical, 24)
+                .frame(maxWidth: .infinity)
             
-            // Volume Control - Enhanced implementation
-            VStack(spacing: 8) {
+            // Volume Control
             HStack(spacing: 15) {
                     Button(action: {
                         // Mute/unmute functionality
@@ -542,7 +539,7 @@ struct EnhancedMusicPlayer: View {
                         }
                     }) {
                         Image(systemName: volume <= 0 ? "speaker.slash.fill" : (volume < 0.3 ? "speaker.fill" : (volume < 0.7 ? "speaker.wave.1.fill" : "speaker.wave.3.fill")))
-                    .foregroundStyle(.white.secondary)
+                            .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.6) : Color(red: 0x6E/255.0, green: 0x6E/255.0, blue: 0x6E/255.0))
                             .font(.caption)
                     }
                     
@@ -573,15 +570,12 @@ struct EnhancedMusicPlayer: View {
                         }
                     }) {
                 Image(systemName: "speaker.wave.3.fill")
-                    .foregroundStyle(.white.secondary)
+                            .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.6) : Color(red: 0x6E/255.0, green: 0x6E/255.0, blue: 0x6E/255.0))
                             .font(.caption)
                     }
-                }
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 15)
             
-            // Bottom Tab Buttons - Enhanced Liquid Glass
+            // Bottom Tab Buttons
             HStack(spacing: 0) {
                 ForEach(BottomTab.allCases, id: \.self) { tab in
                     Button(action: {
@@ -589,15 +583,28 @@ struct EnhancedMusicPlayer: View {
                     }) {
                             Image(systemName: tab.iconName)
                                 .font(.title2)
-                            .foregroundStyle(selectedBottomTab == tab ? .white : .gray)
+                            .foregroundStyle(colorScheme == .dark ? (selectedBottomTab == tab ? .white : .gray) : Color(red: 0x6E/255.0, green: 0x6E/255.0, blue: 0x6E/255.0))
                             .frame(width: 50, height: 50)
                     }
                     .frame(maxWidth: .infinity)
-                    .glassEffect(.regular.tint(selectedBottomTab == tab ? .white.opacity(0.15) : .white.opacity(0.05)).interactive(), in: .circle)
                 }
             }
+            }
+            .padding(.vertical, 20)
             .padding(.horizontal, 20)
-            .padding(.bottom, safeArea.bottom + 10)
+            .background(
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0xBD/255.0, green: 0xB8/255.0, blue: 0xB2/255.0),
+                                Color(red: 0xD7/255.0, green: 0xD1/255.0, blue: 0xCB/255.0)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
         }
     }
     
