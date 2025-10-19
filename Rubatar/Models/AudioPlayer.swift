@@ -9,6 +9,7 @@ import Foundation
 import AVFoundation
 import Combine
 import MusicKit
+import UIKit
 
 @MainActor
 class AudioPlayer: ObservableObject {
@@ -34,6 +35,7 @@ class AudioPlayer: ObservableObject {
     private var lastUsingMusicKit: Bool = false
     private var lastQueueSongIDs: [String] = []
     private var lastCurrentSongID: String? = nil
+    private var stateSaveTimer: Timer?
     
     enum PlaybackError: Error {
         case notAuthorized
@@ -45,9 +47,50 @@ class AudioPlayer: ObservableObject {
         loadLastPlayedTrack()
         loadPlaybackState()
         
+        // Set up app lifecycle observers to save playback state
+        setupAppLifecycleObservers()
+        
         // Load persisted playback state and restore if possible
         Task { @MainActor in
             await checkMusicKitPlaybackState()
+            
+            // If we couldn't restore from existing queue, try rebuilding from saved state
+            if !usingMusicKit && !lastQueueSongIDs.isEmpty {
+                print("🔄 No active MusicKit queue found, attempting to rebuild from saved state...")
+                await rebuildQueueFromSavedIDs()
+            }
+        }
+    }
+    
+    private func setupAppLifecycleObservers() {
+        // Save playback state when app goes to background
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.saveCurrentPlaybackTime()
+        }
+        
+        // Save playback state when app will terminate
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.willTerminateNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.saveCurrentPlaybackTime()
+        }
+    }
+    
+    private func saveCurrentPlaybackTime() {
+        let player = ApplicationMusicPlayer.shared
+        let currentTime = player.playbackTime
+        
+        if currentTime > 0 && usingMusicKit {
+            print("💾 Saving playback time on app lifecycle event: \(currentTime)")
+            UserDefaults.standard.set(currentTime, forKey: "ap_lastValidPlaybackTime")
+            UserDefaults.standard.set(currentTime, forKey: "ap_lastPlaybackTime")
+            UserDefaults.standard.synchronize() // Force immediate save
         }
     }
     
@@ -57,6 +100,10 @@ class AudioPlayer: ObservableObject {
         // Check if MusicKit has an active queue
         if player.queue.entries.count > 0 {
             print("✅ MusicKit has active queue, restoring playback state")
+            print("   Queue entries: \(player.queue.entries.count)")
+            print("   Current playback time: \(player.playbackTime)")
+            print("   Playback status: \(player.state.playbackStatus)")
+            
             usingMusicKit = true
             
             // Get current entry info
@@ -67,12 +114,26 @@ class AudioPlayer: ObservableObject {
                     currentArtwork = song.artwork?.url(width: 400, height: 400)
                     hasPlayedTrack = true
                     saveLastPlayedTrack()
+                    
+                    print("   Current song: \(song.title) by \(song.artistName)")
+                } else {
+                    // Handle other types of queue entries
+                    print("   Current entry type: \(type(of: currentEntry.item))")
                 }
             }
             
             // Update isPlaying based on player state
             isPlaying = player.state.playbackStatus == .playing
             lastPlaybackTime = player.playbackTime
+            
+            // If we have a saved playback time that's different from current, restore it
+            let savedTime = UserDefaults.standard.double(forKey: "ap_lastPlaybackTime")
+            if savedTime > 0 && abs(savedTime - player.playbackTime) > 1.0 {
+                print("   Restoring saved playback time: \(savedTime) (current: \(player.playbackTime))")
+                player.playbackTime = savedTime
+                lastPlaybackTime = savedTime
+            }
+            
             savePlaybackState()
             
             if !isPlaying {
@@ -114,10 +175,20 @@ class AudioPlayer: ObservableObject {
         // Persist whether we were using MusicKit
         UserDefaults.standard.set(usingMusicKit, forKey: "ap_lastUsingMusicKit")
 
-        // Persist playback time from MusicKit
+        // Persist playback time from MusicKit (only if we're actively playing or have a valid time)
         let time = player.playbackTime
-        UserDefaults.standard.set(time, forKey: "ap_lastPlaybackTime")
-        lastPlaybackTime = time
+        if time > 0 || usingMusicKit {
+            UserDefaults.standard.set(time, forKey: "ap_lastPlaybackTime")
+            lastPlaybackTime = time
+            
+            // Also save a backup of valid playback times
+            if time > 0 {
+                UserDefaults.standard.set(time, forKey: "ap_lastValidPlaybackTime")
+            }
+        } else {
+            // If player time is 0 but we have a saved time, preserve it
+            UserDefaults.standard.set(lastPlaybackTime, forKey: "ap_lastPlaybackTime")
+        }
 
         // Persist queue IDs and current song ID if available
         let ids = musicKitQueue.map { $0.id.rawValue }
@@ -130,7 +201,31 @@ class AudioPlayer: ObservableObject {
             lastCurrentSongID = currentId
         }
 
-        print("💾 Saved playback state: usingMusicKit=\(usingMusicKit), time=\(time), currentId=\(lastCurrentSongID ?? "nil")")
+        print("💾 Saved playback state:")
+        print("   usingMusicKit=\(usingMusicKit)")
+        print("   playbackTime=\(lastPlaybackTime)")
+        print("   playerTime=\(time)")
+        print("   currentQueueIndex=\(currentQueueIndex)")
+        print("   currentSongId=\(lastCurrentSongID ?? "nil")")
+        print("   queueSize=\(musicKitQueue.count)")
+        print("   queueSongIds=\(ids)")
+    }
+    
+    // Start periodic saving during playback to capture current position
+    private func startPeriodicStateSaving() {
+        // Cancel any existing timer
+        stopPeriodicStateSaving()
+        
+        // Save state every 3 seconds during playback
+        stateSaveTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
+            guard let self = self, self.usingMusicKit, self.isPlaying else { return }
+            self.savePlaybackState()
+        }
+    }
+    
+    private func stopPeriodicStateSaving() {
+        stateSaveTimer?.invalidate()
+        stateSaveTimer = nil
     }
 
     private func loadPlaybackState() {
@@ -139,9 +234,26 @@ class AudioPlayer: ObservableObject {
         lastQueueSongIDs = UserDefaults.standard.stringArray(forKey: "ap_lastQueueSongIDs") ?? []
         lastCurrentSongID = UserDefaults.standard.string(forKey: "ap_lastCurrentSongID")
 
-        print("📥 Loaded playback state: lastUsingMusicKit=\(lastUsingMusicKit), time=\(lastPlaybackTime), currentId=\(lastCurrentSongID ?? "nil"), queueCount=\(lastQueueSongIDs.count)")
+        print("📥 Loaded playback state:")
+        print("   lastUsingMusicKit=\(lastUsingMusicKit)")
+        print("   lastPlaybackTime=\(lastPlaybackTime)")
+        print("   lastCurrentSongID=\(lastCurrentSongID ?? "nil")")
+        print("   queueCount=\(lastQueueSongIDs.count)")
+        print("   queueSongIDs=\(lastQueueSongIDs)")
 
-        guard lastUsingMusicKit, !lastQueueSongIDs.isEmpty else { return }
+        // Check if we have a valid playback time from a different source
+        let alternativeTimeKey = "ap_lastValidPlaybackTime"
+        let alternativeTime = UserDefaults.standard.double(forKey: alternativeTimeKey)
+        
+        if lastPlaybackTime == 0.0 && alternativeTime > 0.0 {
+            print("🔄 Found alternative saved time: \(alternativeTime), using it instead")
+            lastPlaybackTime = alternativeTime
+        }
+
+        guard lastUsingMusicKit, !lastQueueSongIDs.isEmpty else { 
+            print("⚠️ No saved MusicKit state to restore")
+            return 
+        }
 
         Task { @MainActor in
             await rebuildQueueFromSavedIDs()
@@ -166,6 +278,14 @@ class AudioPlayer: ObservableObject {
     private func rebuildQueueFromSavedIDs() async {
         let player = ApplicationMusicPlayer.shared
 
+        print("🔄 Rebuilding queue from saved IDs...")
+        print("   Saved song IDs: \(lastQueueSongIDs)")
+        print("   Saved current song ID: \(lastCurrentSongID ?? "nil")")
+        print("   Saved playback time: \(lastPlaybackTime)")
+
+        // Preserve the original saved playback time
+        let originalPlaybackTime = lastPlaybackTime
+
         // Fetch songs for saved IDs
         let songs = await idsToSongs(lastQueueSongIDs)
         guard !songs.isEmpty else {
@@ -174,10 +294,13 @@ class AudioPlayer: ObservableObject {
             return
         }
 
+        print("✅ Fetched \(songs.count) songs from saved IDs")
+
         // Resolve current index using saved current song ID
         var startIndex = 0
         if let savedId = lastCurrentSongID, let idx = songs.firstIndex(where: { $0.id.rawValue == savedId }) {
             startIndex = idx
+            print("✅ Found saved current song at index \(startIndex): \(songs[startIndex].title)")
         } else {
             print("⚠️ Saved current song ID not found in rebuilt queue; defaulting to index 0")
         }
@@ -185,17 +308,23 @@ class AudioPlayer: ObservableObject {
         // Assign queue starting at the saved current song
         musicKitQueue = songs
         currentQueueIndex = startIndex
+        
+        print("🎵 Setting MusicKit queue with \(songs.count) songs, starting at index \(startIndex)")
         player.queue = .init(for: songs, startingAt: songs[startIndex])
 
         // Update current track metadata
         updateCurrentTrackInfo()
-
-        // Seek to saved time and remain paused
-        player.playbackTime = lastPlaybackTime
+        
+        // Restore the original saved playback time
+        lastPlaybackTime = originalPlaybackTime
+        
+        // Store the saved time for later use (we'll seek after starting playback)
+        UserDefaults.standard.set(lastPlaybackTime, forKey: "ap_pendingSeekTime")
+        
         isPlaying = false
         usingMusicKit = true
 
-        print("✅ Rebuilt queue at index=\(startIndex), time=\(lastPlaybackTime), paused")
+        print("✅ Rebuilt queue at index=\(startIndex), saved seek time=\(lastPlaybackTime) for later use")
     }
     
     private func setupAudioSession() {
@@ -223,11 +352,12 @@ class AudioPlayer: ObservableObject {
                 if track.contains(":"), let albumId = track.split(separator: ":").first {
                     try await playAlbumByID(albumID: String(albumId), albumTitle: artist)
                 } else {
-                    try await playWithMusicKit(trackTitle: track, artist: artist)
+                try await playWithMusicKit(trackTitle: track, artist: artist)
                 }
                 usingMusicKit = true
                 isPlaying = true
                 savePlaybackState()
+                startPeriodicStateSaving()
                 print("✅ MusicKit playback started")
             } catch {
                 print("⚠️ MusicKit playback failed (\(error)). No fallback available.")
@@ -247,7 +377,7 @@ class AudioPlayer: ObservableObject {
             let status = await MusicAuthorization.request()
             guard status == .authorized else { throw PlaybackError.notAuthorized }
         }
-        
+
         let player = ApplicationMusicPlayer.shared
         
         // Fetch the album by ID
@@ -316,6 +446,7 @@ class AudioPlayer: ObservableObject {
                 usingMusicKit = true
                 isPlaying = true
                 savePlaybackState()
+                startPeriodicStateSaving()
                 print("✅ MusicKit playlist playback started")
             } catch {
                 print("⚠️ MusicKit playlist playback failed (\(error)). No fallback - playlist playback requires MusicKit.")
@@ -392,6 +523,7 @@ class AudioPlayer: ObservableObject {
         usingMusicKit = true
         isPlaying = true
         savePlaybackState()
+        startPeriodicStateSaving()
     }
     
     @MainActor
@@ -490,11 +622,12 @@ class AudioPlayer: ObservableObject {
     func togglePlayPause() {
         Task { @MainActor in
             let player = ApplicationMusicPlayer.shared
-            
+
             if player.queue.entries.count > 0 {
                 if player.state.playbackStatus == .playing {
                     player.pause()
                     isPlaying = false
+                    stopPeriodicStateSaving()
                     savePlaybackState()
                     return
                 } else {
@@ -502,33 +635,84 @@ class AudioPlayer: ObservableObject {
                         try await player.play()
                         isPlaying = true
                         usingMusicKit = true
+                        
+                        // Check if we have a pending seek time
+                        let pendingSeekTime = UserDefaults.standard.double(forKey: "ap_pendingSeekTime")
+                        if pendingSeekTime > 0 {
+                            print("🎯 Performing pending seek to time: \(pendingSeekTime)")
+                            
+                            // Wait a moment for playback to start, then seek
+                            try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 second delay
+                            player.playbackTime = pendingSeekTime
+                            
+                            // Clear the pending seek time
+                            UserDefaults.standard.removeObject(forKey: "ap_pendingSeekTime")
+                            
+                            let actualTime = player.playbackTime
+                            print("✅ Seek completed, actual time: \(actualTime)")
+                        }
+                        
                         savePlaybackState()
+                        startPeriodicStateSaving()
                         return
                     } catch {
                         print("⚠️ MusicKit play failed: \(error)")
-                        isPlaying = false
+                isPlaying = false
                         usingMusicKit = false
                         savePlaybackState()
-                        return
-                    }
+                return
+            }
                 }
             }
             
             // If no active queue, attempt to rebuild queue from saved IDs and play
             if !lastQueueSongIDs.isEmpty {
                 do {
+                    print("🔄 Attempting to rebuild queue and resume playback...")
                     await rebuildQueueFromSavedIDs()
+                    
+                    // Add a small delay to ensure queue is properly set
+                    try? await Task.sleep(nanoseconds: 200_000_000) // 0.2 second delay
+                    
+                    // Try to seek to the saved position again before playing
+                    if lastPlaybackTime > 0 {
+                        print("🎯 Final seek to saved position: \(lastPlaybackTime)")
+                        player.playbackTime = lastPlaybackTime
+                    }
+                    
                     try await player.play()
                     isPlaying = true
                     usingMusicKit = true
+                    
+                    // Check if we have a pending seek time
+                    let pendingSeekTime = UserDefaults.standard.double(forKey: "ap_pendingSeekTime")
+                    if pendingSeekTime > 0 {
+                        print("🎯 Performing pending seek to time: \(pendingSeekTime)")
+                        
+                        // Wait a moment for playback to start, then seek
+                        try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 second delay
+                        player.playbackTime = pendingSeekTime
+                        
+                        // Clear the pending seek time
+                        UserDefaults.standard.removeObject(forKey: "ap_pendingSeekTime")
+                        
+                        let actualTime = player.playbackTime
+                        print("✅ Seek completed, actual time: \(actualTime)")
+                    }
+                    
                     savePlaybackState()
+                    startPeriodicStateSaving()
+                    
+                    // Verify the position after starting playback
+                    let actualTime = player.playbackTime
+                    print("✅ Playback started at time: \(actualTime)")
                 } catch {
                     print("⚠️ Failed to rebuild queue and play: \(error)")
                     isPlaying = false
                     usingMusicKit = false
                     savePlaybackState()
                 }
-            } else {
+                } else {
                 print("ℹ️ No queue to play or resume.")
                 isPlaying = false
                 usingMusicKit = false
@@ -542,7 +726,7 @@ class AudioPlayer: ObservableObject {
             if isSkipping { return }
             isSkipping = true
             defer { isSkipping = false }
-            
+
             guard usingMusicKit else {
                 print("❌ No MusicKit playback active; cannot play next track.")
                 isPlaying = false
@@ -550,10 +734,10 @@ class AudioPlayer: ObservableObject {
                 return
             }
             
-            let player = ApplicationMusicPlayer.shared
-            do {
-                try await player.skipToNextEntry()
-                isPlaying = true
+                let player = ApplicationMusicPlayer.shared
+                do {
+                    try await player.skipToNextEntry()
+                    isPlaying = true
                 
                 // Update our queue index and track info
                 currentQueueIndex = (currentQueueIndex + 1) % musicKitQueue.count
@@ -577,7 +761,7 @@ class AudioPlayer: ObservableObject {
                 print("❌ No MusicKit playback active; cannot play previous track.")
                 isPlaying = false
                 savePlaybackState()
-                return
+                    return
             }
             
             let player = ApplicationMusicPlayer.shared
@@ -625,13 +809,23 @@ class AudioPlayer: ObservableObject {
     func stop() {
         Task { @MainActor in
             let player = ApplicationMusicPlayer.shared
+            
+            // Save the current playback time before stopping
+            let currentTime = player.playbackTime
+            if currentTime > 0 {
+                print("🛑 Saving final playback time before stop: \(currentTime)")
+                UserDefaults.standard.set(currentTime, forKey: "ap_lastValidPlaybackTime")
+                UserDefaults.standard.set(currentTime, forKey: "ap_lastPlaybackTime")
+            }
+            
             do {
                 try await player.stop()
             } catch {
                 print("❌ Failed to stop player: \(error)")
             }
-            isPlaying = false
+        isPlaying = false
             usingMusicKit = false
+            stopPeriodicStateSaving()
             savePlaybackState()
         }
     }
