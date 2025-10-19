@@ -57,6 +57,31 @@ struct EnhancedMusicPlayer: View {
         return "\(title)|\(artist)"
     }
     
+    private func getCurrentPlaybackPosition() -> Double {
+        let player = ApplicationMusicPlayer.shared
+        let actualTime = player.playbackTime
+        
+        // If we have actual playback time or we're playing, use it
+        if actualTime > 0 || audioPlayer.isPlaying {
+            return actualTime
+        }
+        
+        // If paused and no playback time, show saved position
+        let savedTime = UserDefaults.standard.double(forKey: "ap_lastPlaybackTime")
+        let backupTime = UserDefaults.standard.double(forKey: "ap_lastValidPlaybackTime")
+        let pendingTime = UserDefaults.standard.double(forKey: "ap_pendingSeekTime")
+        
+        if pendingTime > 0 {
+            return pendingTime
+        } else if savedTime > 0 {
+            return savedTime
+        } else if backupTime > 0 {
+            return backupTime
+        }
+        
+        return actualTime
+    }
+    
     private func saveCurrentPlaybackPosition() {
         guard let key = trackKey() else { return }
 
@@ -358,16 +383,19 @@ struct EnhancedMusicPlayer: View {
             .onReceive(_timeTimer) { _ in
                 // Update slider even when paused, but don't fight user while dragging
                 guard !isSeekingTime, !isRestoringPlaybackPosition else { return }
-                let player = ApplicationMusicPlayer.shared
-                self.currentTime = player.playbackTime
+                
+                // Always use actual player time for timer updates
+                self.currentTime = getCurrentPlaybackPosition()
+                
                 // Try updating totalTime from current song if available
+                let player = ApplicationMusicPlayer.shared
                 if let entry = player.queue.currentEntry, let song = entry.item as? Song, let duration = song.duration {
                     self.totalTime = duration
                 }
             }
             .onAppear {
                 let player = ApplicationMusicPlayer.shared
-                self.currentTime = player.playbackTime
+                self.currentTime = getCurrentPlaybackPosition()
                 if let entry = player.queue.currentEntry, let song = entry.item as? Song, let duration = song.duration {
                     self.totalTime = duration
                 }
@@ -377,7 +405,7 @@ struct EnhancedMusicPlayer: View {
                 if let entry = player.queue.currentEntry, let song = entry.item as? Song, let duration = song.duration {
                     self.totalTime = duration
                 }
-                self.currentTime = player.playbackTime
+                self.currentTime = getCurrentPlaybackPosition()
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 15)
