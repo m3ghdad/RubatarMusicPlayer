@@ -826,7 +826,9 @@ struct EnhancedMusicPlayer: View {
                 if !self.isAdjustingVolume {
                     let currentVolume = AVAudioSession.sharedInstance().outputVolume
                     print("🔊 System volume changed via notification to: \(currentVolume)")
-                    withAnimation(.easeInOut(duration: 0.2)) {
+                    
+                    // Update immediately without animation for smoother tracking
+                    DispatchQueue.main.async {
                         self.volume = Double(currentVolume)
                         self.lastKnownVolume = currentVolume
                     }
@@ -842,18 +844,18 @@ struct EnhancedMusicPlayer: View {
         // Stop any existing timer
         volumeTimer?.invalidate()
         
-        // Start new timer to check volume every 0.1 seconds
-        volumeTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+        // Start new timer to check volume every 0.05 seconds for smoother updates
+        volumeTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
             if !self.isAdjustingVolume {
                 let currentVolume = AVAudioSession.sharedInstance().outputVolume
                 
                 // Only update if volume actually changed (to avoid unnecessary animations)
-                if abs(currentVolume - self.lastKnownVolume) > 0.01 {
+                if abs(currentVolume - self.lastKnownVolume) > 0.005 {
                     print("🔊 Volume changed from \(self.lastKnownVolume) to \(currentVolume)")
+                    
+                    // Update immediately without animation for smoother tracking
                     DispatchQueue.main.async {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            self.volume = Double(currentVolume)
-                        }
+                        self.volume = Double(currentVolume)
                     }
                     self.lastKnownVolume = currentVolume
                 }
