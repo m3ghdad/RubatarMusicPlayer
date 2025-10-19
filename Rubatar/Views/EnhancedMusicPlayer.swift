@@ -268,41 +268,33 @@ struct EnhancedMusicPlayer: View {
     // MARK: - Layered Background Card
     @ViewBuilder
     func LayeredBackgroundCard() -> some View {
-        GeometryReader { geometry in
-            ZStack {
-                // Layer 3 (bottom): Linear gradient from #DDDDDD to #777777 at 50% opacity
-                Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0xDD/255.0, green: 0xDD/255.0, blue: 0xDD/255.0),
-                                Color(red: 0x77/255.0, green: 0x77/255.0, blue: 0x77/255.0)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+        ZStack {
+            // Layer 3 (bottom): Linear gradient from #DDDDDD to #777777 at 50% opacity
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0xDD/255.0, green: 0xDD/255.0, blue: 0xDD/255.0),
+                            Color(red: 0x77/255.0, green: 0x77/255.0, blue: 0x77/255.0)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
                     )
-                    .opacity(0.5)
-                
-                // Layer 2: Paper texture folded at 80% opacity - fills the card
-                Image("paperTextureFolded")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: geometry.size.width, height: geometry.size.width)
-                    .clipped()
-                    .opacity(0.8)
-                
-                // Layer 1 (top): Setar image at 20% opacity - fills the card
-                Image("Setaar")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: geometry.size.width, height: geometry.size.width)
-                    .clipped()
-                    .opacity(0.2)
-            }
-            .frame(width: geometry.size.width, height: geometry.size.width)
+                )
+                .opacity(0.5)
+            
+            // Layer 2: Paper texture folded at 80% opacity - fills the card
+            Image("paperTextureFolded")
+                .resizable()
+                .scaledToFill()
+                .opacity(0.8)
+            
+            // Layer 1 (top): Setar image at 20% opacity - fills the card, centered
+            Image("Setaar")
+                .resizable()
+                .scaledToFit()
+                .opacity(0.2)
         }
-        .aspectRatio(1.0, contentMode: .fit)
     }
     
     // MARK: - Track Info Card
@@ -362,7 +354,7 @@ struct EnhancedMusicPlayer: View {
     @ViewBuilder
     func ExpandedPlayer(_ size: CGSize, _ safeArea: EdgeInsets) -> some View {
         VStack(spacing: 0) {
-            // Top Card with Layered Background Image - at the very top
+            // Top Card with Layered Background Image - fills available space
             ZStack(alignment: .top) {
                 LayeredBackgroundCard()
                     .frame(maxWidth: .infinity)
@@ -376,7 +368,7 @@ struct EnhancedMusicPlayer: View {
             
             // Track Information Card - positioned to overlap the image card
             TrackInfoCard()
-                .padding(.horizontal, 20)
+            .padding(.horizontal, 20)
                 .offset(y: -40)
             
             // Conditional Segmented Control - Only show for booklet
