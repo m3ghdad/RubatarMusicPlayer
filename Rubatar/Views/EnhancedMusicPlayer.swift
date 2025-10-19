@@ -32,6 +32,8 @@ struct EnhancedMusicPlayer: View {
     @State private var isSeekingTime: Bool = false
     @State private var isAdjustingVolume: Bool = false
     @State private var volumeObserver: NSObjectProtocol?
+    @State private var volumeTimer: Timer?
+    @State private var lastKnownVolume: Float = 0.0
     @State private var isRestoringPlaybackPosition: Bool = false
     @State private var shouldRestoreOnReturn: Bool = false
     
@@ -399,6 +401,10 @@ struct EnhancedMusicPlayer: View {
                 if let entry = player.queue.currentEntry, let song = entry.item as? Song, let duration = song.duration {
                     self.totalTime = duration
                 }
+                
+                // Initialize volume and set up observation
+                self.initializeSystemVolume()
+                self.setupVolumeObservation()
             }
             .onChange(of: audioPlayer.currentTrack) { _, _ in
                 let player = ApplicationMusicPlayer.shared
@@ -406,6 +412,14 @@ struct EnhancedMusicPlayer: View {
                     self.totalTime = duration
                 }
                 self.currentTime = getCurrentPlaybackPosition()
+            }
+            .onDisappear {
+                // Clean up volume observer and timer
+                if let observer = self.volumeObserver {
+                    NotificationCenter.default.removeObserver(observer)
+                    self.volumeObserver = nil
+                }
+                self.stopVolumeMonitoring()
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 15)
@@ -788,28 +802,68 @@ struct EnhancedMusicPlayer: View {
     }
     
     func setupVolumeObservation() {
-        // Set up AVAudioSession for volume monitoring (without conflicting with audio playback)
+        // Set up AVAudioSession for volume monitoring
         do {
             let session = AVAudioSession.sharedInstance()
             try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            try session.setActive(true)
             
-            // Observe volume changes via notification
+            // Get initial volume from system
+            let initialVolume = session.outputVolume
+            volume = Double(initialVolume)
+            lastKnownVolume = initialVolume
+            print("🔊 Initial volume: \(volume)")
+            
+            // Start timer-based volume monitoring (more reliable on physical devices)
+            startVolumeMonitoring()
+            
+            // Also try the notification approach as backup
             volumeObserver = NotificationCenter.default.addObserver(
                 forName: NSNotification.Name("AVSystemController_SystemVolumeDidChangeNotification"),
                 object: nil,
                 queue: .main
             ) { notification in
                 if !self.isAdjustingVolume {
-                    if let volumeValue = notification.userInfo?["AVSystemController_AudioVolumeNotificationParameter"] as? Float {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            self.volume = Double(volumeValue)
-                        }
+                    let currentVolume = AVAudioSession.sharedInstance().outputVolume
+                    print("🔊 System volume changed via notification to: \(currentVolume)")
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        self.volume = Double(currentVolume)
+                        self.lastKnownVolume = currentVolume
                     }
                 }
             }
+            
         } catch {
             print("Failed to set up volume observation: \(error.localizedDescription)")
         }
+    }
+    
+    private func startVolumeMonitoring() {
+        // Stop any existing timer
+        volumeTimer?.invalidate()
+        
+        // Start new timer to check volume every 0.1 seconds
+        volumeTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+            if !self.isAdjustingVolume {
+                let currentVolume = AVAudioSession.sharedInstance().outputVolume
+                
+                // Only update if volume actually changed (to avoid unnecessary animations)
+                if abs(currentVolume - self.lastKnownVolume) > 0.01 {
+                    print("🔊 Volume changed from \(self.lastKnownVolume) to \(currentVolume)")
+                    DispatchQueue.main.async {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            self.volume = Double(currentVolume)
+                        }
+                    }
+                    self.lastKnownVolume = currentVolume
+                }
+            }
+        }
+    }
+    
+    private func stopVolumeMonitoring() {
+        volumeTimer?.invalidate()
+        volumeTimer = nil
     }
     
 }
