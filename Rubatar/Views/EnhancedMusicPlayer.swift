@@ -187,10 +187,10 @@ struct EnhancedMusicPlayer: View {
                             )
                         )
                 }
-                .clipShape(.rect(cornerRadius: 24))
+                .clipShape(UnevenRoundedRectangle(topLeadingRadius: 32, bottomLeadingRadius: 0, bottomTrailingRadius: 0, topTrailingRadius: 32))
                 .overlay(
-                ExpandedPlayer(size, safeArea)
-                        .clipShape(.rect(cornerRadius: 24))
+                    ExpandedPlayer(size, safeArea)
+                        .clipShape(UnevenRoundedRectangle(topLeadingRadius: 32, bottomLeadingRadius: 0, bottomTrailingRadius: 0, topTrailingRadius: 32))
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
@@ -357,18 +357,18 @@ struct EnhancedMusicPlayer: View {
             // Top Card with Layered Background Image - fills available space
             ZStack(alignment: .top) {
                 LayeredBackgroundCard()
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
                 // Drag handle on top of the image card
-            Capsule()
-                .fill(.white.secondary)
-                .frame(width: 35, height: 5)
+                Capsule()
+                    .fill(.white.secondary)
+                    .frame(width: 35, height: 5)
                     .padding(.top, 64)
             }
             
             // Track Information Card - positioned to overlap the image card
             TrackInfoCard()
-            .padding(.horizontal, 20)
+                .padding(.horizontal, 20)
                 .offset(y: -40)
             
             // Conditional Segmented Control - Only show for booklet
@@ -402,8 +402,6 @@ struct EnhancedMusicPlayer: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             */
-            
-            Spacer()
             
             // Controls Container with gradient background
             VStack(spacing: 12) {
@@ -581,7 +579,8 @@ struct EnhancedMusicPlayer: View {
                 }
             }
             }
-            .padding(.vertical, 20)
+            .padding(.top, 80)
+            .padding(.bottom, 20)
             .padding(.horizontal, 20)
             .background(
                 Rectangle()
