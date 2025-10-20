@@ -114,6 +114,7 @@ struct ContentView: View {
                 )
                 .environmentObject(audioPlayer)
                 .zIndex(1000)
+                .transition(.scale(scale: 0.8).combined(with: .opacity))
             }
         }
         .onAppear { initializeVideoPlayer() }
@@ -138,7 +139,10 @@ struct ContentView: View {
         if audioPlayer.hasPlayedTrack && !showEnhancedPlayer {
             PlayBackView(
                 onTap: { 
-                    showEnhancedPlayer = true
+                    // Animate the transition to enhanced player with zoom effect
+                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                        showEnhancedPlayer = true
+                    }
                     shouldShowMiniPlayer = true
                 },
                 onPlayPause: { audioPlayer.togglePlayPause() },
@@ -230,6 +234,12 @@ struct ContentView: View {
             artwork: artwork
         )
         showMiniPlayer = true
+        
+        // Animate the transition to enhanced player with zoom effect
+        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+            showEnhancedPlayer = true
+        }
+        
         provideHapticFeedback()
         print("🎶 Now playing playlist: \(playlistTitle) by \(curatorName)")
     }
