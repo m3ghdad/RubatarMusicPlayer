@@ -86,7 +86,7 @@ struct MusicSectionView: View {
                             let playlistIds = ["pl.u-vEe5t44Rjbm", nil, nil] // Apple Music playlist IDs
                             
                             // Custom content for each playlist
-                            let customTitles = ["Joyful - Setaar", nil, nil]
+                            let customTitles = ["The Dance of Silence | رقص سکوت", nil, nil]
                             let customCuratorNames = ["Se Tār | سه تار", nil, nil]
                             let customDescriptions = ["A meditative journey where the سه‌تار (Se Tār) weaves joy and silence into one graceful breath.", nil, nil]
                             
