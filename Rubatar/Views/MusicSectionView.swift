@@ -82,12 +82,17 @@ struct MusicSectionView: View {
                             .padding(.horizontal, 16)
                         
                         VStack(spacing: 12) {
-                            ForEach(musicManager.playlists) { playlist in
-                                PlaylistCardView(playlist: playlist) {
+                            let imageNames = ["Setaar", "Santoor", "Kamancheh"]
+                            ForEach(0..<musicManager.playlists.count, id: \.self) { index in
+                                let playlist = musicManager.playlists[index]
+                                let imageName = index < imageNames.count ? imageNames[index] : "Setaar"
+                                
+                                PlaylistCardView(playlist: playlist, onTap: {
                                     // Handle playlist tap
                                     handlePlaylistTap(playlist)
-                                }
+                                }, customImageName: imageName)
                                 .padding(.horizontal, 16)
+                                
                             }
                         }
                     }

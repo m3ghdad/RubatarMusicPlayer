@@ -82,14 +82,16 @@ struct AlbumButtonStyle: ButtonStyle {
 struct PlaylistCardView: View {
     let playlist: Playlist
     let onTap: () -> Void
+    let customImageName: String
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Playlist artwork
+        VStack(alignment: .leading, spacing: 0) {
+            // Cover - Playlist artwork
+            /*
             AsyncImage(url: playlist.artworkURL) { image in
                 image
                     .resizable()
-                    .aspectRatio(1, contentMode: .fill)
+                    .aspectRatio(contentMode: .fit)
             } placeholder: {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(
@@ -105,9 +107,31 @@ struct PlaylistCardView: View {
                             .foregroundColor(.white.opacity(0.7))
                     )
             }
-            .frame(maxWidth: .infinity)
-            .aspectRatio(1, contentMode: .fill)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .frame(maxWidth: .infinity, maxHeight: 400)
+            .clipShape(
+                .rect(
+                    topLeadingRadius: 8,
+                    bottomLeadingRadius: 0,
+                    bottomTrailingRadius: 0,
+                    topTrailingRadius: 8
+                )
+            )
+            */
+            
+            // Cover - Custom image for playlists
+            Image(customImageName)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(maxWidth: .infinity, maxHeight: 400, alignment: .top)
+                .clipped()
+                .clipShape(
+                    .rect(
+                        topLeadingRadius: 8,
+                        bottomLeadingRadius: 0,
+                        bottomTrailingRadius: 0,
+                        topTrailingRadius: 8
+                    )
+                )
             
             // PlaylistFooter
             HStack(spacing: 12) {
@@ -208,7 +232,8 @@ struct PlaylistButtonStyle: ButtonStyle {
                 trackCount: 50,
                 description: "The biggest songs of the moment"
             ),
-            onTap: {}
+            onTap: {},
+            customImageName: "Setaar"
         )
     }
     .padding()
