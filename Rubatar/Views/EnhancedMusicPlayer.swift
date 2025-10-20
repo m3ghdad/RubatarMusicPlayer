@@ -296,6 +296,7 @@ struct EnhancedMusicPlayer: View {
                 .scaledToFit()
                 .opacity(0.2)
         }
+        
     }
     
     // MARK: - Track Info Card
@@ -355,10 +356,11 @@ struct EnhancedMusicPlayer: View {
     @ViewBuilder
     func ExpandedPlayer(_ size: CGSize, _ safeArea: EdgeInsets) -> some View {
         VStack(spacing: 0) {
-            // Top Card with Layered Background Image - fills available space
+            // Top Card with Layered Background Image - fixed height
             ZStack(alignment: .top) {
                 LayeredBackgroundCard()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(width: size.width)
                 
                 // Drag handle on top of the image card
             Capsule()
@@ -371,6 +373,9 @@ struct EnhancedMusicPlayer: View {
             TrackInfoCard()
             .padding(.horizontal, 20)
                 .offset(y: -40)
+            
+            // Spacer to push controls to bottom
+            Spacer()
             
             // Conditional Segmented Control - Only show for booklet
             // COMMENTED OUT - Segmented controls and content
@@ -580,8 +585,8 @@ struct EnhancedMusicPlayer: View {
                 }
             }
             }
-            .padding(.top, 80)
-            .padding(.bottom, 20)
+            .padding(.top, 40)
+            .padding(.bottom, 40)
             .padding(.horizontal, 20)
             .background(
                 Rectangle()
@@ -1003,3 +1008,4 @@ struct PanGesture: UIGestureRecognizerRepresentable {
 #Preview {
         ContentView()
     }
+
