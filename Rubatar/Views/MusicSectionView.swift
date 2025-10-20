@@ -83,12 +83,24 @@ struct MusicSectionView: View {
                         VStack(spacing: 12) {
                             let imageNames = ["Setaar", "Santoor", "Kamancheh"]
                             let instrumentImageNames = ["SetaarInstrument", "SantoorInstrument", "KamanchehInstrument"]
-                            let playlistIds = ["pl.u-vEe5t44Rjbm", nil, nil] // Apple Music playlist IDs
+                            let playlistIds = ["pl.u-vEe5t44Rjbm", "pl.u-AqK9HDDXK5a", "pl.u-bvj8T00GXMg"] // Apple Music playlist IDs
                             
                             // Custom content for each playlist
-                            let customTitles = ["The Dance of Silence | رقص سکوت", nil, nil]
-                            let customCuratorNames = ["Se Tār | سه تار", nil, nil]
-                            let customDescriptions = ["A meditative journey where the سه‌تار (Se Tār) weaves joy and silence into one graceful breath.", nil, nil]
+                            let customTitles = [
+                                "The Dance of Silence | رقص سکوت",
+                                "Melody of Water | نغمه آب",
+                                "The Shadow of Time | سایه زمان"
+                            ]
+                            let customCuratorNames = [
+                                "Se Tār | سه تار",
+                                "Santoor | سنتور",
+                                "Kamancheh | کمانچه"
+                            ]
+                            let customDescriptions = [
+                                "A meditative journey where the سه‌تار (Se Tār) weaves joy and silence into one graceful breath.",
+                                "A tranquil reflection where the سنتور (Santoor) speaks in ripples of light, echoing thought and memory into still air.",
+                                "A reflective journey where the کمانچه (Kamancheh) sings of seasons, distance, and the gentle passing of time."
+                            ]
                             
                             ForEach(0..<musicManager.playlists.count, id: \.self) { index in
                                 let playlist = musicManager.playlists[index]

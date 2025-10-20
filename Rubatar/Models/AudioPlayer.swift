@@ -653,10 +653,10 @@ class AudioPlayer: ObservableObject {
             if player.queue.entries.count > 0 {
                 if player.state.playbackStatus == .playing {
                     player.pause()
-                    isPlaying = false
+                isPlaying = false
                     stopPeriodicStateSaving()
                     savePlaybackState()
-                    return
+                return
                 } else {
                     do {
                         try await player.play()
