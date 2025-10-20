@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - MusicView (Commented Out - Content Moved to HomeView)
+/*
 struct MusicView: View {
     @AppStorage("selectedBackgroundColor") private var selectedBackgroundColor = 0
     @Binding var showCard: Bool
@@ -92,3 +94,4 @@ struct MusicView: View {
         }
     }
 }
+*/

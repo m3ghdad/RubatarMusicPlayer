@@ -49,10 +49,13 @@ struct ContentView: View {
                         showVideoPlayer: $showVideoPlayer,
                         isTabBarMinimized: $isTabBarMinimized,
                         scrollOffset: $scrollOffset,
+                        onMusicSelected: playSelectedTrack,
+                        onPlaylistSelected: playSelectedPlaylist,
                         showProfileSheet: $showProfileSheet
                     )
                 }
 
+                /*
                 Tab("Music", systemImage: "music.note") {
                     MusicView(
                         showCard: $showCard,
@@ -65,10 +68,13 @@ struct ContentView: View {
                         showProfileSheet: $showProfileSheet
                     )
                 }
+                */
 
+                /*
                 Tab("Favorites", systemImage: "heart") {
                     PlanView()
                 }
+                */
 
                 Tab("Rubatar", systemImage: "apple.books.pages.fill") {
                     ProfileView()
@@ -81,7 +87,7 @@ struct ContentView: View {
                 }
             }
             .searchable(text: $searchText, prompt: "Search")
-            .tint(.blue)
+            .tint(isDarkMode ? Color(hex: "E3B887") : Color(hex: "7A5C39"))
             .preferredColorScheme(isDarkMode ? .dark : .light)
             .tabBarMinimizeBehavior(.onScrollDown)
             .tabViewBottomAccessory {
