@@ -84,7 +84,7 @@ struct PlaylistCardView: View {
     let onTap: () -> Void
     
     var body: some View {
-        HStack(spacing: 12) {
+        VStack(alignment: .leading, spacing: 12) {
             // Playlist artwork
             AsyncImage(url: playlist.artworkURL) { image in
                 image
@@ -105,40 +105,52 @@ struct PlaylistCardView: View {
                             .foregroundColor(.white.opacity(0.7))
                     )
             }
-            .frame(width: 60, height: 60)
+            .frame(maxWidth: .infinity)
+            .aspectRatio(1, contentMode: .fill)
             .clipShape(RoundedRectangle(cornerRadius: 8))
             
-            // Playlist info
-            VStack(alignment: .leading, spacing: 4) {
-                Text(playlist.title)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.primary)
-                    .lineLimit(1)
-                    .multilineTextAlignment(.leading)
-                    .truncationMode(.tail)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            // PlaylistFooter
+            HStack(spacing: 12) {
+                // Setaar Instrument image
+                Image("SetaarInstrument")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 48, height: 48)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 
-                Text(playlist.curatorName)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                
-                Text(playlist.description)
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                    .truncationMode(.tail)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                // Text content VStack
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(playlist.title)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+                        .multilineTextAlignment(.leading)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    Text(playlist.curatorName)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    Text(playlist.description)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
             
-            Spacer()
-            
-            // Track count
+            // Track count (commented out)
+            /*
             Text("\(playlist.trackCount)")
                 .font(.caption)
                 .foregroundColor(.secondary)
@@ -148,8 +160,8 @@ struct PlaylistCardView: View {
                     RoundedRectangle(cornerRadius: 6)
                         .fill(.quaternary)
                 )
+            */
         }
-        .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(.regularMaterial)
