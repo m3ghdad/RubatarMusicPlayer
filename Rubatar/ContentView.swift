@@ -42,7 +42,7 @@ struct ContentView: View {
             Color.blue.ignoresSafeArea(.all)
             
             TabView {
-        Tab("Home", systemImage: "house") {
+        Tab {
                     HomeView(
                         showCard: $showCard,
                         showWelcomeModal: $showWelcomeModal,
@@ -53,6 +53,13 @@ struct ContentView: View {
                         onPlaylistSelected: playSelectedPlaylist,
                         showProfileSheet: $showProfileSheet
                     )
+                } label: {
+                    Label {
+                        Text("Home")
+                            .font(.custom("Palatino", size: 10))
+                    } icon: {
+                        Image(systemName: "house")
+                    }
                 }
 
                 /*

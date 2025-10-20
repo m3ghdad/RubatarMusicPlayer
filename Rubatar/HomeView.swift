@@ -23,7 +23,7 @@ struct HomeView: View {
                     VStack(spacing: 20) {
                         HStack {
                             Text("Home")
-                                .font(.largeTitle)
+                                .font(.custom("Palatino", size: 34))
                                 .fontWeight(.bold)
                             Spacer()
                             AvatarButtonView(action: {
@@ -40,28 +40,7 @@ struct HomeView: View {
                                 onPlaylistSelected(playlistId, playlistTitle, curatorName, artwork)
                             }
                         )
-                        
-                        VStack(spacing: 20) {
-                            ForEach(0..<5) { index in
-                                VStack(spacing: 12) {
-                                    Text("Music Category \(index + 1)")
-                                        .font(.headline)
-                                        .fontWeight(.semibold)
-                                    
-                                    Text("This is additional content to make sure the Music tab is scrollable and the mini player behavior works correctly.")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                        .multilineTextAlignment(.center)
-                                }
-                                .padding()
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(.regularMaterial)
-                                )
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 20)
+
                         
                         Spacer(minLength: 100)
                     }

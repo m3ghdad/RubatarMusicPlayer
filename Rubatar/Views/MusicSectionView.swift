@@ -23,8 +23,8 @@ struct MusicSectionView: View {
         VStack(alignment: .leading, spacing: 20) {
             // Section Header
             HStack {
-                Text("Your Music")
-                    .font(.title2)
+                Text("Top picks")
+                    .font(.custom("Palatino", size: 28))
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
                 
@@ -49,29 +49,6 @@ struct MusicSectionView: View {
             .padding(.horizontal, 16)
             
             if musicManager.authorizationStatus == .authorized {
-                // Albums Section
-                if !musicManager.albums.isEmpty {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Recent Albums")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.primary)
-                            .padding(.horizontal, 16)
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 16) {
-                                ForEach(musicManager.albums) { album in
-                                    AlbumCardView(album: album) {
-                                        // Handle album tap
-                                        handleAlbumTap(album)
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 16)
-                        }
-                    }
-                }
-                
                 // Playlists Section
                 if !musicManager.playlists.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
@@ -133,6 +110,28 @@ struct MusicSectionView: View {
                                 .padding(.horizontal, 16)
                                 
                             }
+                        }
+                    }
+                }
+                
+                // Albums Section
+                if !musicManager.albums.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Featured Albums")
+                            .font(.custom("Palatino", size: 17))
+                            .foregroundColor(.primary)
+                            .padding(.horizontal, 16)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 16) {
+                                ForEach(musicManager.albums) { album in
+                                    AlbumCardView(album: album) {
+                                        // Handle album tap
+                                        handleAlbumTap(album)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 16)
                         }
                     }
                 }

@@ -43,7 +43,7 @@ struct AlbumCardView: View {
             // Album info
             VStack(alignment: .leading, spacing: 4) {
                 Text(album.title)
-                    .font(.headline)
+                    .font(.custom("Palatino", size: 16))
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
                     .lineLimit(2)
@@ -52,15 +52,10 @@ struct AlbumCardView: View {
                     .frame(maxWidth: 160, alignment: .leading)
                 
                 Text(album.artist)
-                    .font(.subheadline)
+                    .font(.custom("Palatino", size: 14))
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                    .frame(maxWidth: 160, alignment: .leading)
-                
-                Text("\(album.trackCount) tracks")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
                     .frame(maxWidth: 160, alignment: .leading)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -206,7 +201,7 @@ struct PlaylistCardView: View {
             // PlaylistFooter
             VStack(alignment: .leading, spacing: 4) {
                 Text(customTitle ?? playlist.title)
-                    .font(.headline)
+                    .font(.custom("Palatino", size: 17))
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
                     .lineLimit(1)
@@ -215,14 +210,14 @@ struct PlaylistCardView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
                 Text(customCuratorName ?? playlist.curatorName)
-                    .font(.subheadline)
+                    .font(.custom("Palatino", size: 14))
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
                 Text(customDescription ?? playlist.description)
-                    .font(.caption)
+                    .font(.custom("Palatino", size: 12))
                     .foregroundStyle(.tertiary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
