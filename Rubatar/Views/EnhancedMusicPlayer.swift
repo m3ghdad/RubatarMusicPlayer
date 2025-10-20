@@ -1,6 +1,7 @@
 import SwiftUI
 import AVFoundation
 import MediaPlayer
+import AVKit
 import MusicKit
 import Combine
 
@@ -37,6 +38,8 @@ struct EnhancedMusicPlayer: View {
     @State private var lastKnownVolume: Float = 0.0
     @State private var isRestoringPlaybackPosition: Bool = false
     @State private var shouldRestoreOnReturn: Bool = false
+    
+    @State private var routePicker = AVRoutePickerView()
     
     private var lastPlaybackPositions: [String: Double] {
         get {
@@ -801,6 +804,14 @@ struct EnhancedMusicPlayer: View {
                 ForEach(BottomTab.allCases, id: \.self) { tab in
                     Button(action: {
                         selectedBottomTab = tab
+                        if tab == .airplay {
+                            // Present native AirPlay route picker
+                            DispatchQueue.main.async {
+                                if let button = routePicker.subviews.compactMap({ $0 as? UIControl }).first {
+                                    button.sendActions(for: .touchUpInside)
+                                }
+                            }
+                        }
                     }) {
                             Image(systemName: tab.iconName)
                                 .font(.title2)
@@ -810,6 +821,10 @@ struct EnhancedMusicPlayer: View {
                         .frame(maxWidth: .infinity)
                     }
                 }
+            // Hidden AVRoutePickerView to drive native AirPlay UI
+            RoutePickerRepresentable(routePicker: $routePicker)
+                .frame(width: 0, height: 0)
+                .opacity(0.01)
             }
             .padding(.top, 40)
             .padding(.bottom, 40)
@@ -917,7 +932,12 @@ struct EnhancedMusicPlayer: View {
                 .foregroundStyle(.white.secondary)
             
             Button("Choose AirPlay Device") {
-                // AirPlay selection
+                // Present native AirPlay route picker
+                DispatchQueue.main.async {
+                    if let button = routePicker.subviews.compactMap({ $0 as? UIControl }).first {
+                        button.sendActions(for: .touchUpInside)
+                    }
+                }
             }
             .buttonStyle(.glass)
             .foregroundStyle(.white)
@@ -1231,7 +1251,21 @@ struct PanGesture: UIGestureRecognizerRepresentable {
     }
 }
 
+struct RoutePickerRepresentable: UIViewRepresentable {
+    @Binding var routePicker: AVRoutePickerView
+
+    func makeUIView(context: Context) -> AVRoutePickerView {
+        routePicker.tintColor = .white
+        routePicker.activeTintColor = .systemBlue
+        routePicker.prioritizesVideoDevices = false
+        return routePicker
+    }
+
+    func updateUIView(_ uiView: AVRoutePickerView, context: Context) {
+        // Keep references in sync if needed
+    }
+}
+
 #Preview {
         ContentView()
     }
-
