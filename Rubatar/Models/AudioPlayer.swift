@@ -69,7 +69,9 @@ class AudioPlayer: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.saveCurrentPlaybackTime()
+            Task { @MainActor in
+                self?.saveCurrentPlaybackTime()
+            }
         }
         
         // Save playback state when app will terminate
@@ -78,7 +80,9 @@ class AudioPlayer: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.saveCurrentPlaybackTime()
+            Task { @MainActor in
+                self?.saveCurrentPlaybackTime()
+            }
         }
     }
     
@@ -830,3 +834,4 @@ class AudioPlayer: ObservableObject {
         }
     }
 }
+
