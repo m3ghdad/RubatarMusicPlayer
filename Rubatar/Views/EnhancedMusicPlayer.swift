@@ -188,7 +188,7 @@ struct EnhancedMusicPlayer: View {
                         )
                 }
                 .overlay(
-                    ExpandedPlayer(size, safeArea)
+                ExpandedPlayer(size, safeArea)
                 )
                 .frame(width: size.width, height: size.height + safeArea.bottom, alignment: .top)
                 .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
@@ -210,10 +210,10 @@ struct EnhancedMusicPlayer: View {
                         if (translation + velocity) > (size.height * 0.5) {
                                 // Closing View - dismiss fullScreenCover
                                 show = false
-                            }
-                            offsetY = 0
                         }
+                        offsetY = 0
                     }
+                }
             )
         }
         .ignoresSafeArea(.container, edges: [.top, .bottom])
@@ -269,7 +269,7 @@ struct EnhancedMusicPlayer: View {
     // MARK: - Layered Background Card
     @ViewBuilder
     func LayeredBackgroundCard() -> some View {
-        ZStack {
+            ZStack {
             // Layer 3 (bottom): Linear gradient from #DDDDDD to #777777 at 50% opacity
             Rectangle()
                 .fill(
@@ -286,68 +286,161 @@ struct EnhancedMusicPlayer: View {
             
             // Layer 2: Paper texture folded at 80% opacity - fills the card
             Image("paperTextureFolded")
-                .resizable()
+                        .resizable()
                 .scaledToFill()
                 .opacity(0.8)
             
             // Layer 1 (top): Setar image at 20% opacity - fills the card, centered
             SetaarImageWithAnimation()
+            
+            // Persian text overlays - on top of everything
+            PersianTextOverlaysAbsolute()
         }
     }
     
     // MARK: - Setaar Image with Sunlight Animation
     @ViewBuilder
     func SetaarImageWithAnimation() -> some View {
-        ZStack {
-            // Base statue image - opacity varies in complex pattern
-            TimelineView(.animation(minimumInterval: 0.05, paused: false)) { timeline in
-                let time = timeline.date.timeIntervalSinceReferenceDate
-                
-                // Create a complex breathing pattern
-                // Each full cycle takes 24 seconds (2 complete patterns)
-                let cycleTime = time.truncatingRemainder(dividingBy: 24)
-                
-                // Calculate opacity based on the pattern
-                let currentOpacity = calculateOpacity(for: cycleTime)
-                
-                Image("Setaar")
-                    .resizable()
-                    .scaledToFit()
-                    .opacity(currentOpacity)
-            }
-            
-            // Moving sunlight glare overlay - localized cloud of light
-            TimelineView(.animation(minimumInterval: 0.05, paused: false)) { timeline in
-                let time = timeline.date.timeIntervalSinceReferenceDate
-                let glarePosition = sin(time * 0.25) // Slow movement across the image
-                
-                // Creamy white with cyan tint colors
-                let creamyWhite = Color(red: 0.98, green: 0.96, blue: 0.92)
-                let cyanTint = Color(red: 0.75, green: 0.92, blue: 0.95)
-                
-                ZStack {
-                    // Create a localized cloud-like gradient
-                    RadialGradient(
-                        colors: [
-                            cyanTint.opacity(0.4),
-                            creamyWhite.opacity(0.5),
-                            creamyWhite.opacity(0.3),
-                            .clear
-                        ],
-                        center: UnitPoint(x: 0.3 + glarePosition * 0.4, y: 0.4 + sin(time * 0.15) * 0.2),
-                        startRadius: 20,
-                        endRadius: 150
-                    )
-                    .blur(radius: 30) // Larger blur for cloud-like softness
-                    .blendMode(.overlay)
-                }
-                .mask(
+        GeometryReader { geometry in
+            ZStack {
+                // Base statue image - opacity varies in complex pattern
+                TimelineView(.animation(minimumInterval: 0.05, paused: false)) { timeline in
+                    let time = timeline.date.timeIntervalSinceReferenceDate
+                    
+                    // Create a complex breathing pattern
+                    // Each full cycle takes 24 seconds (2 complete patterns)
+                    let cycleTime = time.truncatingRemainder(dividingBy: 24)
+                    
+                    // Calculate opacity based on the pattern
+                    let currentOpacity = calculateOpacity(for: cycleTime)
+                    
                     Image("Setaar")
                         .resizable()
                         .scaledToFit()
-                )
+                        .opacity(currentOpacity)
+                }
+                
+                // Moving sunlight glare overlay - localized cloud of light
+                TimelineView(.animation(minimumInterval: 0.05, paused: false)) { timeline in
+                    let time = timeline.date.timeIntervalSinceReferenceDate
+                    let glarePosition = sin(time * 0.25) // Slow movement across the image
+                    
+                    // Creamy white with cyan tint colors
+                    let creamyWhite = Color(red: 0.98, green: 0.96, blue: 0.92)
+                    let cyanTint = Color(red: 0.75, green: 0.92, blue: 0.95)
+                    
+                    ZStack {
+                        // Create a localized cloud-like gradient
+                        RadialGradient(
+                            colors: [
+                                cyanTint.opacity(0.4),
+                                creamyWhite.opacity(0.5),
+                                creamyWhite.opacity(0.3),
+                                .clear
+                            ],
+                            center: UnitPoint(x: 0.3 + glarePosition * 0.4, y: 0.4 + sin(time * 0.15) * 0.2),
+                            startRadius: 20,
+                            endRadius: 150
+                        )
+                        .blur(radius: 30) // Larger blur for cloud-like softness
+                        .blendMode(.overlay)
+                    }
+                    .mask(
+                        Image("Setaar")
+                            .resizable()
+                            .scaledToFit()
+                    )
+                }
             }
         }
+    }
+    
+    // MARK: - Persian Text Overlays (Absolute Positioning)
+    @ViewBuilder
+    func PersianTextOverlaysAbsolute() -> some View {
+        TimelineView(.animation(minimumInterval: 0.05, paused: false)) { timeline in
+            let time = timeline.date.timeIntervalSinceReferenceDate
+            let cycleTime = time.truncatingRemainder(dividingBy: 24)
+            
+            let firstTextOpacity = calculateFirstTextOpacity(cycleTime: cycleTime)
+            let secondTextOpacity = calculateSecondTextOpacity(cycleTime: cycleTime)
+            
+            VStack(spacing: 0) {
+                HStack(spacing: 0) {
+                    Spacer()
+                        .frame(width: 64 + 48 + 24 + 32) // 64 original + 48 + 24 + 32 more to the right
+                    
+                    // First text on the right - 24px, moved right and down
+                    Text("دلا بسوز که سوز تو کارها بکند")
+                        .font(.custom("NotoNastaliqUrdu", size: 24))
+                        .foregroundColor(Color(hex: "84847E"))
+                        .opacity(firstTextOpacity)
+                        .multilineTextAlignment(.trailing)
+                        .fixedSize(horizontal: false, vertical: true)
+                    
+                    Spacer()
+                        .frame(width: 64)
+                }
+                .padding(.top, 88 + 48 + 64) // 88 original + 48 + 64 more down
+                
+                HStack(spacing: 0) {
+                    Spacer()
+                        .frame(width: 64 - 8 - 24 - 8) // 64 original - 8 - 24 - 8 to the left
+                    
+                    // Second text on the left - 24px, moved left and down
+                    Text("نیاز نیم‌شب‌ات آب در جگرها کند")
+                        .font(.custom("NotoNastaliqUrdu", size: 24))
+                        .foregroundColor(Color(hex: "84847E"))
+                        .opacity(secondTextOpacity)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                    
+                    Spacer()
+                        .frame(width: 64)
+                }
+                .padding(.top, 24 + 48 + 16 - 24 - 48 + 64 - 24 - 8 - 8 - 12) // Original + 64 - 24 - 8 - 8 - 12 up
+                
+                Spacer()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+    
+    // Helper functions for text opacity
+    private func calculateFirstTextOpacity(cycleTime: Double) -> Double {
+        // First text appears at second 4 and stays visible until second 22
+        if cycleTime >= 4 && cycleTime < 22 {
+            let t = cycleTime - 4
+            if t < 4 {
+                // Fading in (4-8 seconds)
+                return t / 4.0
+            } else if t < 14 {
+                // Stay visible (8-18 seconds)
+                return 1.0
+            } else {
+                // Fading out together with second text (18-22 seconds)
+                return 1.0 - ((t - 14) / 4.0)
+            }
+        }
+        return 0
+    }
+    
+    private func calculateSecondTextOpacity(cycleTime: Double) -> Double {
+        // Second text appears at second 10 and fades out at second 22
+        if cycleTime >= 10 && cycleTime < 22 {
+            let t = cycleTime - 10
+            if t < 4 {
+                // Fading in (10-14 seconds)
+                return t / 4.0
+            } else if t < 8 {
+                // Stay visible (14-18 seconds)
+                return 1.0
+            } else {
+                // Fading out together with first text (18-22 seconds)
+                return 1.0 - ((t - 8) / 4.0)
+            }
+        }
+        return 0
     }
     
     // Helper function to calculate opacity based on cycleTime
@@ -390,12 +483,12 @@ struct EnhancedMusicPlayer: View {
     // MARK: - Track Info Card
     @ViewBuilder
     func TrackInfoCard() -> some View {
-        HStack(spacing: 12) {
+            HStack(spacing: 12) {
             // Album artwork - 48x48 with 12px border radius
             AsyncImage(url: audioPlayer.currentArtwork) { image in
                 image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
             } placeholder: {
                 Rectangle()
                     .fill(Color(white: 0.8))
@@ -419,9 +512,9 @@ struct EnhancedMusicPlayer: View {
                     .font(.system(size: 14))
                     .foregroundStyle(Color(red: 0.72, green: 0.38, blue: 0.22))
                     .lineLimit(1)
-            }
-            
-            Spacer()
+                }
+                
+                Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
@@ -571,8 +664,8 @@ struct EnhancedMusicPlayer: View {
                 }
                 self.stopVolumeMonitoring()
             }
-                
-                // Playback Controls
+            
+            // Playback Controls
                 HStack {
                     // Previous button - hugs left
                     Button(action: {
@@ -657,7 +750,7 @@ struct EnhancedMusicPlayer: View {
                 Image(systemName: "speaker.wave.3.fill")
                             .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.6) : Color(red: 0x6E/255.0, green: 0x6E/255.0, blue: 0x6E/255.0))
                             .font(.caption)
-                    }
+            }
             }
             
             // Bottom Tab Buttons
@@ -670,10 +763,10 @@ struct EnhancedMusicPlayer: View {
                                 .font(.title2)
                             .foregroundStyle(colorScheme == .dark ? (selectedBottomTab == tab ? .white : .gray) : Color(red: 0x6E/255.0, green: 0x6E/255.0, blue: 0x6E/255.0))
                             .frame(width: 50, height: 50)
+                        }
+                        .frame(maxWidth: .infinity)
                     }
-                    .frame(maxWidth: .infinity)
                 }
-            }
             }
             .padding(.top, 40)
             .padding(.bottom, 40)

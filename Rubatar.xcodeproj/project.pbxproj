@@ -29,9 +29,30 @@
 		8C647EB32E8DA04900F36002 /* RubatarUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RubatarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		8C9A85AB2EA5C6D6005DA730 /* Exceptions for "Rubatar" folder in "RubatarTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"IranNastaliq-Regular.ttf",
+			);
+			target = 8C647EA82E8DA04900F36002 /* RubatarTests */;
+		};
+		8C9A85AC2EA5C6D6005DA730 /* Exceptions for "Rubatar" folder in "RubatarUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"IranNastaliq-Regular.ttf",
+			);
+			target = 8C647EB22E8DA04900F36002 /* RubatarUITests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8C647E9E2E8DA04800F36002 /* Rubatar */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				8C9A85AB2EA5C6D6005DA730 /* Exceptions for "Rubatar" folder in "RubatarTests" target */,
+				8C9A85AC2EA5C6D6005DA730 /* Exceptions for "Rubatar" folder in "RubatarUITests" target */,
+			);
 			path = Rubatar;
 			sourceTree = "<group>";
 		};
@@ -403,7 +424,10 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Rubatar;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_NSAppleMusicUsageDescription = "This app uses Apple Music to display your music library and playlists.";
-				INFOPLIST_KEY_UIAppFonts = "GideonRoman-Regular.ttf";
+				INFOPLIST_KEY_UIAppFonts = (
+					"GideonRoman-Regular.ttf",
+					"IranNastaliq-Regular.ttf",
+				);
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -438,7 +462,10 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Rubatar;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_NSAppleMusicUsageDescription = "This app uses Apple Music to display your music library and playlists.";
-				INFOPLIST_KEY_UIAppFonts = "GideonRoman-Regular.ttf";
+				INFOPLIST_KEY_UIAppFonts = (
+					"GideonRoman-Regular.ttf",
+					"IranNastaliq-Regular.ttf",
+				);
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
