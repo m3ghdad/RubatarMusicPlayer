@@ -83,6 +83,8 @@ struct PlaylistCardView: View {
     let playlist: Playlist
     let onTap: () -> Void
     let customImageName: String
+    let customInstrumentImageName: String
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -119,10 +121,74 @@ struct PlaylistCardView: View {
             */
             
             // Cover - Custom image for playlists
-            Image(customImageName)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(maxWidth: .infinity, maxHeight: 400, alignment: .top)
+            TimelineView(.animation) { timeline in
+                let time = timeline.date.timeIntervalSinceReferenceDate
+                let glarePosition = (sin(time * 0.3) + 1) / 2 // 0 to 1
+                
+                ZStack(alignment: .top) {
+                    // Background gradient layer (bottom)
+                    if colorScheme == .dark {
+                        LinearGradient(
+                            colors: [
+                                Color(hex: "5D5858"),
+                                Color(hex: "171312")
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                        .opacity(0.9)
+                    } else {
+                        LinearGradient(
+                            colors: [
+                                Color(hex: "DDDDDD"),
+                                Color(hex: "777777")
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                        .opacity(0.1)
+                    }
+                    
+                    // Paper texture layer (middle)
+                    Image("paperTextureFolded")
+                        .resizable()
+                        .frame(maxWidth: .infinity, maxHeight: 400)
+                        .clipped()
+                        .opacity(colorScheme == .dark ? 0.2 : 0.5)
+                    
+                    // Main image layer (top)
+                    Image(customImageName)
+                        .resizable()
+                        .frame(maxWidth: .infinity, maxHeight: 400)
+                        .clipped()
+                        .opacity(0.2)
+                    
+                    // Glare effect
+                    let creamyWhite = Color(red: 0.98, green: 0.96, blue: 0.92)
+                    let cyanTint = Color(red: 0.75, green: 0.92, blue: 0.95)
+                    let darkCreamyWhite = Color(red: 0.85, green: 0.83, blue: 0.80)
+                    let darkCyanTint = Color(red: 0.6, green: 0.75, blue: 0.8)
+                    
+                    RadialGradient(
+                        colors: colorScheme == .dark ? [
+                            darkCyanTint.opacity(0.3),
+                            darkCreamyWhite.opacity(0.4),
+                            darkCreamyWhite.opacity(0.2),
+                            .clear
+                        ] : [
+                            cyanTint.opacity(0.4),
+                            creamyWhite.opacity(0.5),
+                            creamyWhite.opacity(0.3),
+                            .clear
+                        ],
+                        center: UnitPoint(x: 0.3 + glarePosition * 0.4, y: 0.4 + sin(time * 0.15) * 0.2),
+                        startRadius: 20,
+                        endRadius: 150
+                    )
+                    .blur(radius: 30)
+                    .blendMode(.overlay)
+                }
+                .frame(maxWidth: .infinity, maxHeight: 400)
                 .clipped()
                 .clipShape(
                     .rect(
@@ -132,43 +198,33 @@ struct PlaylistCardView: View {
                         topTrailingRadius: 8
                     )
                 )
+            }
             
             // PlaylistFooter
-            HStack(spacing: 12) {
-                // Setaar Instrument image
-                Image("SetaarInstrument")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 48, height: 48)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            VStack(alignment: .leading, spacing: 4) {
+                Text(playlist.title)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+                    .multilineTextAlignment(.leading)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 
-                // Text content VStack
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(playlist.title)
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
-                        .multilineTextAlignment(.leading)
-                        .truncationMode(.tail)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    Text(playlist.curatorName)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    Text(playlist.description)
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
-                        .truncationMode(.tail)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Text(playlist.curatorName)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                
+                Text(playlist.description)
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -233,7 +289,8 @@ struct PlaylistButtonStyle: ButtonStyle {
                 description: "The biggest songs of the moment"
             ),
             onTap: {},
-            customImageName: "Setaar"
+            customImageName: "Setaar",
+            customInstrumentImageName: "SetaarInstrument"
         )
     }
     .padding()
