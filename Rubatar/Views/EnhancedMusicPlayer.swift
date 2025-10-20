@@ -306,6 +306,9 @@ struct EnhancedMusicPlayer: View {
     func SetaarImageWithAnimation() -> some View {
         GeometryReader { geometry in
             ZStack {
+                // Determine which image to use based on current playlist
+                let imageName = getInstrumentImageName()
+                
                 // Base statue image - opacity varies in complex pattern
                 TimelineView(.animation(minimumInterval: 0.05, paused: false)) { timeline in
                     let time = timeline.date.timeIntervalSinceReferenceDate
@@ -317,7 +320,7 @@ struct EnhancedMusicPlayer: View {
                     // Calculate opacity based on the pattern
                     let currentOpacity = calculateOpacity(for: cycleTime)
                     
-                    Image("Setaar")
+                    Image(imageName)
                         .resizable()
                         .scaledToFit()
                         .opacity(currentOpacity)
@@ -349,12 +352,30 @@ struct EnhancedMusicPlayer: View {
                         .blendMode(.overlay)
                     }
                     .mask(
-                        Image("Setaar")
+                        Image(imageName)
                             .resizable()
-                            .scaledToFit()
+                            .scaledToFill()
                     )
                 }
             }
+        }
+    }
+    
+    // Helper function to get instrument image name based on current playlist
+    private func getInstrumentImageName() -> String {
+        guard let playlistId = audioPlayer.currentPlaylistId else {
+            return "Setaar" // Default
+        }
+        
+        switch playlistId {
+        case "pl.u-vEe5t44Rjbm": // The Dance of Silence
+            return "Setaar"
+        case "pl.u-AqK9HDDXK5a": // Melody of Water
+            return "Santoor"
+        case "pl.u-bvj8T00GXMg": // The Shadow of Time
+            return "Kamancheh"
+        default:
+            return "Setaar"
         }
     }
     

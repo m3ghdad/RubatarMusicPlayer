@@ -18,6 +18,7 @@ class AudioPlayer: ObservableObject {
     @Published var currentArtist: String = ""
     @Published var currentArtwork: URL? = nil
     @Published var hasPlayedTrack = false // Track if user has ever played something
+    @Published var currentPlaylistId: String? = nil // Track current playlist ID
     
     @Published var usingMusicKit = false
     
@@ -441,6 +442,7 @@ class AudioPlayer: ObservableObject {
         currentTrack = playlistTitle
         currentArtist = curatorName
         currentArtwork = artwork
+        currentPlaylistId = playlistId // Store the playlist ID
         saveLastPlayedTrack() // Save immediately when playlist is selected
 
         // Try MusicKit playlist playback by ID
@@ -461,6 +463,7 @@ class AudioPlayer: ObservableObject {
                 currentTrack = "Playlist playback unavailable"
                 currentArtist = "MusicKit required"
                 currentArtwork = nil
+                currentPlaylistId = nil
                 savePlaybackState()
             }
         }
