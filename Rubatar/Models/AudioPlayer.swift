@@ -489,11 +489,26 @@ class AudioPlayer: ObservableObject {
         
         print("✅ Found playlist: \(playlist.name)")
         
-        // Fetch the playlist's tracks
+        // Fetch detailed playlist with tracks
         let detailedPlaylist = try await playlist.with([.tracks])
+        
+        // Print available playlist details
+        print("📝 Playlist title: \(detailedPlaylist.name)")
+        
+        if let curatorName = detailedPlaylist.curatorName {
+            print("👤 Curator: \(curatorName)")
+        }
+        
         guard let tracks = detailedPlaylist.tracks, !tracks.isEmpty else {
             print("❌ No tracks found in playlist")
             throw PlaybackError.noResults
+        }
+        
+        print("🎵 Track count: \(tracks.count)")
+        
+        // Print track names
+        for (index, track) in tracks.enumerated() {
+            print("  \(index + 1). \(track.title) - \(track.artistName)")
         }
         
         // Convert tracks to songs for playback
