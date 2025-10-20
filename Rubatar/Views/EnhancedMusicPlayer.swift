@@ -365,13 +365,16 @@ struct EnhancedMusicPlayer: View {
             let firstTextOpacity = calculateFirstTextOpacity(cycleTime: cycleTime)
             let secondTextOpacity = calculateSecondTextOpacity(cycleTime: cycleTime)
             
+            // Select a random poetry set at the start of each cycle (when cycleTime resets to 0)
+            let currentSet = getCurrentPoemSet(time: time)
+            
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
                     Spacer()
                         .frame(width: 64 + 48 + 24 + 32) // 64 original + 48 + 24 + 32 more to the right
                     
                     // First text on the right - 24px, moved right and down
-                    Text("دلا بسوز که سوز تو کارها بکند")
+                    Text(currentSet.firstText)
                         .font(.custom("NotoNastaliqUrdu", size: 24))
                         .foregroundColor(Color(hex: "84847E"))
                         .opacity(firstTextOpacity)
@@ -381,14 +384,14 @@ struct EnhancedMusicPlayer: View {
                     Spacer()
                         .frame(width: 64)
                 }
-                .padding(.top, 88 + 48 + 64) // 88 original + 48 + 64 more down
+                .padding(.top, 88 + 48 + 64 + 32 + 24 + 8) // 88 original + 48 + 64 + 32 + 24 + 8 more down
                 
                 HStack(spacing: 0) {
                     Spacer()
                         .frame(width: 64 - 8 - 24 - 8) // 64 original - 8 - 24 - 8 to the left
                     
                     // Second text on the left - 24px, moved left and down
-                    Text("نیاز نیم‌شب‌ات آب در جگرها کند")
+                    Text(currentSet.secondText)
                         .font(.custom("NotoNastaliqUrdu", size: 24))
                         .foregroundColor(Color(hex: "84847E"))
                         .opacity(secondTextOpacity)
@@ -398,12 +401,39 @@ struct EnhancedMusicPlayer: View {
                     Spacer()
                         .frame(width: 64)
                 }
-                .padding(.top, 24 + 48 + 16 - 24 - 48 + 64 - 24 - 8 - 8 - 12) // Original + 64 - 24 - 8 - 8 - 12 up
+                .padding(.top, 24 + 48 + 16 - 24 - 48 + 64 - 24 - 8 - 8 - 12 + 32 - 24 - 12) // Original + 64 - 24 - 8 - 8 - 12 + 32 - 24 - 12 up
                 
                 Spacer()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+    }
+    
+    // Helper function to get current poem set
+    private func getCurrentPoemSet(time: Double) -> (firstText: String, secondText: String) {
+        // Array of all poetry sets
+        let poetrySets: [(String, String)] = [
+            ("دلا بسوز که سوز تو کارها بکند", "نیاز نیم‌شب‌ات آب در جگرها کند"),
+            ("ما ز آغاز و ز انجام جهان بی‌خبریم", "ول و آخر این کهنه کتاب افتادست"),
+            ("جهان سر به سر حکمت و عبرت است", "چرا بهره ما همه غفلت است"),
+            ("ای تو ز خوبی خویش آینه را مشتری", "سوخته باد آینه تا تو در او ننگری"),
+            ("این کوزه چو من عاشقِ زاری بوده‌ست", "در بندِ سرِ زلفِ نگاری بوده‌ست")
+        ]
+        
+        // Use the cycle number to select a set (changes every 24 seconds)
+        let cycleNumber = Int(time / 24)
+        
+        // Better pseudo-random using multiple operations
+        var hash = UInt(cycleNumber)
+        hash = hash ^ (hash &>> 16)
+        hash = hash &* 0x85ebca6b
+        hash = hash ^ (hash &>> 13)
+        hash = hash &* 0xc2b2ae35
+        hash = hash ^ (hash &>> 16)
+        
+        let index = Int(hash % UInt(poetrySets.count))
+        
+        return poetrySets[index]
     }
     
     // Helper functions for text opacity
@@ -504,12 +534,13 @@ struct EnhancedMusicPlayer: View {
             // Track info
             VStack(alignment: .leading, spacing: 4) {
                 Text(audioPlayer.currentTrack != "No track selected" ? audioPlayer.currentTrack : "Shabgard")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.custom("Palatino", size: 16))
+                        .fontWeight(.semibold)
                     .foregroundStyle(Color(red: 0.2, green: 0.15, blue: 0.1))
                     .lineLimit(1)
                 
                 Text(audioPlayer.currentArtist.isEmpty ? "Sohrab Pournazeri" : audioPlayer.currentArtist)
-                    .font(.system(size: 14))
+                    .font(.custom("Palatino", size: 14))
                     .foregroundStyle(Color(red: 0.72, green: 0.38, blue: 0.22))
                     .lineLimit(1)
                 }
@@ -517,20 +548,32 @@ struct EnhancedMusicPlayer: View {
                 Spacer()
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.vertical, 8)
+        .frame(height: 64)
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(red: 0xEA/255.0, green: 0xEA/255.0, blue: 0xEA/255.0),
-                            Color(red: 0xC6/255.0, green: 0xC0/255.0, blue: 0xBA/255.0)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
+            ZStack {
+                // Background gradient at 40% opacity
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0xEA/255.0, green: 0xEA/255.0, blue: 0xEA/255.0),
+                                Color(red: 0xC6/255.0, green: 0xC0/255.0, blue: 0xBA/255.0)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                     )
-                )
+                    .opacity(0.4)
+                
+                // LinedNotebook image at 30% opacity on top
+                // Image("LinedNotebook")
+                //     .resizable()
+                //     .scaledToFill()
+                //     .opacity(0.3)
+            }
         )
+        .clipShape(RoundedRectangle(cornerRadius: 16))
     }
     
     // MARK: - Expanded Player
