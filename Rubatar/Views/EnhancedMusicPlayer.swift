@@ -291,12 +291,93 @@ struct EnhancedMusicPlayer: View {
                 .opacity(0.8)
             
             // Layer 1 (top): Setar image at 20% opacity - fills the card, centered
-            Image("Setaar")
-                .resizable()
-                .scaledToFit()
-                .opacity(0.2)
+            SetaarImageWithAnimation()
         }
-        
+    }
+    
+    // MARK: - Setaar Image with Sunlight Animation
+    @ViewBuilder
+    func SetaarImageWithAnimation() -> some View {
+        ZStack {
+            // Base statue image - opacity varies in complex pattern
+            TimelineView(.animation(minimumInterval: 0.05, paused: false)) { timeline in
+                let time = timeline.date.timeIntervalSinceReferenceDate
+                
+                // Create a complex breathing pattern
+                // Each full cycle takes 24 seconds (2 complete patterns)
+                let cycleTime = time.truncatingRemainder(dividingBy: 24)
+                
+                // Calculate opacity based on the pattern
+                let currentOpacity = calculateOpacity(for: cycleTime)
+                
+                Image("Setaar")
+                    .resizable()
+                    .scaledToFit()
+                    .opacity(currentOpacity)
+            }
+            
+            // Moving sunlight glare overlay at 45-degree angle with blur
+            TimelineView(.animation(minimumInterval: 0.05, paused: false)) { timeline in
+                let time = timeline.date.timeIntervalSinceReferenceDate
+                let glarePosition = sin(time * 0.3) // Slow movement across the image
+                
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0),
+                        .init(color: .white.opacity(0.3), location: 0.4 + glarePosition * 0.2),
+                        .init(color: .white.opacity(0.6), location: 0.5 + glarePosition * 0.2),
+                        .init(color: .white.opacity(0.3), location: 0.6 + glarePosition * 0.2),
+                        .init(color: .clear, location: 1)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .blur(radius: 20) // Large blur radius for soft, diffused light
+                .blendMode(.overlay)
+                .mask(
+                    Image("Setaar")
+                        .resizable()
+                        .scaledToFit()
+                )
+            }
+        }
+    }
+    
+    // Helper function to calculate opacity based on cycleTime
+    private func calculateOpacity(for cycleTime: Double) -> Double {
+        if cycleTime < 12 {
+            // First pattern: 50→20→5→50 (12 seconds)
+            let t = cycleTime / 12.0
+            if t < 0.33 {
+                // 50 to 20 (first 4 seconds)
+                let progress = t / 0.33
+                return 0.5 - (progress * 0.3)
+            } else if t < 0.66 {
+                // 20 to 5 (next 4 seconds)
+                let progress = (t - 0.33) / 0.33
+                return 0.2 - (progress * 0.15)
+            } else {
+                // 5 to 50 (last 4 seconds)
+                let progress = (t - 0.66) / 0.34
+                return 0.05 + (progress * 0.45)
+            }
+        } else {
+            // Second pattern: 50→10→30→50 (12 seconds)
+            let t = (cycleTime - 12) / 12.0
+            if t < 0.33 {
+                // 50 to 10 (first 4 seconds)
+                let progress = t / 0.33
+                return 0.5 - (progress * 0.4)
+            } else if t < 0.66 {
+                // 10 to 30 (next 4 seconds)
+                let progress = (t - 0.33) / 0.33
+                return 0.1 + (progress * 0.2)
+            } else {
+                // 30 to 50 (last 4 seconds)
+                let progress = (t - 0.66) / 0.34
+                return 0.3 + (progress * 0.2)
+            }
+        }
     }
     
     // MARK: - Track Info Card
