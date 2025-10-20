@@ -361,6 +361,7 @@ struct EnhancedMusicPlayer: View {
                 LayeredBackgroundCard()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .frame(width: size.width)
+                    .padding(.bottom, -80) // Extend 80px down
                 
                 // Drag handle on top of the image card
             Capsule()
@@ -372,7 +373,8 @@ struct EnhancedMusicPlayer: View {
             // Track Information Card - positioned to overlap the image card
             TrackInfoCard()
             .padding(.horizontal, 20)
-                .offset(y: -40)
+                .offset(y: 24) // Moved down 24px
+                .zIndex(1) // Ensure card appears on top
             
             // Spacer to push controls to bottom
             Spacer()
