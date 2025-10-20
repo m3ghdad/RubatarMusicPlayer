@@ -75,9 +75,8 @@ struct MusicSectionView: View {
                 // Playlists Section
                 if !musicManager.playlists.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Your Playlists")
-                            .font(.headline)
-                            .fontWeight(.semibold)
+                        Text("Playlists by instrument")
+                            .font(.custom("Palatino", size: 16))
                             .foregroundColor(.primary)
                             .padding(.horizontal, 16)
                         

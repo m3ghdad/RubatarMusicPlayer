@@ -513,21 +513,23 @@ class AudioPlayer: ObservableObject {
             throw PlaybackError.noResults
         }
         
-        // Store the queue and reset index
-        musicKitQueue = songsToQueue
+        // Shuffle the songs array for random playback order
+        let shuffledSongs = songsToQueue.shuffled()
+        print("🔀 Shuffled \(shuffledSongs.count) songs for random playback")
+        
+        // Store the shuffled queue and reset index
+        musicKitQueue = shuffledSongs
         currentQueueIndex = 0
         
         // Update current track info with the first song
         updateCurrentTrackInfo()
         
-        // Configure shuffle and repeat modes
-        player.state.shuffleMode = .songs  // Shuffle the songs
-        player.state.repeatMode = .all     // Loop after the last song
-        print("🔀 Shuffle mode enabled: songs")
+        // Configure repeat mode to loop after the last song
+        player.state.repeatMode = .all
         print("🔁 Repeat mode enabled: all")
         
-        // Start playing the first song
-        player.queue = .init(for: songsToQueue, startingAt: songsToQueue[0])
+        // Start playing with the shuffled queue
+        player.queue = .init(for: shuffledSongs, startingAt: shuffledSongs[0])
         try await player.play()
         
         usingMusicKit = true
