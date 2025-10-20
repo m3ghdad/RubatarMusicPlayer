@@ -316,24 +316,31 @@ struct EnhancedMusicPlayer: View {
                     .opacity(currentOpacity)
             }
             
-            // Moving sunlight glare overlay at 45-degree angle with blur
+            // Moving sunlight glare overlay - localized cloud of light
             TimelineView(.animation(minimumInterval: 0.05, paused: false)) { timeline in
                 let time = timeline.date.timeIntervalSinceReferenceDate
-                let glarePosition = sin(time * 0.3) // Slow movement across the image
+                let glarePosition = sin(time * 0.25) // Slow movement across the image
                 
-                LinearGradient(
-                    stops: [
-                        .init(color: .clear, location: 0),
-                        .init(color: .white.opacity(0.3), location: 0.4 + glarePosition * 0.2),
-                        .init(color: .white.opacity(0.6), location: 0.5 + glarePosition * 0.2),
-                        .init(color: .white.opacity(0.3), location: 0.6 + glarePosition * 0.2),
-                        .init(color: .clear, location: 1)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .blur(radius: 20) // Large blur radius for soft, diffused light
-                .blendMode(.overlay)
+                // Creamy white with cyan tint colors
+                let creamyWhite = Color(red: 0.98, green: 0.96, blue: 0.92)
+                let cyanTint = Color(red: 0.75, green: 0.92, blue: 0.95)
+                
+                ZStack {
+                    // Create a localized cloud-like gradient
+                    RadialGradient(
+                        colors: [
+                            cyanTint.opacity(0.4),
+                            creamyWhite.opacity(0.5),
+                            creamyWhite.opacity(0.3),
+                            .clear
+                        ],
+                        center: UnitPoint(x: 0.3 + glarePosition * 0.4, y: 0.4 + sin(time * 0.15) * 0.2),
+                        startRadius: 20,
+                        endRadius: 150
+                    )
+                    .blur(radius: 30) // Larger blur for cloud-like softness
+                    .blendMode(.overlay)
+                }
                 .mask(
                     Image("Setaar")
                         .resizable()
