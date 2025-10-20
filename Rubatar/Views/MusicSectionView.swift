@@ -84,14 +84,23 @@ struct MusicSectionView: View {
                         VStack(spacing: 12) {
                             let imageNames = ["Setaar", "Santoor", "Kamancheh"]
                             let instrumentImageNames = ["SetaarInstrument", "SantoorInstrument", "KamanchehInstrument"]
+                            let playlistIds = ["pl.u-vEe5t44Rjbm", nil, nil] // Apple Music playlist IDs
                             ForEach(0..<musicManager.playlists.count, id: \.self) { index in
                                 let playlist = musicManager.playlists[index]
                                 let imageName = index < imageNames.count ? imageNames[index] : "Setaar"
                                 let instrumentImageName = index < instrumentImageNames.count ? instrumentImageNames[index] : "SetaarInstrument"
+                                let customPlaylistId = index < playlistIds.count ? playlistIds[index] : nil
                                 
                                 PlaylistCardView(playlist: playlist, onTap: {
-                                    // Handle playlist tap
-                                    handlePlaylistTap(playlist)
+                                    // Handle playlist tap with custom ID if available
+                                    if let customId = customPlaylistId {
+                                        // Use the custom Apple Music playlist ID
+                                        onPlaylistSelected(customId, playlist.title, playlist.curatorName, playlist.artworkURL)
+                                        print("🎶 Tapped custom playlist: \(playlist.title) with ID: \(customId)")
+                                    } else {
+                                        // Use the default playlist handling
+                                        handlePlaylistTap(playlist)
+                                    }
                                 }, customImageName: imageName, customInstrumentImageName: instrumentImageName)
                                 .padding(.horizontal, 16)
                                 

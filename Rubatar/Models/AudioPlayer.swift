@@ -520,6 +520,12 @@ class AudioPlayer: ObservableObject {
         // Update current track info with the first song
         updateCurrentTrackInfo()
         
+        // Configure shuffle and repeat modes
+        player.state.shuffleMode = .songs  // Shuffle the songs
+        player.state.repeatMode = .all     // Loop after the last song
+        print("🔀 Shuffle mode enabled: songs")
+        print("🔁 Repeat mode enabled: all")
+        
         // Start playing the first song
         player.queue = .init(for: songsToQueue, startingAt: songsToQueue[0])
         try await player.play()
