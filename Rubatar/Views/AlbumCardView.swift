@@ -84,6 +84,9 @@ struct PlaylistCardView: View {
     let onTap: () -> Void
     let customImageName: String
     let customInstrumentImageName: String
+    let customTitle: String?
+    let customCuratorName: String?
+    let customDescription: String?
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
@@ -202,7 +205,7 @@ struct PlaylistCardView: View {
             
             // PlaylistFooter
             VStack(alignment: .leading, spacing: 4) {
-                Text(playlist.title)
+                Text(customTitle ?? playlist.title)
                     .font(.headline)
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
@@ -211,14 +214,14 @@ struct PlaylistCardView: View {
                     .truncationMode(.tail)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
-                Text(playlist.curatorName)
+                Text(customCuratorName ?? playlist.curatorName)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
-                Text(playlist.description)
+                Text(customDescription ?? playlist.description)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .lineLimit(2)
@@ -290,7 +293,10 @@ struct PlaylistButtonStyle: ButtonStyle {
             ),
             onTap: {},
             customImageName: "Setaar",
-            customInstrumentImageName: "SetaarInstrument"
+            customInstrumentImageName: "SetaarInstrument",
+            customTitle: nil,
+            customCuratorName: nil,
+            customDescription: nil
         )
     }
     .padding()

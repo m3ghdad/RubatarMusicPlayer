@@ -84,23 +84,40 @@ struct MusicSectionView: View {
                             let imageNames = ["Setaar", "Santoor", "Kamancheh"]
                             let instrumentImageNames = ["SetaarInstrument", "SantoorInstrument", "KamanchehInstrument"]
                             let playlistIds = ["pl.u-vEe5t44Rjbm", nil, nil] // Apple Music playlist IDs
+                            
+                            // Custom content for each playlist
+                            let customTitles = ["Joyful - Setaar", nil, nil]
+                            let customCuratorNames = ["Se Tār | سه تار", nil, nil]
+                            let customDescriptions = ["A meditative journey where the سه‌تار (Se Tār) weaves joy and silence into one graceful breath.", nil, nil]
+                            
                             ForEach(0..<musicManager.playlists.count, id: \.self) { index in
                                 let playlist = musicManager.playlists[index]
                                 let imageName = index < imageNames.count ? imageNames[index] : "Setaar"
                                 let instrumentImageName = index < instrumentImageNames.count ? instrumentImageNames[index] : "SetaarInstrument"
                                 let customPlaylistId = index < playlistIds.count ? playlistIds[index] : nil
+                                let customTitle = index < customTitles.count ? customTitles[index] : nil
+                                let customCuratorName = index < customCuratorNames.count ? customCuratorNames[index] : nil
+                                let customDescription = index < customDescriptions.count ? customDescriptions[index] : nil
                                 
-                                PlaylistCardView(playlist: playlist, onTap: {
-                                    // Handle playlist tap with custom ID if available
-                                    if let customId = customPlaylistId {
-                                        // Use the custom Apple Music playlist ID
-                                        onPlaylistSelected(customId, playlist.title, playlist.curatorName, playlist.artworkURL)
-                                        print("🎶 Tapped custom playlist: \(playlist.title) with ID: \(customId)")
-                                    } else {
-                                        // Use the default playlist handling
-                                        handlePlaylistTap(playlist)
-                                    }
-                                }, customImageName: imageName, customInstrumentImageName: instrumentImageName)
+                                PlaylistCardView(
+                                    playlist: playlist,
+                                    onTap: {
+                                        // Handle playlist tap with custom ID if available
+                                        if let customId = customPlaylistId {
+                                            // Use the custom Apple Music playlist ID
+                                            onPlaylistSelected(customId, playlist.title, playlist.curatorName, playlist.artworkURL)
+                                            print("🎶 Tapped custom playlist: \(playlist.title) with ID: \(customId)")
+                                        } else {
+                                            // Use the default playlist handling
+                                            handlePlaylistTap(playlist)
+                                        }
+                                    },
+                                    customImageName: imageName,
+                                    customInstrumentImageName: instrumentImageName,
+                                    customTitle: customTitle,
+                                    customCuratorName: customCuratorName,
+                                    customDescription: customDescription
+                                )
                                 .padding(.horizontal, 16)
                                 
                             }
