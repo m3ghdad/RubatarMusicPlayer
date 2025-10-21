@@ -371,7 +371,7 @@ struct EnhancedMusicPlayer: View {
                     }
                     .mask(
                         // Use the same image logic for the mask
-                        Group {
+            Group {
                             if imageUrl.hasPrefix("http") {
                                 AsyncImage(url: URL(string: imageUrl)) { image in
                                     image
@@ -452,7 +452,7 @@ struct EnhancedMusicPlayer: View {
                     // First text on the right - 24px, moved right and down
                     Text(currentSet.firstText)
                         .font(.custom("NotoNastaliqUrdu", size: 24))
-                        .foregroundColor(Color(hex: "84847E"))
+                        .foregroundColor(colorScheme == .dark ? Color(hex: "FFEDD1") : Color(hex: "84847E"))
                         .opacity(firstTextOpacity)
                         .multilineTextAlignment(.trailing)
                         .fixedSize(horizontal: false, vertical: true)
@@ -469,7 +469,7 @@ struct EnhancedMusicPlayer: View {
                     // Second text on the left - 24px, moved left and down
                     Text(currentSet.secondText)
                         .font(.custom("NotoNastaliqUrdu", size: 24))
-                        .foregroundColor(Color(hex: "84847E"))
+                        .foregroundColor(colorScheme == .dark ? Color(hex: "FFEDD1") : Color(hex: "84847E"))
                         .opacity(secondTextOpacity)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
