@@ -272,25 +272,46 @@ struct DynamicSectionView: View {
                 .padding(.horizontal, 16)
             
             if section.layoutType == "horizontal" {
-                // Horizontal layout (ScrollView) - for albums
+                // Horizontal layout (ScrollView) - for albums or playlists
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
-                        ForEach(getAlbumsForSection()) { featuredAlbum in
-                            AppleMusicAlbumCardView(
-                                albumId: featuredAlbum.appleAlbumId ?? "",
-                                customTitle: featuredAlbum.customTitle ?? "Featured Album",
-                                customArtist: featuredAlbum.customArtist ?? "Featured Artist",
-                                onTap: {
-                                    if let url = URL(string: featuredAlbum.appleAlbumUrl) {
-                                        onMusicSelected(
-                                            featuredAlbum.customTitle ?? "Featured Album",
-                                            featuredAlbum.customArtist ?? "Featured Artist",
-                                            url
-                                        )
-                                        print("🎶 Tapped backend album: \(featuredAlbum.customTitle ?? "Unknown")")
+                        if section.type == "albums" {
+                            // Albums in horizontal layout
+                            ForEach(getAlbumsForSection()) { featuredAlbum in
+                                AppleMusicAlbumCardView(
+                                    albumId: featuredAlbum.appleAlbumId ?? "",
+                                    customTitle: featuredAlbum.customTitle ?? "Featured Album",
+                                    customArtist: featuredAlbum.customArtist ?? "Featured Artist",
+                                    onTap: {
+                                        if let url = URL(string: featuredAlbum.appleAlbumUrl) {
+                                            onMusicSelected(
+                                                featuredAlbum.customTitle ?? "Featured Album",
+                                                featuredAlbum.customArtist ?? "Featured Artist",
+                                                url
+                                            )
+                                            print("🎶 Tapped backend album: \(featuredAlbum.customTitle ?? "Unknown")")
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
+                        } else {
+                            // Playlists in horizontal layout - compact style like albums
+                            ForEach(getPlaylistsForSection()) { featuredPlaylist in
+                                CompactPlaylistCardView(
+                                    title: featuredPlaylist.customTitle ?? "Featured Playlist",
+                                    curator: featuredPlaylist.customCurator ?? "Featured Curator",
+                                    coverImageUrl: featuredPlaylist.coverImageUrl,
+                                    onTap: {
+                                        onPlaylistSelected(
+                                            featuredPlaylist.applePlaylistId,
+                                            featuredPlaylist.customTitle ?? "Featured Playlist",
+                                            featuredPlaylist.customCurator ?? "Featured Curator",
+                                            nil
+                                        )
+                                        print("🎶 Tapped backend playlist: \(featuredPlaylist.customTitle ?? "Unknown") with ID: \(featuredPlaylist.applePlaylistId)")
+                                    }
+                                )
+                            }
                         }
                     }
                     .padding(.horizontal, 16)
@@ -338,6 +359,73 @@ struct DynamicSectionView: View {
     
     private func getPlaylistsForSection() -> [FeaturedPlaylist] {
         return contentManager.playlists.filter { $0.sectionId == section.id }
+    }
+}
+
+// MARK: - Compact Playlist Card View
+struct CompactPlaylistCardView: View {
+    let title: String
+    let curator: String
+    let coverImageUrl: String?
+    let onTap: () -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Cover image - same size as album cards
+            Group {
+                if let coverImageUrl = coverImageUrl, !coverImageUrl.isEmpty {
+                    AsyncImage(url: URL(string: coverImageUrl)) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(
+                                LinearGradient(
+                                    colors: [.gray.opacity(0.3), .gray.opacity(0.1)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .overlay(
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            )
+                    }
+                } else {
+                    // Fallback to local instrument image
+                    Image("Setaar")
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                }
+            }
+            .frame(width: 160, height: 160)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+            .onTapGesture {
+                onTap()
+            }
+            
+            // Playlist info - same style as album cards
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.custom("Palatino", size: 16))
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: 160, alignment: .leading)
+                
+                Text(curator)
+                    .font(.custom("Palatino", size: 14))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: 160, alignment: .leading)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 }
 
