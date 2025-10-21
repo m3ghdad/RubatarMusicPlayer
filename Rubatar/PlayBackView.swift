@@ -77,14 +77,7 @@ struct PlayBackView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(.regularMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(.separator, lineWidth: 0.5)
-                )
-        )
+        .glassEffect(in: RoundedRectangle(cornerRadius: 8))
         .contentShape(Rectangle())
         .onTapGesture { onTap() }
         }
@@ -140,14 +133,7 @@ struct MiniPlayerSkeletonView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(.regularMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(.separator, lineWidth: 0.5)
-                )
-        )
+        .glassEffect(in: RoundedRectangle(cornerRadius: 8))
     }
     
     private var skeletonColor: Color {
