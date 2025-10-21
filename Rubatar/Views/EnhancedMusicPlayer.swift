@@ -410,7 +410,7 @@ struct EnhancedMusicPlayer: View {
     // Helper function to get instrument image URL from ContentManager
     private func getInstrumentImageUrl() -> String {
         guard let playlistId = audioPlayer.currentPlaylistId else {
-            return "Setaar" // Default fallback
+            return "Tree" // Default fallback
         }
         
         // Find the playlist in ContentManager
