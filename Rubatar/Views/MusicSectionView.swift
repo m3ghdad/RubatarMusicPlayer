@@ -49,13 +49,7 @@ struct MusicSectionView: View {
                 // Show loading state for ContentManager
                 switch contentManager.loadingState {
                 case .loading:
-                    VStack {
-                        ProgressView()
-                        Text("Loading content...")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding()
+                    ContentSkeletonView()
                     
                 case .loaded(_), .offline(_):
                     // Dynamic sections based on database configuration
@@ -421,6 +415,129 @@ struct CompactPlaylistCardView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+}
+
+// MARK: - Content Skeleton Loading View
+struct ContentSkeletonView: View {
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        VStack(spacing: 24) {
+            // Skeleton for 3 sections
+            ForEach(0..<3, id: \.self) { sectionIndex in
+                VStack(alignment: .leading, spacing: 12) {
+                    // Section title skeleton
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(skeletonColor)
+                        .frame(width: 120, height: 20)
+                        .padding(.horizontal, 16)
+                    
+                    if sectionIndex == 0 {
+                        // Vertical layout skeleton (playlists)
+                        VStack(spacing: 12) {
+                            ForEach(0..<3, id: \.self) { _ in
+                                PlaylistCardSkeleton()
+                            }
+                        }
+                    } else {
+                        // Horizontal layout skeleton (albums)
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 16) {
+                                ForEach(0..<4, id: \.self) { _ in
+                                    AlbumCardSkeleton()
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 20)
+    }
+    
+    private var skeletonColor: Color {
+        colorScheme == .dark ? 
+            Color(red: 0.2, green: 0.2, blue: 0.2) : 
+            Color(red: 0.9, green: 0.9, blue: 0.9)
+    }
+}
+
+// MARK: - Playlist Card Skeleton
+struct PlaylistCardSkeleton: View {
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Cover skeleton
+            RoundedRectangle(cornerRadius: 8)
+                .fill(skeletonColor)
+                .frame(height: 200)
+                .padding(.horizontal, 16)
+            
+            // Footer skeleton
+            HStack(spacing: 12) {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(skeletonColor)
+                    .frame(width: 48, height: 48)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(skeletonColor)
+                        .frame(width: 120, height: 16)
+                    
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(skeletonColor)
+                        .frame(width: 80, height: 14)
+                    
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(skeletonColor)
+                        .frame(width: 100, height: 12)
+                }
+                
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+        }
+    }
+    
+    private var skeletonColor: Color {
+        colorScheme == .dark ? 
+            Color(red: 0.2, green: 0.2, blue: 0.2) : 
+            Color(red: 0.9, green: 0.9, blue: 0.9)
+    }
+}
+
+// MARK: - Album Card Skeleton
+struct AlbumCardSkeleton: View {
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Album artwork skeleton
+            RoundedRectangle(cornerRadius: 12)
+                .fill(skeletonColor)
+                .frame(width: 160, height: 160)
+            
+            // Album info skeleton
+            VStack(alignment: .leading, spacing: 4) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(skeletonColor)
+                    .frame(width: 120, height: 16)
+                
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(skeletonColor)
+                    .frame(width: 100, height: 14)
+            }
+        }
+    }
+    
+    private var skeletonColor: Color {
+        colorScheme == .dark ? 
+            Color(red: 0.2, green: 0.2, blue: 0.2) : 
+            Color(red: 0.9, green: 0.9, blue: 0.9)
     }
 }
 

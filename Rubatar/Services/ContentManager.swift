@@ -51,6 +51,9 @@ class ContentManager: ObservableObject, ContentManagerProtocol {
     }
     
     func fetchContent() async {
+        // TEMPORARY: Add delay to see skeleton view (REMOVE AFTER TESTING)
+        // try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds delay
+        
         // Clear cache to force fresh fetch
         clearCache()
         
