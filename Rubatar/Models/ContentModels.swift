@@ -10,13 +10,32 @@ import Foundation
 // MARK: - Content Section Models
 
 struct ContentSection: Codable, Identifiable {
-    let id: String
+    let id: UUID
     let type: String // "playlists" or "albums"
     let title: String
     let displayOrder: Int
     let isVisible: Bool
+    let layoutType: String // "vertical" or "horizontal"
     let createdAt: String
     let updatedAt: String
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        type = try container.decode(String.self, forKey: .type)
+        title = try container.decode(String.self, forKey: .title)
+        displayOrder = try container.decode(Int.self, forKey: .displayOrder)
+        isVisible = try container.decode(Bool.self, forKey: .isVisible)
+        layoutType = try container.decode(String.self, forKey: .layoutType)
+        
+        // Handle timestamp format with timezone
+        let createdAtRaw = try container.decode(String.self, forKey: .createdAt)
+        let updatedAtRaw = try container.decode(String.self, forKey: .updatedAt)
+        
+        // Remove timezone info if present
+        createdAt = createdAtRaw.replacingOccurrences(of: "+00:00", with: "Z")
+        updatedAt = updatedAtRaw.replacingOccurrences(of: "+00:00", with: "Z")
+    }
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -24,6 +43,7 @@ struct ContentSection: Codable, Identifiable {
         case title
         case displayOrder = "display_order"
         case isVisible = "is_visible"
+        case layoutType = "layout_type"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }

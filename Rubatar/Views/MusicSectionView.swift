@@ -63,83 +63,15 @@ struct MusicSectionView: View {
                     .padding()
                     
                 case .loaded(_), .offline(_):
-                    // Playlists Section - Now using ContentManager
-                    if !contentManager.playlists.isEmpty {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Playlists by instrument")
-                            .font(.custom("Palatino", size: 16))
-                            .foregroundColor(.primary)
-                            .padding(.horizontal, 16)
-                        
-                        VStack(spacing: 12) {
-                            ForEach(contentManager.playlists) { featuredPlaylist in
-                                // Create a mock Playlist object for compatibility
-                                let mockPlaylist = Playlist(
-                                    id: featuredPlaylist.id.uuidString,
-                                    title: featuredPlaylist.customTitle ?? "Featured Playlist",
-                                    curatorName: featuredPlaylist.customCurator ?? "Featured Curator",
-                                    artwork: nil,
-                                    trackCount: 0,
-                                    description: featuredPlaylist.customDescription ?? "Featured playlist description"
-                                )
-                                
-                                PlaylistCardView(
-                                    playlist: mockPlaylist,
-                                    onTap: {
-                                        // Use the Apple Music playlist ID from backend
-                                        onPlaylistSelected(
-                                            featuredPlaylist.applePlaylistId,
-                                            featuredPlaylist.customTitle ?? "Featured Playlist",
-                                            featuredPlaylist.customCurator ?? "Featured Curator",
-                                            nil
-                                        )
-                                        print("🎶 Tapped backend playlist: \(featuredPlaylist.customTitle ?? "Unknown") with ID: \(featuredPlaylist.applePlaylistId)")
-                                    },
-                                    customImageName: featuredPlaylist.coverImageUrl,
-                                    customInstrumentImageName: featuredPlaylist.instrumentImageUrl ?? "SetaarInstrument",
-                                    customTitle: featuredPlaylist.customTitle,
-                                    customCuratorName: featuredPlaylist.customCurator,
-                                    customDescription: featuredPlaylist.customDescription
-                                )
-                                .padding(.horizontal, 16)
-                            }
-                        }
+                    // Dynamic sections based on database configuration
+                    ForEach(contentManager.sections.sorted(by: { $0.displayOrder < $1.displayOrder })) { section in
+                        DynamicSectionView(
+                            section: section,
+                            contentManager: contentManager,
+                            onMusicSelected: onMusicSelected,
+                            onPlaylistSelected: onPlaylistSelected
+                        )
                     }
-                }
-                
-                // Albums Section - Now using ContentManager
-                if !contentManager.albums.isEmpty {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Featured Albums")
-                            .font(.custom("Palatino", size: 17))
-                            .foregroundColor(.primary)
-                            .padding(.horizontal, 16)
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 16) {
-                                ForEach(contentManager.albums) { featuredAlbum in
-                                    AppleMusicAlbumCardView(
-                                        albumId: featuredAlbum.appleAlbumId ?? "",
-                                        customTitle: featuredAlbum.customTitle ?? "Featured Album",
-                                        customArtist: featuredAlbum.customArtist ?? "Featured Artist",
-                                        onTap: {
-                                            // Handle album tap with Apple Music URL
-                                            if let url = URL(string: featuredAlbum.appleAlbumUrl) {
-                                                onMusicSelected(
-                                                    featuredAlbum.customTitle ?? "Featured Album",
-                                                    featuredAlbum.customArtist ?? "Featured Artist",
-                                                    url
-                                                )
-                                                print("🎶 Tapped backend album: \(featuredAlbum.customTitle ?? "Unknown")")
-                                            }
-                                        }
-                                    )
-                                }
-                            }
-                            .padding(.horizontal, 16)
-                        }
-                    }
-                }
                 
                 case .error(let errorMessage):
                     VStack {
@@ -322,6 +254,90 @@ struct MusicSectionView: View {
         print("   👤 Curated by: \(playlist.curatorName)")
         print("   📝 \(playlist.description)")
         print("   🎵 \(playlist.trackCount) tracks")
+    }
+}
+
+// MARK: - Dynamic Section View
+struct DynamicSectionView: View {
+    let section: ContentSection
+    let contentManager: ContentManager
+    let onMusicSelected: (String, String, URL) -> Void
+    let onPlaylistSelected: (String, String, String, URL?) -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(section.title)
+                .font(.custom("Palatino", size: section.type == "albums" ? 17 : 16))
+                .foregroundColor(.primary)
+                .padding(.horizontal, 16)
+            
+            if section.layoutType == "horizontal" {
+                // Horizontal layout (ScrollView) - for albums
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        ForEach(getAlbumsForSection()) { featuredAlbum in
+                            AppleMusicAlbumCardView(
+                                albumId: featuredAlbum.appleAlbumId ?? "",
+                                customTitle: featuredAlbum.customTitle ?? "Featured Album",
+                                customArtist: featuredAlbum.customArtist ?? "Featured Artist",
+                                onTap: {
+                                    if let url = URL(string: featuredAlbum.appleAlbumUrl) {
+                                        onMusicSelected(
+                                            featuredAlbum.customTitle ?? "Featured Album",
+                                            featuredAlbum.customArtist ?? "Featured Artist",
+                                            url
+                                        )
+                                        print("🎶 Tapped backend album: \(featuredAlbum.customTitle ?? "Unknown")")
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                }
+            } else {
+                // Vertical layout (VStack) - for playlists
+                VStack(spacing: 12) {
+                    ForEach(getPlaylistsForSection()) { featuredPlaylist in
+                        let mockPlaylist = Playlist(
+                            id: featuredPlaylist.id.uuidString,
+                            title: featuredPlaylist.customTitle ?? "Featured Playlist",
+                            curatorName: featuredPlaylist.customCurator ?? "Featured Curator",
+                            artwork: nil,
+                            trackCount: 0,
+                            description: featuredPlaylist.customDescription ?? "Featured playlist description"
+                        )
+                        
+                        PlaylistCardView(
+                            playlist: mockPlaylist,
+                            onTap: {
+                                onPlaylistSelected(
+                                    featuredPlaylist.applePlaylistId,
+                                    featuredPlaylist.customTitle ?? "Featured Playlist",
+                                    featuredPlaylist.customCurator ?? "Featured Curator",
+                                    nil
+                                )
+                                print("🎶 Tapped backend playlist: \(featuredPlaylist.customTitle ?? "Unknown") with ID: \(featuredPlaylist.applePlaylistId)")
+                            },
+                            customImageName: featuredPlaylist.coverImageUrl,
+                            customInstrumentImageName: featuredPlaylist.instrumentImageUrl ?? "SetaarInstrument",
+                            customTitle: featuredPlaylist.customTitle,
+                            customCuratorName: featuredPlaylist.customCurator,
+                            customDescription: featuredPlaylist.customDescription
+                        )
+                        .padding(.horizontal, 16)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func getAlbumsForSection() -> [FeaturedAlbum] {
+        return contentManager.albums.filter { $0.sectionId == section.id }
+    }
+    
+    private func getPlaylistsForSection() -> [FeaturedPlaylist] {
+        return contentManager.playlists.filter { $0.sectionId == section.id }
     }
 }
 

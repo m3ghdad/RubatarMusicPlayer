@@ -62,19 +62,19 @@ class ContentManager: ObservableObject, ContentManagerProtocol {
             // Fetch sections
             let sectionsResponse: [ContentSection] = try await fetchFromSupabase(
                 table: "content_sections",
-                query: "is_visible=eq.true&order=display_order"
+                query: "is_visible=eq.true&order=display_order.asc&select=id,type,title,display_order,is_visible,layout_type,created_at,updated_at"
             )
             
             // Fetch playlists
             let playlistsResponse: [FeaturedPlaylist] = try await fetchFromSupabase(
                 table: "featured_playlists",
-                query: "is_visible=eq.true&order=display_order"
+                query: "is_visible=eq.true&order=display_order.asc&select=*"
             )
             
             // Fetch albums
             let albumsResponse: [FeaturedAlbum] = try await fetchFromSupabase(
                 table: "featured_albums",
-                query: "is_visible=eq.true&order=display_order"
+                query: "is_visible=eq.true&order=display_order.asc&select=*"
             )
             
             // Create content response
@@ -128,6 +128,7 @@ class ContentManager: ObservableObject, ContentManagerProtocol {
         }
         
         var request = URLRequest(url: url)
+        request.setValue(apiKey, forHTTPHeaderField: "apikey")
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -145,11 +146,16 @@ class ContentManager: ObservableObject, ContentManagerProtocol {
                         print("🌐 ContentManager: Response body: \(responseString)")
                     }
                     throw URLError(.badServerResponse)
+                } else {
+                    // Debug: Print the actual response for successful requests
+                    if let responseString = String(data: data, encoding: .utf8) {
+                        print("🌐 ContentManager: Response body: \(responseString)")
+                    }
                 }
             }
             
             let decoder = JSONDecoder()
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            // Don't use convertFromSnakeCase since we have custom CodingKeys
             let result = try decoder.decode([T].self, from: data)
             print("✅ ContentManager: Successfully decoded \(result.count) items from \(table)")
             return result
@@ -249,6 +255,67 @@ class ContentManager: ObservableObject, ContentManagerProtocol {
                 customCurator: "Kamancheh | کمانچه",
                 customDescription: "A reflective journey where the کمانچه (Kamancheh) sings of seasons, distance, and the gentle passing of time.",
                 displayOrder: 3,
+                isVisible: true,
+                createdAt: "2025-01-21T00:00:00Z",
+                updatedAt: "2025-01-21T00:00:00Z"
+            ),
+            // Add mood playlists to fallback data
+            FeaturedPlaylist(
+                id: UUID(),
+                sectionId: UUID(uuidString: "4f9e5f5f-3a27-4932-81f0-6881ce4d76ef"),
+                applePlaylistId: "pl.u-vEe5t44Rjbm",
+                coverImageUrl: "Setaar",
+                instrumentImageUrl: nil,
+                footerText: "گلچین تار و سه‌تار ایران",
+                customTitle: "گلچین تار و سه‌تار ایران",
+                customCurator: "Persian Classical",
+                customDescription: "A curated collection of Persian classical music featuring Tar and Setar",
+                displayOrder: 1,
+                isVisible: true,
+                createdAt: "2025-01-21T00:00:00Z",
+                updatedAt: "2025-01-21T00:00:00Z"
+            ),
+            FeaturedPlaylist(
+                id: UUID(),
+                sectionId: UUID(uuidString: "4f9e5f5f-3a27-4932-81f0-6881ce4d76ef"),
+                applePlaylistId: "pl.u-AqK9HDDXK5a",
+                coverImageUrl: "Santoor",
+                instrumentImageUrl: nil,
+                footerText: "سه‌تار (Setar)",
+                customTitle: "سه‌تار (Setar)",
+                customCurator: "Persian Classical",
+                customDescription: "Traditional Persian Setar music",
+                displayOrder: 2,
+                isVisible: true,
+                createdAt: "2025-01-21T00:00:00Z",
+                updatedAt: "2025-01-21T00:00:00Z"
+            ),
+            FeaturedPlaylist(
+                id: UUID(),
+                sectionId: UUID(uuidString: "4f9e5f5f-3a27-4932-81f0-6881ce4d76ef"),
+                applePlaylistId: "pl.u-bvj8T00GXMg",
+                coverImageUrl: "Kamancheh",
+                instrumentImageUrl: nil,
+                footerText: "Kamkars Santur",
+                customTitle: "Kamkars Santur",
+                customCurator: "Persian Classical",
+                customDescription: "Traditional Persian Santur music",
+                displayOrder: 3,
+                isVisible: true,
+                createdAt: "2025-01-21T00:00:00Z",
+                updatedAt: "2025-01-21T00:00:00Z"
+            ),
+            FeaturedPlaylist(
+                id: UUID(),
+                sectionId: UUID(uuidString: "4f9e5f5f-3a27-4932-81f0-6881ce4d76ef"),
+                applePlaylistId: "pl.u-vEe5t44Rjbm",
+                coverImageUrl: "Setaar",
+                instrumentImageUrl: nil,
+                footerText: "Santur Solo in Abuata",
+                customTitle: "Santur Solo in Abuata",
+                customCurator: "Persian Classical",
+                customDescription: "Traditional Persian Santur solo performance",
+                displayOrder: 4,
                 isVisible: true,
                 createdAt: "2025-01-21T00:00:00Z",
                 updatedAt: "2025-01-21T00:00:00Z"
