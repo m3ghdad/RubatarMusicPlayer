@@ -144,22 +144,18 @@ struct EnhancedMusicPlayer: View {
     private let _timeTimer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
     
     // Bottom Tab Selection
-    @State private var selectedBottomTab: BottomTab = .booklet
+    @State private var selectedBottomTab: BottomTab = .airplay
     
     // Segmented Control Selection
     @State private var selectedSegment: SegmentTab = .listeningGuide
     
     
     enum BottomTab: String, CaseIterable {
-        case booklet = "Booklet"
         case airplay = "AirPlay"
-        case list = "List"
         
         var iconName: String {
             switch self {
-            case .booklet: return "book.fill"
             case .airplay: return "airplayvideo"
-            case .list: return "list.bullet"
             }
         }
     }
