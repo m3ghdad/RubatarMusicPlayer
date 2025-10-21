@@ -12,6 +12,7 @@ struct EnhancedMusicPlayer: View {
     
     // Pass the existing audio player from ContentView
     @EnvironmentObject var audioPlayer: AudioPlayer
+    @EnvironmentObject var contentManager: ContentManager
     
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.colorScheme) private var colorScheme
@@ -306,8 +307,8 @@ struct EnhancedMusicPlayer: View {
     func SetaarImageWithAnimation() -> some View {
         GeometryReader { geometry in
             ZStack {
-                // Determine which image to use based on current playlist
-                let imageName = getInstrumentImageName()
+                // Get the image URL from ContentManager
+                let imageUrl = getInstrumentImageUrl()
                 
                 // Base statue image - opacity varies in complex pattern
                 TimelineView(.animation(minimumInterval: 0.05, paused: false)) { timeline in
@@ -320,10 +321,27 @@ struct EnhancedMusicPlayer: View {
                     // Calculate opacity based on the pattern
                     let currentOpacity = calculateOpacity(for: cycleTime)
                     
-                    Image(imageName)
-                        .resizable()
-                        .scaledToFit()
-                        .opacity(currentOpacity)
+                    // Use AsyncImage for URL-based images, fallback to local for hardcoded names
+                    if imageUrl.hasPrefix("http") {
+                        AsyncImage(url: URL(string: imageUrl)) { image in
+                            image
+                                .resizable()
+                                .scaledToFit()
+                                .opacity(currentOpacity)
+                        } placeholder: {
+                            // Show placeholder while loading
+                            Image("Setaar")
+                                .resizable()
+                                .scaledToFit()
+                                .opacity(currentOpacity * 0.3)
+                        }
+                    } else {
+                        // Fallback to local image for hardcoded names
+                        Image(imageUrl)
+                            .resizable()
+                            .scaledToFit()
+                            .opacity(currentOpacity)
+                    }
                 }
                 
                 // Moving sunlight glare overlay - localized cloud of light
@@ -352,21 +370,42 @@ struct EnhancedMusicPlayer: View {
                         .blendMode(.overlay)
                     }
                     .mask(
-                        Image(imageName)
-                            .resizable()
-                            .scaledToFill()
+                        // Use the same image logic for the mask
+                        Group {
+                            if imageUrl.hasPrefix("http") {
+                                AsyncImage(url: URL(string: imageUrl)) { image in
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                } placeholder: {
+                                    Image("Setaar")
+                                        .resizable()
+                                        .scaledToFill()
+                                }
+                            } else {
+                                Image(imageUrl)
+                                    .resizable()
+                                    .scaledToFill()
+                            }
+                        }
                     )
                 }
             }
         }
     }
     
-    // Helper function to get instrument image name based on current playlist
-    private func getInstrumentImageName() -> String {
+    // Helper function to get instrument image URL from ContentManager
+    private func getInstrumentImageUrl() -> String {
         guard let playlistId = audioPlayer.currentPlaylistId else {
-            return "Setaar" // Default
+            return "Setaar" // Default fallback
         }
         
+        // Find the playlist in ContentManager
+        if let playlist = contentManager.playlist(with: playlistId) {
+            return playlist.coverImageUrl
+        }
+        
+        // Fallback to hardcoded mapping if not found in ContentManager
         switch playlistId {
         case "pl.u-vEe5t44Rjbm": // The Dance of Silence
             return "Setaar"

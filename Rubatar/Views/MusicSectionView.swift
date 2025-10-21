@@ -10,6 +10,7 @@ import MusicKit
 
 struct MusicSectionView: View {
     @StateObject private var musicManager = MusicManager()
+    @EnvironmentObject var contentManager: ContentManager
     @State private var showingAlbumAlert = false
     @State private var showingPlaylistAlert = false
     @State private var selectedAlbum: Album?
@@ -48,9 +49,22 @@ struct MusicSectionView: View {
             }
             .padding(.horizontal, 16)
             
+            
             if musicManager.authorizationStatus == .authorized {
-                // Playlists Section
-                if !musicManager.playlists.isEmpty {
+                // Show loading state for ContentManager
+                switch contentManager.loadingState {
+                case .loading:
+                    VStack {
+                        ProgressView()
+                        Text("Loading content...")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    
+                case .loaded(_), .offline(_):
+                    // Playlists Section - Now using ContentManager
+                    if !contentManager.playlists.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Playlists by instrument")
                             .font(.custom("Palatino", size: 16))
@@ -58,64 +72,43 @@ struct MusicSectionView: View {
                             .padding(.horizontal, 16)
                         
                         VStack(spacing: 12) {
-                            let imageNames = ["Setaar", "Santoor", "Kamancheh"]
-                            let instrumentImageNames = ["SetaarInstrument", "SantoorInstrument", "KamanchehInstrument"]
-                            let playlistIds = ["pl.u-vEe5t44Rjbm", "pl.u-AqK9HDDXK5a", "pl.u-bvj8T00GXMg"] // Apple Music playlist IDs
-                            
-                            // Custom content for each playlist
-                            let customTitles = [
-                                "The Dance of Silence | رقص سکوت",
-                                "Melody of Water | نغمه آب",
-                                "The Shadow of Time | سایه زمان"
-                            ]
-                            let customCuratorNames = [
-                                "Se Tār | سه تار",
-                                "Santoor | سنتور",
-                                "Kamancheh | کمانچه"
-                            ]
-                            let customDescriptions = [
-                                "A meditative journey where the سه‌تار (Se Tār) weaves joy and silence into one graceful breath.",
-                                "A tranquil reflection where the سنتور (Santoor) speaks in ripples of light, echoing thought and memory into still air.",
-                                "A reflective journey where the کمانچه (Kamancheh) sings of seasons, distance, and the gentle passing of time."
-                            ]
-                            
-                            ForEach(0..<musicManager.playlists.count, id: \.self) { index in
-                                let playlist = musicManager.playlists[index]
-                                let imageName = index < imageNames.count ? imageNames[index] : "Setaar"
-                                let instrumentImageName = index < instrumentImageNames.count ? instrumentImageNames[index] : "SetaarInstrument"
-                                let customPlaylistId = index < playlistIds.count ? playlistIds[index] : nil
-                                let customTitle = index < customTitles.count ? customTitles[index] : nil
-                                let customCuratorName = index < customCuratorNames.count ? customCuratorNames[index] : nil
-                                let customDescription = index < customDescriptions.count ? customDescriptions[index] : nil
+                            ForEach(contentManager.playlists) { featuredPlaylist in
+                                // Create a mock Playlist object for compatibility
+                                let mockPlaylist = Playlist(
+                                    id: featuredPlaylist.id.uuidString,
+                                    title: featuredPlaylist.customTitle ?? "Featured Playlist",
+                                    curatorName: featuredPlaylist.customCurator ?? "Featured Curator",
+                                    artwork: nil,
+                                    trackCount: 0,
+                                    description: featuredPlaylist.customDescription ?? "Featured playlist description"
+                                )
                                 
                                 PlaylistCardView(
-                                    playlist: playlist,
+                                    playlist: mockPlaylist,
                                     onTap: {
-                                        // Handle playlist tap with custom ID if available
-                                        if let customId = customPlaylistId {
-                                            // Use the custom Apple Music playlist ID
-                                            onPlaylistSelected(customId, playlist.title, playlist.curatorName, playlist.artworkURL)
-                                            print("🎶 Tapped custom playlist: \(playlist.title) with ID: \(customId)")
-                                        } else {
-                                            // Use the default playlist handling
-                                            handlePlaylistTap(playlist)
-                                        }
+                                        // Use the Apple Music playlist ID from backend
+                                        onPlaylistSelected(
+                                            featuredPlaylist.applePlaylistId,
+                                            featuredPlaylist.customTitle ?? "Featured Playlist",
+                                            featuredPlaylist.customCurator ?? "Featured Curator",
+                                            nil
+                                        )
+                                        print("🎶 Tapped backend playlist: \(featuredPlaylist.customTitle ?? "Unknown") with ID: \(featuredPlaylist.applePlaylistId)")
                                     },
-                                    customImageName: imageName,
-                                    customInstrumentImageName: instrumentImageName,
-                                    customTitle: customTitle,
-                                    customCuratorName: customCuratorName,
-                                    customDescription: customDescription
+                                    customImageName: featuredPlaylist.coverImageUrl,
+                                    customInstrumentImageName: featuredPlaylist.instrumentImageUrl ?? "SetaarInstrument",
+                                    customTitle: featuredPlaylist.customTitle,
+                                    customCuratorName: featuredPlaylist.customCurator,
+                                    customDescription: featuredPlaylist.customDescription
                                 )
                                 .padding(.horizontal, 16)
-                                
                             }
                         }
                     }
                 }
                 
-                // Albums Section
-                if !musicManager.albums.isEmpty {
+                // Albums Section - Now using ContentManager
+                if !contentManager.albums.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Featured Albums")
                             .font(.custom("Palatino", size: 17))
@@ -124,16 +117,44 @@ struct MusicSectionView: View {
                         
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 16) {
-                                ForEach(musicManager.albums) { album in
-                                    AlbumCardView(album: album) {
-                                        // Handle album tap
-                                        handleAlbumTap(album)
-                                    }
+                                ForEach(contentManager.albums) { featuredAlbum in
+                                    AppleMusicAlbumCardView(
+                                        albumId: featuredAlbum.appleAlbumId ?? "",
+                                        customTitle: featuredAlbum.customTitle ?? "Featured Album",
+                                        customArtist: featuredAlbum.customArtist ?? "Featured Artist",
+                                        onTap: {
+                                            // Handle album tap with Apple Music URL
+                                            if let url = URL(string: featuredAlbum.appleAlbumUrl) {
+                                                onMusicSelected(
+                                                    featuredAlbum.customTitle ?? "Featured Album",
+                                                    featuredAlbum.customArtist ?? "Featured Artist",
+                                                    url
+                                                )
+                                                print("🎶 Tapped backend album: \(featuredAlbum.customTitle ?? "Unknown")")
+                                            }
+                                        }
+                                    )
                                 }
                             }
                             .padding(.horizontal, 16)
                         }
                     }
+                }
+                
+                case .error(let errorMessage):
+                    VStack {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 30))
+                            .foregroundColor(.orange)
+                        Text("Content Error")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        Text(errorMessage)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding()
                 }
                 
                 if musicManager.isLoading {

@@ -10,6 +10,7 @@ struct HomeView: View {
     let onMusicSelected: (String, String, URL?) -> Void
     let onPlaylistSelected: (String, String, String, URL?) -> Void
     @Binding var showProfileSheet: Bool
+    @EnvironmentObject var contentManager: ContentManager
     
     @State private var lastScrollOffset: CGFloat = 0
     

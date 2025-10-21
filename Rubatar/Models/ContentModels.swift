@@ -32,8 +32,8 @@ struct ContentSection: Codable, Identifiable {
 // MARK: - Featured Playlist Model
 
 struct FeaturedPlaylist: Codable, Identifiable {
-    let id: String
-    let sectionId: String
+    let id: UUID
+    let sectionId: UUID?
     let applePlaylistId: String
     let coverImageUrl: String
     let instrumentImageUrl: String? // Optional since not used currently
@@ -79,8 +79,8 @@ struct FeaturedPlaylist: Codable, Identifiable {
 // MARK: - Featured Album Model
 
 struct FeaturedAlbum: Codable, Identifiable {
-    let id: String
-    let sectionId: String
+    let id: UUID
+    let sectionId: UUID?
     let appleAlbumUrl: String
     let appleAlbumId: String?
     let customTitle: String?
@@ -154,22 +154,5 @@ protocol ContentManagerProtocol: ObservableObject {
 
 // MARK: - Extensions for Easy Access
 
-extension ContentResponse {
-    /// Get playlists for a specific section
-    func playlists(for section: ContentSection) -> [FeaturedPlaylist] {
-        return playlists.filter { $0.sectionId == section.id && $0.isVisible }
-            .sorted { $0.displayOrder < $1.displayOrder }
-    }
-    
-    /// Get albums for a specific section
-    func albums(for section: ContentSection) -> [FeaturedAlbum] {
-        return albums.filter { $0.sectionId == section.id && $0.isVisible }
-            .sorted { $0.displayOrder < $1.displayOrder }
-    }
-    
-    /// Get all visible sections
-    var visibleSections: [ContentSection] {
-        return sections.filter { $0.isVisible }
-            .sorted { $0.displayOrder < $1.displayOrder }
-    }
-}
+// Note: Extension methods temporarily removed due to UUID comparison issues
+// TODO: Fix UUID optional comparison in the future

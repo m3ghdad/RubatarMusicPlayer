@@ -6,38 +6,81 @@
 //
 
 import SwiftUI
+import MusicKit
 
 struct AlbumCardView: View {
     let album: Album
     let onTap: () -> Void
+    var customImageName: String? = nil // Add support for local images
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Album artwork
-            AsyncImage(url: album.artworkURL) { image in
-                image
+            // Album artwork - support both URLs and local images
+            if let imageName = customImageName, !imageName.hasPrefix("http") {
+                // Use local asset image
+                Image(imageName)
                     .resizable()
                     .aspectRatio(1, contentMode: .fill)
-            } placeholder: {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(
-                        LinearGradient(
-                            colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+                    .frame(width: 160, height: 160)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    .onTapGesture {
+                        onTap()
+                    }
+            } else if let imageURL = customImageName, imageURL.hasPrefix("http"), let url = URL(string: imageURL) {
+                // Use URL-based image
+                AsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(1, contentMode: .fill)
+                } placeholder: {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(
+                            LinearGradient(
+                                colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                    )
-                    .overlay(
-                        Image(systemName: "music.note")
-                            .font(.title)
-                            .foregroundColor(.white.opacity(0.7))
-                    )
-            }
-            .frame(width: 160, height: 160)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-            .onTapGesture {
-                onTap()
+                        .overlay(
+                            Image(systemName: "music.note")
+                                .font(.title)
+                                .foregroundColor(.white.opacity(0.7))
+                        )
+                }
+                .frame(width: 160, height: 160)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                .onTapGesture {
+                    onTap()
+                }
+            } else {
+                // Fallback to album artwork URL
+                AsyncImage(url: album.artworkURL) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(1, contentMode: .fill)
+                } placeholder: {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(
+                            LinearGradient(
+                                colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay(
+                            Image(systemName: "music.note")
+                                .font(.title)
+                                .foregroundColor(.white.opacity(0.7))
+                        )
+                }
+                .frame(width: 160, height: 160)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                .onTapGesture {
+                    onTap()
+                }
             }
             
             // Album info
@@ -154,12 +197,28 @@ struct PlaylistCardView: View {
                         .clipped()
                         .opacity(colorScheme == .dark ? 0.2 : 0.5)
                     
-                    // Main image layer (top)
-                    Image(customImageName)
-                        .resizable()
-                        .frame(maxWidth: .infinity, maxHeight: 400)
-                        .clipped()
-                        .opacity(0.2)
+                    // Main image layer (top) - Handle both URLs and local images
+                    if customImageName.hasPrefix("http") {
+                        AsyncImage(url: URL(string: customImageName)) { image in
+                            image
+                                .resizable()
+                                .frame(maxWidth: .infinity, maxHeight: 400)
+                                .clipped()
+                                .opacity(0.2)
+                        } placeholder: {
+                            Image("Setaar")
+                                .resizable()
+                                .frame(maxWidth: .infinity, maxHeight: 400)
+                                .clipped()
+                                .opacity(0.2)
+                        }
+                    } else {
+                        Image(customImageName)
+                            .resizable()
+                            .frame(maxWidth: .infinity, maxHeight: 400)
+                            .clipped()
+                            .opacity(0.2)
+                    }
                     
                     // Glare effect
                     let creamyWhite = Color(red: 0.98, green: 0.96, blue: 0.92)
@@ -295,4 +354,132 @@ struct PlaylistButtonStyle: ButtonStyle {
         )
     }
     .padding()
+}
+
+// MARK: - Apple Music Album Card View
+struct AppleMusicAlbumCardView: View {
+    let albumId: String
+    let customTitle: String
+    let customArtist: String
+    let onTap: () -> Void
+    
+    @State private var album: MusicKit.Album?
+    @State private var isLoading = true
+    @State private var error: Error?
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Album artwork from Apple Music
+            Group {
+                if let album = album, let artwork = album.artwork {
+                    AsyncImage(url: artwork.url(width: 300, height: 300)) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(1, contentMode: .fill)
+                    } placeholder: {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(
+                                LinearGradient(
+                                    colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .overlay(
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            )
+                    }
+                } else if isLoading {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(
+                            LinearGradient(
+                                colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay(
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        )
+                } else {
+                    // Fallback for error state
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(
+                            LinearGradient(
+                                colors: [.red.opacity(0.3), .orange.opacity(0.3)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay(
+                            Image(systemName: "exclamationmark.triangle")
+                                .font(.title)
+                                .foregroundColor(.white.opacity(0.7))
+                        )
+                }
+            }
+            .frame(width: 160, height: 160)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+            .onTapGesture {
+                onTap()
+            }
+            
+            // Album info
+            VStack(alignment: .leading, spacing: 4) {
+                Text(customTitle)
+                    .font(.custom("Palatino", size: 16))
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: 160, alignment: .leading)
+                
+                Text(customArtist)
+                    .font(.custom("Palatino", size: 14))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: 160, alignment: .leading)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .onTapGesture {
+            onTap()
+        }
+        .task {
+            await fetchAlbum()
+        }
+    }
+    
+    @MainActor
+    private func fetchAlbum() async {
+        do {
+            print("🎵 Fetching Apple Music album with ID: \(albumId)")
+            
+            // Request the album by ID
+            let request = MusicCatalogResourceRequest<MusicKit.Album>(
+                matching: \.id,
+                equalTo: MusicItemID(albumId)
+            )
+            
+            let response = try await request.response()
+            
+            if let fetchedAlbum = response.items.first {
+                self.album = fetchedAlbum
+                print("✅ Successfully fetched album: \(fetchedAlbum.title)")
+            } else {
+                print("⚠️ No album found with ID: \(albumId)")
+                self.error = NSError(domain: "AlbumNotFound", code: 404, userInfo: [NSLocalizedDescriptionKey: "Album not found"])
+            }
+        } catch {
+            print("❌ Failed to fetch album: \(error)")
+            self.error = error
+        }
+        
+        self.isLoading = false
+    }
 }

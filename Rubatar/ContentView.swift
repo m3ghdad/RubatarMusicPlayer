@@ -18,6 +18,9 @@ struct ContentView: View {
     @State private var searchText = ""
     @AppStorage("isDarkMode") private var isDarkMode = false
     @State private var showWelcomeModal = true
+    
+    // MARK: - Content Management
+    @StateObject private var contentManager = ContentManager()
     @State private var showMiniPlayer = false
     @State private var showCard = false
     @State private var showVideoPlayer = false
@@ -60,6 +63,7 @@ struct ContentView: View {
                         onPlaylistSelected: playSelectedPlaylist,
                         showProfileSheet: $showProfileSheet
                     )
+                    .environmentObject(contentManager)
                 } label: {
                     Label {
                         Text("Home")
@@ -120,6 +124,7 @@ struct ContentView: View {
                     animation: animation
                 )
                 .environmentObject(audioPlayer)
+                .environmentObject(contentManager)
                 .zIndex(1000)
                 .transition(getPlayerTransition())
             }
