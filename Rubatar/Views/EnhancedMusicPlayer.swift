@@ -640,27 +640,35 @@ struct EnhancedMusicPlayer: View {
                 Text(audioPlayer.currentTrack != "No track selected" ? audioPlayer.currentTrack : "Shabgard")
                     .font(.custom("Palatino", size: 16))
                         .fontWeight(.semibold)
-                    .foregroundStyle(Color(red: 0.2, green: 0.15, blue: 0.1))
+                    .foregroundStyle(colorScheme == .dark ? Color.white : Color(red: 0.2, green: 0.15, blue: 0.1))
                     .lineLimit(1)
                 
                 Text(audioPlayer.currentArtist.isEmpty ? "Sohrab Pournazeri" : audioPlayer.currentArtist)
                     .font(.custom("Palatino", size: 14))
-                    .foregroundStyle(Color(red: 0.72, green: 0.38, blue: 0.22))
+                    .foregroundStyle(colorScheme == .dark ? Color(red: 0xE3/255.0, green: 0xB8/255.0, blue: 0x87/255.0) : Color(red: 0.72, green: 0.38, blue: 0.22))
                     .lineLimit(1)
                 }
                 
                 Spacer()
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 8)
         .padding(.vertical, 8)
         .frame(height: 64)
         .background(
             ZStack {
+                // Liquid Glass Effect
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(.ultraThinMaterial)
+                    .opacity(0.8)
+                
                 // Background gradient at 40% opacity
                 RoundedRectangle(cornerRadius: 16)
                     .fill(
                         LinearGradient(
-                            colors: [
+                            colors: colorScheme == .dark ? [
+                                Color(red: 0x3A/255.0, green: 0x3A/255.0, blue: 0x3A/255.0),
+                                Color(red: 0x6D/255.0, green: 0x6A/255.0, blue: 0x67/255.0)
+                            ] : [
                                 Color(red: 0xEA/255.0, green: 0xEA/255.0, blue: 0xEA/255.0),
                                 Color(red: 0xC6/255.0, green: 0xC0/255.0, blue: 0xBA/255.0)
                             ],
@@ -998,7 +1006,10 @@ struct EnhancedMusicPlayer: View {
                 Rectangle()
                     .fill(
                         LinearGradient(
-                            colors: [
+                            colors: colorScheme == .dark ? [
+                                Color(red: 0x1D/255.0, green: 0x1C/255.0, blue: 0x1C/255.0),
+                                Color(red: 0x13/255.0, green: 0x0F/255.0, blue: 0x0F/255.0)
+                            ] : [
                                 Color(red: 0xBD/255.0, green: 0xB8/255.0, blue: 0xB2/255.0),
                                 Color(red: 0xD7/255.0, green: 0xD1/255.0, blue: 0xCB/255.0)
                             ],
