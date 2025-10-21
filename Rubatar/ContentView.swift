@@ -26,8 +26,15 @@ struct ContentView: View {
     @State private var showEnhancedPlayer = false
     @State private var shouldShowMiniPlayer = false
     @State private var showProfileSheet = false
+    @State private var playerOpenedFrom: PlayerSource = .none
     @StateObject private var audioPlayer = AudioPlayer()
     @Namespace private var animation
+    
+    enum PlayerSource {
+        case none
+        case playlistCard
+        case miniPlayer
+    }
     
     // MARK: - Video Configuration
     private let videoURL = URL(string: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")!
@@ -114,12 +121,19 @@ struct ContentView: View {
                 )
                 .environmentObject(audioPlayer)
                 .zIndex(1000)
-                .transition(.scale(scale: 0.8).combined(with: .opacity))
+                .transition(getPlayerTransition())
             }
         }
         .onAppear { initializeVideoPlayer() }
         .onChange(of: showEnhancedPlayer) { oldValue, newValue in
-            handleEnhancedPlayerDismissal(oldValue: oldValue, newValue: newValue)
+            if oldValue == true && newValue == false {
+                // Dismissing - use snappy animation with no bounce
+                withAnimation(.spring(response: 0.35, dampingFraction: 1.0)) {
+                    handleEnhancedPlayerDismissal(oldValue: oldValue, newValue: newValue)
+                }
+            } else {
+                handleEnhancedPlayerDismissal(oldValue: oldValue, newValue: newValue)
+            }
         }
         .fullScreenCover(isPresented: $showVideoPlayer) {
             videoPlayerView
@@ -139,6 +153,7 @@ struct ContentView: View {
         if audioPlayer.hasPlayedTrack && !showEnhancedPlayer {
             PlayBackView(
                 onTap: { 
+                    playerOpenedFrom = .miniPlayer
                     // Animate the transition to enhanced player with zoom effect
                     withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                         showEnhancedPlayer = true
@@ -218,6 +233,22 @@ struct ContentView: View {
         }
     }
     
+    private func getPlayerTransition() -> AnyTransition {
+        switch playerOpenedFrom {
+        case .playlistCard:
+            // Scale to center of screen (where card would be)
+            return .scale(scale: 0.3).combined(with: .opacity)
+        case .miniPlayer:
+            // Scale to bottom (where mini player is)
+            return .asymmetric(
+                insertion: .scale(scale: 0.8).combined(with: .opacity),
+                removal: .scale(scale: 0.1, anchor: .bottom).combined(with: .opacity)
+            )
+        case .none:
+            return .scale(scale: 0.8).combined(with: .opacity)
+        }
+    }
+    
     // MARK: - Music Control Functions
     private func playSelectedTrack(track: String, artist: String, artwork: URL?) {
         audioPlayer.playSelectedTrack(track: track, artist: artist, artwork: artwork)
@@ -234,6 +265,7 @@ struct ContentView: View {
             artwork: artwork
         )
         showMiniPlayer = true
+        playerOpenedFrom = .playlistCard
         
         // Animate the transition to enhanced player with zoom effect
         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
