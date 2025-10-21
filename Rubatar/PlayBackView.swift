@@ -24,19 +24,9 @@ struct PlayBackView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
             } placeholder: {
-                Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .overlay(
-                        Image(systemName: "music.note")
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.7))
-                    )
+                Image(systemName: "music.note")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
             .frame(width: 32, height: 32)
             .cornerRadius(8)
