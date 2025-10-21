@@ -33,7 +33,6 @@ struct PlayBackView: View {
             .frame(width: 32, height: 32)
             .cornerRadius(8)
             .clipped()
-            .onTapGesture { onTap() }
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(currentTrack)
@@ -47,22 +46,25 @@ struct PlayBackView: View {
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .onTapGesture { onTap() }
             
             HStack(spacing: 8) {
-                Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.primary)
-                    .frame(width: 32, height: 32)
-                    .contentShape(Rectangle())
-                    .highPriorityGesture(TapGesture().onEnded { onPlayPause() })
+                Button(action: onPlayPause) {
+                    Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.primary)
+                        .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(PlainButtonStyle())
                 
-                Image(systemName: "forward.fill")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
-                    .frame(width: 32, height: 32)
-                    .contentShape(Rectangle())
-                    .highPriorityGesture(TapGesture().onEnded { onNext() })
+                Button(action: onNext) {
+                    Image(systemName: "forward.fill")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(PlainButtonStyle())
             }
         }
         .padding(.horizontal, 12)
@@ -75,5 +77,7 @@ struct PlayBackView: View {
                         .stroke(.separator, lineWidth: 0.5)
                 )
         )
+        .contentShape(Rectangle())
+        .onTapGesture { onTap() }
     }
 }
