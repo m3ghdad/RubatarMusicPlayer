@@ -19,6 +19,7 @@ class AudioPlayer: ObservableObject {
     @Published var currentArtwork: URL? = nil
     @Published var hasPlayedTrack = false // Track if user has ever played something
     @Published var currentPlaylistId: String? = nil // Track current playlist ID
+    @Published var currentTrackDuration: Double = 0.0 // Track current song duration
     
     @Published var usingMusicKit = false
     
@@ -271,7 +272,11 @@ class AudioPlayer: ObservableObject {
             do {
                 let req = MusicCatalogResourceRequest<Song>(matching: \.id, equalTo: MusicItemID(id))
                 let resp = try await req.response()
-                if let song = resp.items.first { songs.append(song) }
+                if let song = resp.items.first {
+                    // Duration should be automatically included in Song objects
+                    songs.append(song)
+                    print("🎵 Fetched song: \(song.title) - Duration: \(song.duration ?? 0)s")
+                }
             } catch {
                 print("⚠️ Failed to fetch song id=\(id): \(error)")
             }
@@ -522,7 +527,9 @@ class AudioPlayer: ObservableObject {
             songRequest.limit = 1
             let songResponse = try await songRequest.response()
             if let song = songResponse.songs.first {
+                // Duration should be automatically included in Song objects from search
                 songsToQueue.append(song)
+                print("  ✅ Loaded: \(song.title) - Duration: \(song.duration ?? 0)s")
             }
         }
         
@@ -645,6 +652,8 @@ class AudioPlayer: ObservableObject {
         currentTrack = song.title
         currentArtist = song.artistName
         currentArtwork = song.artwork?.url(width: 400, height: 400)
+        currentTrackDuration = song.duration ?? 0.0
+        print("🎵 Updated track info: \(song.title) - Duration: \(currentTrackDuration)s")
         saveLastPlayedTrack() // Save when track updates
         savePlaybackState()
     }

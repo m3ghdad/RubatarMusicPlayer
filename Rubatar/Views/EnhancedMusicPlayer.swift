@@ -740,17 +740,55 @@ struct EnhancedMusicPlayer: View {
                 // Always use actual player time for timer updates
                 self.currentTime = getCurrentPlaybackPosition()
                 
-                // Try updating totalTime from current song if available
-                let player = ApplicationMusicPlayer.shared
-                if let entry = player.queue.currentEntry, let song = entry.item as? Song, let duration = song.duration {
-                    self.totalTime = duration
+                // Try to get duration from audioPlayer first (most reliable source)
+                if audioPlayer.currentTrackDuration > 0 {
+                    if abs(self.totalTime - audioPlayer.currentTrackDuration) > 0.1 {
+                        self.totalTime = audioPlayer.currentTrackDuration
+                        print("⏱️ Timer - Duration updated from audioPlayer: \(self.totalTime) seconds")
+                    }
+                } else {
+                    // Fallback: Always try updating totalTime from current song in MusicKit
+                    let player = ApplicationMusicPlayer.shared
+                    if let entry = player.queue.currentEntry, let song = entry.item as? Song, let duration = song.duration {
+                        // Only update if it's different to avoid unnecessary state changes
+                        if abs(self.totalTime - duration) > 0.1 {
+                            self.totalTime = duration
+                            print("⏱️ Timer - Duration updated from MusicKit: \(duration) seconds")
+                        }
+                    } else {
+                        // Log if we can't get duration from either source
+                        if self.totalTime == 240.0 {
+                            print("⚠️ Timer - Still using default duration (240s), unable to fetch")
+                        }
+                    }
                 }
             }
             .onAppear {
                 let player = ApplicationMusicPlayer.shared
                 self.currentTime = getCurrentPlaybackPosition()
-                if let entry = player.queue.currentEntry, let song = entry.item as? Song, let duration = song.duration {
+                
+                // Try to get duration from audioPlayer first (most reliable)
+                if audioPlayer.currentTrackDuration > 0 {
+                    self.totalTime = audioPlayer.currentTrackDuration
+                    print("⏱️ onAppear - Duration from audioPlayer: \(self.totalTime) seconds")
+                } else if let entry = player.queue.currentEntry, let song = entry.item as? Song, let duration = song.duration {
+                    // Fallback: Try to get duration from MusicKit player
                     self.totalTime = duration
+                    print("⏱️ onAppear - Duration from MusicKit: \(duration) seconds")
+                } else {
+                    print("⚠️ onAppear - Could not get duration, will retry...")
+                    // Use a small delay to allow MusicKit to load
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        if self.audioPlayer.currentTrackDuration > 0 {
+                            self.totalTime = self.audioPlayer.currentTrackDuration
+                            print("⏱️ onAppear (delayed) - Duration from audioPlayer: \(self.totalTime) seconds")
+                        } else if let entry = ApplicationMusicPlayer.shared.queue.currentEntry, 
+                                  let song = entry.item as? Song, 
+                                  let duration = song.duration {
+                            self.totalTime = duration
+                            print("⏱️ onAppear (delayed) - Duration from MusicKit: \(duration) seconds")
+                        }
+                    }
                 }
                 
                 // Initialize volume and set up observation
@@ -758,11 +796,37 @@ struct EnhancedMusicPlayer: View {
                 self.setupVolumeObservation()
             }
             .onChange(of: audioPlayer.currentTrack) { _, _ in
-                let player = ApplicationMusicPlayer.shared
-                if let entry = player.queue.currentEntry, let song = entry.item as? Song, let duration = song.duration {
-                    self.totalTime = duration
+                // Prioritize duration from audioPlayer
+                if audioPlayer.currentTrackDuration > 0 {
+                    self.totalTime = audioPlayer.currentTrackDuration
+                    print("⏱️ Track changed - Duration from audioPlayer: \(self.totalTime) seconds")
+                } else {
+                    // Fallback to MusicKit
+                    let player = ApplicationMusicPlayer.shared
+                    if let entry = player.queue.currentEntry, let song = entry.item as? Song, let duration = song.duration {
+                        self.totalTime = duration
+                        print("⏱️ Track changed - Duration from MusicKit: \(duration) seconds")
+                    }
                 }
                 self.currentTime = getCurrentPlaybackPosition()
+            }
+            .onChange(of: audioPlayer.isPlaying) { _, _ in
+                // Prioritize duration from audioPlayer
+                if audioPlayer.currentTrackDuration > 0 {
+                    if abs(self.totalTime - audioPlayer.currentTrackDuration) > 0.1 {
+                        self.totalTime = audioPlayer.currentTrackDuration
+                        print("⏱️ Playback state changed - Duration from audioPlayer: \(self.totalTime) seconds")
+                    }
+                } else {
+                    // Fallback: Update duration from MusicKit when playback state changes
+                    let player = ApplicationMusicPlayer.shared
+                    if let entry = player.queue.currentEntry, let song = entry.item as? Song, let duration = song.duration {
+                        if abs(self.totalTime - duration) > 0.1 {
+                            self.totalTime = duration
+                            print("⏱️ Playback state changed - Duration from MusicKit: \(duration) seconds")
+                        }
+                    }
+                }
             }
             .onDisappear {
                 // Clean up volume observer and timer
