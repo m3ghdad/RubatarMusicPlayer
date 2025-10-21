@@ -390,6 +390,19 @@ struct EnhancedMusicPlayer: View {
                         }
                     )
                 }
+                
+                // Dark mode gradient overlay
+                if colorScheme == .dark {
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0x22/255.0, green: 0x22/255.0, blue: 0x22/255.0),
+                            Color(red: 0x11/255.0, green: 0x11/255.0, blue: 0x11/255.0)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    .opacity(0.3)
+                }
             }
         }
     }
