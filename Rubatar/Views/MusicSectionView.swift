@@ -24,11 +24,6 @@ struct MusicSectionView: View {
         VStack(alignment: .leading, spacing: 20) {
             // Section Header
             HStack {
-                Text("Top picks")
-                    .font(.custom("Palatino", size: 28))
-                    .fontWeight(.bold)
-                    .foregroundColor(.primary)
-                
                 Spacer()
                 
                 if musicManager.authorizationStatus != .authorized {
