@@ -172,7 +172,8 @@ struct ContentView: View {
                 currentTrack: audioPlayer.currentTrack,
                 currentArtist: audioPlayer.currentArtist,
                 currentArtwork: audioPlayer.currentArtwork,
-                isPlaying: audioPlayer.isPlaying
+                isPlaying: audioPlayer.isPlaying,
+                isLoading: audioPlayer.isLoadingTrack
             )
             .padding(.vertical, 8)
             .onChange(of: isTabBarMinimized) { _, newValue in

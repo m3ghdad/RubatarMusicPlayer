@@ -22,6 +22,7 @@ class AudioPlayer: ObservableObject {
     @Published var currentTrackDuration: Double = 0.0 // Track current song duration
     
     @Published var usingMusicKit = false
+    @Published var isLoadingTrack = false // Track loading state for skeleton
     
     private var autoAdvanceEnabled = true
     private var isSkipping = false
@@ -350,6 +351,9 @@ class AudioPlayer: ObservableObject {
     func playSelectedTrack(track: String, artist: String, artwork: URL?) {
         print("🎵 playSelectedTrack called with: \(track) by \(artist)")
 
+        // Set loading state
+        isLoadingTrack = true
+        
         currentTrack = track
         currentArtist = artist
         currentArtwork = artwork
@@ -375,6 +379,9 @@ class AudioPlayer: ObservableObject {
                 isPlaying = false
                 savePlaybackState()
             }
+            
+            // Clear loading state
+            isLoadingTrack = false
         }
     }
     
@@ -444,6 +451,9 @@ class AudioPlayer: ObservableObject {
     func playSelectedPlaylist(playlistId: String, playlistTitle: String, curatorName: String, artwork: URL?) {
         print("🎶 playSelectedPlaylist called with: \(playlistTitle) by \(curatorName), ID: \(playlistId)")
 
+        // Set loading state
+        isLoadingTrack = true
+        
         currentTrack = playlistTitle
         currentArtist = curatorName
         currentArtwork = artwork
@@ -471,6 +481,9 @@ class AudioPlayer: ObservableObject {
                 currentPlaylistId = nil
                 savePlaybackState()
             }
+            
+            // Clear loading state
+            isLoadingTrack = false
         }
     }
     

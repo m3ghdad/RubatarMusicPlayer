@@ -630,6 +630,9 @@ struct EnhancedMusicPlayer: View {
     // MARK: - Track Info Card
     @ViewBuilder
     func TrackInfoCard() -> some View {
+        if audioPlayer.isLoadingTrack {
+            TrackInfoCardSkeleton()
+        } else {
             HStack(spacing: 12) {
             // Album artwork - 48x48 with 12px border radius
             AsyncImage(url: audioPlayer.currentArtwork) { image in
@@ -699,6 +702,7 @@ struct EnhancedMusicPlayer: View {
             }
         )
         .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
     }
     
     // MARK: - Expanded Player
@@ -1452,6 +1456,122 @@ struct RoutePickerRepresentable: UIViewRepresentable {
 
     func updateUIView(_ uiView: AVRoutePickerView, context: Context) {
         // Keep references in sync if needed
+    }
+}
+
+// MARK: - Skeleton Loading Views
+
+// MARK: - Track Info Card Skeleton
+struct TrackInfoCardSkeleton: View {
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Album artwork skeleton - 48x48 with 12px border radius
+            RoundedRectangle(cornerRadius: 12)
+                .fill(skeletonColor)
+                .frame(width: 48, height: 48)
+            
+            // Track info skeleton
+            VStack(alignment: .leading, spacing: 4) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(skeletonColor)
+                    .frame(width: 120, height: 16)
+                
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(skeletonColor)
+                    .frame(width: 80, height: 14)
+            }
+            
+            Spacer()
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 8)
+        .frame(height: 64)
+        .background(
+            ZStack {
+                // Liquid Glass Effect
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(.ultraThinMaterial)
+                    .opacity(0.8)
+                
+                // Background gradient at 40% opacity
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(
+                        LinearGradient(
+                            colors: colorScheme == .dark ? [
+                                Color(red: 0x3A/255.0, green: 0x3A/255.0, blue: 0x3A/255.0), // #3A3A3A
+                                Color(red: 0x6D/255.0, green: 0x6A/255.0, blue: 0x67/255.0)  // #6D6A67
+                            ] : [
+                                Color(red: 0xEA/255.0, green: 0xEA/255.0, blue: 0xEA/255.0),
+                                Color(red: 0xC6/255.0, green: 0xC0/255.0, blue: 0xBA/255.0)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .opacity(0.4)
+            }
+        )
+    }
+    
+    private var skeletonColor: Color {
+        colorScheme == .dark ?
+            Color(red: 0.3, green: 0.3, blue: 0.3) :
+            Color(red: 0.85, green: 0.85, blue: 0.85)
+    }
+}
+
+// MARK: - Mini Player Skeleton
+struct MiniPlayerSkeleton: View {
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Album artwork skeleton
+            RoundedRectangle(cornerRadius: 8)
+                .fill(skeletonColor)
+                .frame(width: 32, height: 32)
+            
+            // Track info skeleton
+            VStack(alignment: .leading, spacing: 2) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(skeletonColor)
+                    .frame(width: 100, height: 12)
+                
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(skeletonColor)
+                    .frame(width: 60, height: 10)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            
+            // Control buttons skeleton
+            HStack(spacing: 8) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(skeletonColor)
+                    .frame(width: 32, height: 32)
+                
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(skeletonColor)
+                    .frame(width: 32, height: 32)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(.regularMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(.separator, lineWidth: 0.5)
+                )
+        )
+    }
+    
+    private var skeletonColor: Color {
+        colorScheme == .dark ?
+            Color(red: 0.3, green: 0.3, blue: 0.3) :
+            Color(red: 0.85, green: 0.85, blue: 0.85)
     }
 }
 

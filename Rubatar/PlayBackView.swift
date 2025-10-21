@@ -8,8 +8,16 @@ struct PlayBackView: View {
     let currentArtist: String
     let currentArtwork: URL?
     let isPlaying: Bool
+    let isLoading: Bool // Add loading state parameter
     
     var body: some View {
+        if isLoading {
+            MiniPlayerSkeletonView(
+                onPlayPause: onPlayPause,
+                onNext: onNext,
+                isPlaying: isPlaying
+            )
+        } else {
         HStack(spacing: 12) {
             AsyncImage(url: currentArtwork) { image in
                 image
@@ -79,5 +87,72 @@ struct PlayBackView: View {
         )
         .contentShape(Rectangle())
         .onTapGesture { onTap() }
+        }
+    }
+}
+
+// MARK: - Mini Player Skeleton
+struct MiniPlayerSkeletonView: View {
+    let onPlayPause: () -> Void
+    let onNext: () -> Void
+    let isPlaying: Bool
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Album artwork skeleton
+            RoundedRectangle(cornerRadius: 8)
+                .fill(skeletonColor)
+                .frame(width: 32, height: 32)
+            
+            // Track info skeleton
+            VStack(alignment: .leading, spacing: 2) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(skeletonColor)
+                    .frame(width: 100, height: 12)
+                
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(skeletonColor)
+                    .frame(width: 60, height: 10)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            
+            // Real control buttons (not skeleton)
+            HStack(spacing: 8) {
+                Button(action: onPlayPause) {
+                    Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.primary)
+                        .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(PlainButtonStyle())
+                
+                Button(action: onNext) {
+                    Image(systemName: "forward.fill")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(.regularMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(.separator, lineWidth: 0.5)
+                )
+        )
+    }
+    
+    private var skeletonColor: Color {
+        colorScheme == .dark ?
+            Color(red: 0.3, green: 0.3, blue: 0.3) :
+            Color(red: 0.85, green: 0.85, blue: 0.85)
     }
 }

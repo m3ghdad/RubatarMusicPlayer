@@ -458,9 +458,9 @@ struct ContentSkeletonView: View {
     }
     
     private var skeletonColor: Color {
-        colorScheme == .dark ? 
-            Color(red: 0.2, green: 0.2, blue: 0.2) : 
-            Color(red: 0.9, green: 0.9, blue: 0.9)
+        colorScheme == .dark ?
+            Color(red: 0.3, green: 0.3, blue: 0.3) :
+            Color(red: 0.85, green: 0.85, blue: 0.85)
     }
 }
 
@@ -504,9 +504,9 @@ struct PlaylistCardSkeleton: View {
     }
     
     private var skeletonColor: Color {
-        colorScheme == .dark ? 
-            Color(red: 0.2, green: 0.2, blue: 0.2) : 
-            Color(red: 0.9, green: 0.9, blue: 0.9)
+        colorScheme == .dark ?
+            Color(red: 0.3, green: 0.3, blue: 0.3) :
+            Color(red: 0.85, green: 0.85, blue: 0.85)
     }
 }
 
@@ -535,9 +535,9 @@ struct AlbumCardSkeleton: View {
     }
     
     private var skeletonColor: Color {
-        colorScheme == .dark ? 
-            Color(red: 0.2, green: 0.2, blue: 0.2) : 
-            Color(red: 0.9, green: 0.9, blue: 0.9)
+        colorScheme == .dark ?
+            Color(red: 0.3, green: 0.3, blue: 0.3) :
+            Color(red: 0.85, green: 0.85, blue: 0.85)
     }
 }
 
