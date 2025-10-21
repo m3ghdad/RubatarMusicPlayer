@@ -79,7 +79,7 @@ struct MiniPlayerSkeletonView: View {
     let onPlayPause: () -> Void
     let onNext: () -> Void
     let isPlaying: Bool
-    @Environment(\.colorScheme) var colorScheme
+    @AppStorage("isDarkMode") private var isDarkMode = false
     
     var body: some View {
         HStack(spacing: 12) {
@@ -127,7 +127,7 @@ struct MiniPlayerSkeletonView: View {
     }
     
     private var skeletonColor: Color {
-        colorScheme == .dark ?
+        isDarkMode ?
             Color(red: 0.3, green: 0.3, blue: 0.3) :
             Color(red: 0.85, green: 0.85, blue: 0.85)
     }
