@@ -44,7 +44,16 @@ class ContentManager: ObservableObject, ContentManagerProtocol {
     
     // MARK: - Public Methods
     
+    func clearCache() {
+        UserDefaults.standard.removeObject(forKey: cacheKey)
+        UserDefaults.standard.removeObject(forKey: cacheExpiryKey)
+        print("🗑️ ContentManager: Cache cleared")
+    }
+    
     func fetchContent() async {
+        // Clear cache to force fresh fetch
+        clearCache()
+        
         do {
             print("🔄 ContentManager: Fetching content from Supabase...")
             print("🌐 ContentManager: Base URL: \(baseURL)")
@@ -293,7 +302,7 @@ class ContentManager: ObservableObject, ContentManagerProtocol {
                 appleAlbumUrl: "https://music.apple.com/us/album/grind-fine-diamonds-riz-danehaye-almas-contemporary/828182055",
                 appleAlbumId: "828182055",
                 customTitle: "Grind Fine Diamonds (Riz Danehaye Almas) - Contemporary",
-                customArtist: "Hossein Alizadeh & Dastan Ensemble",
+                customArtist: "Ardavan Kamkar",
                 customImageUrl: "Setaar",
                 displayOrder: 4,
                 isVisible: true,
