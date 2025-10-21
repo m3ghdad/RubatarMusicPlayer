@@ -128,12 +128,13 @@ struct ContentView: View {
         .onChange(of: showEnhancedPlayer) { oldValue, newValue in
             if oldValue == true && newValue == false {
                 // Dismissing - use snappy animation with no bounce
-                withAnimation(.spring(response: 0.35, dampingFraction: 1.0)) {
+                withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
                     handleEnhancedPlayerDismissal(oldValue: oldValue, newValue: newValue)
                 }
             } else {
                 handleEnhancedPlayerDismissal(oldValue: oldValue, newValue: newValue)
             }
+            
         }
         .fullScreenCover(isPresented: $showVideoPlayer) {
             videoPlayerView
@@ -144,6 +145,7 @@ struct ContentView: View {
                 .presentationDragIndicator(.hidden)
                 .presentationCornerRadius(16)
         }
+        
     }
     
     // MARK: - Computed Views
