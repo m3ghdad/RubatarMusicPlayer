@@ -663,31 +663,32 @@ struct EnhancedMusicPlayer: View {
                 
                 Spacer()
         }
-        .padding(.horizontal, 8)
+        // .padding(.horizontal, 8)
         .padding(.vertical, 8)
         .frame(height: 64)
         .background(
             ZStack {
                 // Liquid Glass Effect
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(.ultraThinMaterial)
-                    .opacity(0.8)
+                // RoundedRectangle(cornerRadius: 16)
+
                 
                 // Background gradient at 40% opacity
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(
-                        LinearGradient(
-                            colors: colorScheme == .dark ? [
-                                Color(red: 0x3A/255.0, green: 0x3A/255.0, blue: 0x3A/255.0),
-                                Color(red: 0x6D/255.0, green: 0x6A/255.0, blue: 0x67/255.0)
-                            ] : [
-                                Color(red: 0xEA/255.0, green: 0xEA/255.0, blue: 0xEA/255.0),
-                                Color(red: 0xC6/255.0, green: 0xC0/255.0, blue: 0xBA/255.0)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                // RoundedRectangle(cornerRadius: 16)
+                    
+
+                    // .fill(
+                    //     LinearGradient(
+                    //         colors: colorScheme == .dark ? [
+                    //             Color(red: 0x3A/255.0, green: 0x3A/255.0, blue: 0x3A/255.0),
+                    //             Color(red: 0x6D/255.0, green: 0x6A/255.0, blue: 0x67/255.0)
+                    //         ] : [
+                    //             Color(red: 0xEA/255.0, green: 0xEA/255.0, blue: 0xEA/255.0),
+                    //             Color(red: 0xC6/255.0, green: 0xC0/255.0, blue: 0xBA/255.0)
+                    //         ],
+                    //         startPoint: .topLeading,
+                    //         endPoint: .bottomTrailing
+                    //     )
+                    // )
                     // .opacity(0.4)
                 
                 // LinedNotebook image at 30% opacity on top
@@ -697,7 +698,9 @@ struct EnhancedMusicPlayer: View {
                 //     .opacity(0.3)
             }
         )
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        //  .glassEffect(in: .rect(cornerRadius: 16.0))
+        // .clipShape(RoundedRectangle(cornerRadius: 16))
+        // .glassEffect()
         }
     }
     
@@ -722,7 +725,7 @@ struct EnhancedMusicPlayer: View {
             // Track Information Card - positioned to overlap the image card
             TrackInfoCard()
             .padding(.horizontal, 20)
-                .offset(y: 24) // Moved down 24px
+                .offset(y: -8) // Moved up 8 more px (from 0 to -8)
                 .zIndex(1) // Ensure card appears on top
             
             // Spacer to push controls to bottom
