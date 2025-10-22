@@ -688,7 +688,7 @@ struct EnhancedMusicPlayer: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .opacity(0.4)
+                    // .opacity(0.4)
                 
                 // LinedNotebook image at 30% opacity on top
                 // Image("LinedNotebook")
@@ -1485,29 +1485,8 @@ struct TrackInfoCardSkeleton: View {
         .padding(.vertical, 8)
         .frame(height: 64)
         .background(
-            ZStack {
-                // Liquid Glass Effect
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(.ultraThinMaterial)
-                    .opacity(0.8)
-                
-                // Background gradient at 40% opacity
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(
-                        LinearGradient(
-                            colors: colorScheme == .dark ? [
-                                Color(red: 0x3A/255.0, green: 0x3A/255.0, blue: 0x3A/255.0), // #3A3A3A
-                                Color(red: 0x6D/255.0, green: 0x6A/255.0, blue: 0x67/255.0)  // #6D6A67
-                            ] : [
-                                Color(red: 0xEA/255.0, green: 0xEA/255.0, blue: 0xEA/255.0),
-                                Color(red: 0xC6/255.0, green: 0xC0/255.0, blue: 0xBA/255.0)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .opacity(0.4)
-            }
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
         )
     }
     
