@@ -204,23 +204,23 @@ struct PlaylistCardView: View {
                                 .resizable()
                                 .frame(maxWidth: .infinity, maxHeight: 400)
                                 .clipped()
-                                .opacity(0.2)
+                                .opacity(0.6)
                         } placeholder: {
                             Image("Setaar")
                                 .resizable()
                                 .frame(maxWidth: .infinity, maxHeight: 400)
                                 .clipped()
-                                .opacity(0.2)
+                                .opacity(0.6)
                         }
                     } else {
                         Image(customImageName)
                             .resizable()
                             .frame(maxWidth: .infinity, maxHeight: 400)
                             .clipped()
-                            .opacity(0.2)
+                            .opacity(0.6)
                     }
                     
-                    // Glare effect
+                    // Glare effect 1
                     let creamyWhite = Color(red: 0.98, green: 0.96, blue: 0.92)
                     let cyanTint = Color(red: 0.75, green: 0.92, blue: 0.95)
                     let darkCreamyWhite = Color(red: 0.85, green: 0.83, blue: 0.80)
@@ -243,6 +243,31 @@ struct PlaylistCardView: View {
                         endRadius: 150
                     )
                     .blur(radius: 30)
+                    .blendMode(.overlay)
+                    
+                    // Glare effect 2 - More vibrant, parallel movement
+                    let vibrantCreamyWhite = Color(red: 1.0, green: 0.98, blue: 0.95)
+                    let vibrantCyanTint = Color(red: 0.8, green: 0.95, blue: 1.0)
+                    let darkVibrantCreamyWhite = Color(red: 0.9, green: 0.87, blue: 0.85)
+                    let darkVibrantCyanTint = Color(red: 0.7, green: 0.85, blue: 0.9)
+                    
+                    RadialGradient(
+                        colors: colorScheme == .dark ? [
+                            darkVibrantCyanTint.opacity(0.5),
+                            darkVibrantCreamyWhite.opacity(0.6),
+                            darkVibrantCreamyWhite.opacity(0.3),
+                            .clear
+                        ] : [
+                            vibrantCyanTint.opacity(0.6),
+                            vibrantCreamyWhite.opacity(0.7),
+                            vibrantCreamyWhite.opacity(0.4),
+                            .clear
+                        ],
+                        center: UnitPoint(x: 0.7 + glarePosition * 0.3, y: 0.6 + sin(time * 0.15) * 0.2),
+                        startRadius: 15,
+                        endRadius: 120
+                    )
+                    .blur(radius: 25)
                     .blendMode(.overlay)
                 }
                 .frame(maxWidth: .infinity, maxHeight: 400)

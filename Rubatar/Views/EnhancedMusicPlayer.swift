@@ -976,6 +976,7 @@ struct EnhancedMusicPlayer: View {
             .padding(.top, 40)
             .padding(.bottom, 40)
             .padding(.horizontal, 20)
+            .glassEffect(in: RoundedRectangle(cornerRadius: 0))
             .background(
                 Rectangle()
                     .fill(
