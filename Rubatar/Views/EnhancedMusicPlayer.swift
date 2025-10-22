@@ -1426,18 +1426,21 @@ struct TrackInfoCardSkeleton: View {
         HStack(spacing: 12) {
             // Album artwork skeleton - 48x48 with 12px border radius
             RoundedRectangle(cornerRadius: 12)
-                .fill(skeletonColor)
+                .fill(.ultraThinMaterial)
                 .frame(width: 48, height: 48)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             
             // Track info skeleton
             VStack(alignment: .leading, spacing: 4) {
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(skeletonColor)
+                    .fill(.ultraThinMaterial)
                     .frame(width: 120, height: 16)
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
                 
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(skeletonColor)
+                    .fill(.ultraThinMaterial)
                     .frame(width: 80, height: 14)
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
             }
             
             Spacer()
@@ -1448,13 +1451,7 @@ struct TrackInfoCardSkeleton: View {
         // .background(
         //     RoundedRectangle(cornerRadius: 16)
         //         .fill(.ultraThinMaterial)
-        // )
-    }
-    
-    private var skeletonColor: Color {
-        colorScheme == .dark ?
-            Color(red: 0.3, green: 0.3, blue: 0.3) :
-            Color(red: 0.85, green: 0.85, blue: 0.85)
+        //         )
     }
 }
 
@@ -1466,17 +1463,17 @@ struct MiniPlayerSkeleton: View {
         HStack(spacing: 12) {
             // Album artwork skeleton
             RoundedRectangle(cornerRadius: 8)
-                .fill(skeletonColor)
+                .glassEffect(in: RoundedRectangle(cornerRadius: 8))
                 .frame(width: 32, height: 32)
             
             // Track info skeleton
             VStack(alignment: .leading, spacing: 2) {
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(skeletonColor)
+                    .glassEffect(in: RoundedRectangle(cornerRadius: 4))
                     .frame(width: 100, height: 12)
                 
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(skeletonColor)
+                    .glassEffect(in: RoundedRectangle(cornerRadius: 4))
                     .frame(width: 60, height: 10)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -1484,31 +1481,26 @@ struct MiniPlayerSkeleton: View {
             // Control buttons skeleton
             HStack(spacing: 8) {
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(skeletonColor)
+                    .glassEffect(in: RoundedRectangle(cornerRadius: 4))
                     .frame(width: 32, height: 32)
                 
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(skeletonColor)
+                    .glassEffect(in: RoundedRectangle(cornerRadius: 4))
                     .frame(width: 32, height: 32)
             }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(.regularMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(.separator, lineWidth: 0.5)
-                )
+            // RoundedRectangle(cornerRadius: 8)
+            //     .fill(.regularMaterial)
+            //     .overlay(
+            //         RoundedRectangle(cornerRadius: 8)
+            //             .stroke(.separator, lineWidth: 0.5)
+            //     )
         )
     }
     
-    private var skeletonColor: Color {
-        colorScheme == .dark ?
-            Color(red: 0.3, green: 0.3, blue: 0.3) :
-            Color(red: 0.85, green: 0.85, blue: 0.85)
-    }
 }
 
 #Preview {
