@@ -483,70 +483,28 @@ struct EnhancedMusicPlayer: View {
     
     // Helper function to get current poem set
     private func getCurrentPoemSet(time: Double) -> (firstText: String, secondText: String) {
-        // Get the appropriate poetry sets based on current playlist
-        let poetrySets: [(String, String)]
+        // Get the appropriate poetry sets from ContentManager
+        let poetrySets: [PoetrySet]
         
         if let playlistId = audioPlayer.currentPlaylistId {
-            switch playlistId {
-            case "pl.u-vEe5t44Rjbm": // The Dance of Silence - Setaar
-                poetrySets = [
-                    ("دلا بسوز که سوز تو کارها بکند", "نیاز نیم‌شب‌ات آب در جگرها کند"),
-                    ("ما ز آغاز و ز انجام جهان بی‌خبریم", "ول و آخر این کهنه کتاب افتادست"),
-                    ("جهان سر به سر حکمت و عبرت است", "چرا بهره ما همه غفلت است"),
-                    ("ای تو ز خوبی خویش آینه را مشتری", "سوخته باد آینه تا تو در او ننگری"),
-                    ("این کوزه چو من عاشقِ زاری بوده‌ست", "در بندِ سرِ زلفِ نگاری بوده‌ست")
-                ]
-            case "pl.u-AqK9HDDXK5a": // Melody of Water - Santoor
-                poetrySets = [
-                    ("مزرعِ سبزِ فلک دیدم و داسِ مه نو", "یادم از کِشتهٔ خویش آمد و هنگامِ درو"),
-                    ("ترکیبِ پیاله‌ای که در هم پیوست", "بشکستنِ آن روا نمی‌دارد مست"),
-                    ("ر چند که سرخ روست اطراف شفق", "شهمات همی شوند رخ زرد ترا"),
-                    ("از هر که وجود صبر بتوانم کرد", "الا ز وجودت که وجودم همه اوست"),
-                    ("غم گرد دل پر هنران می‌گردد", "شادی همه بر بی‌خبران می‌گردد")
-                ]
-            case "pl.u-bvj8T00GXMg": // The Shadow of Time - Kamancheh
-                poetrySets = [
-                    ("گر بر رگ جان ز شستت آید تیرم", "چه خوشتر ازان که پیش دستت میرم"),
-                    ("بر چرخ فلک هیچ کسی چیر نشد", "وز خوردن آدمی زمین سیر نشد"),
-                    ("آن روح که بسته بود در نقش صفات", "از پرتو مصطفی درآمد بر ذات"),
-                    ("عشقِ رخِ یار، بر منِ زار مگیر", "بر خسته‌دلانِ رندِ خَمّار مگیر"),
-                    ("ای دست جفای تو چو زلف تو دراز", "وی بی‌سببی گرفته پای از من باز")
-                ]
-            default:
-                // Default to Setaar poems
-                poetrySets = [
-                    ("دلا بسوز که سوز تو کارها بکند", "نیاز نیم‌شب‌ات آب در جگرها کند"),
-                    ("ما ز آغاز و ز انجام جهان بی‌خبریم", "ول و آخر این کهنه کتاب افتادست"),
-                    ("جهان سر به سر حکمت و عبرت است", "چرا بهره ما همه غفلت است"),
-                    ("ای تو ز خوبی خویش آینه را مشتری", "سوخته باد آینه تا تو در او ننگری"),
-                    ("این کوزه چو من عاشقِ زاری بوده‌ست", "در بندِ سرِ زلفِ نگاری بوده‌ست")
-                ]
-            }
+            poetrySets = contentManager.getPoetrySets(for: playlistId)
         } else {
-            // No playlist - use default Setaar poems
-            poetrySets = [
-                ("دلا بسوز که سوز تو کارها بکند", "نیاز نیم‌شب‌ات آب در جگرها کند"),
-                ("ما ز آغاز و ز انجام جهان بی‌خبریم", "ول و آخر این کهنه کتاب افتادست"),
-                ("جهان سر به سر حکمت و عبرت است", "چرا بهره ما همه غفلت است"),
-                ("ای تو ز خوبی خویش آینه را مشتری", "سوخته باد آینه تا تو در او ننگری"),
-                ("این کوزه چو من عاشقِ زاری بوده‌ست", "در بندِ سرِ زلفِ نگاری بوده‌ست")
-            ]
+            poetrySets = contentManager.getPoetrySets(for: "default")
         }
         
-        // Use the cycle number to select a set (changes every 24 seconds)
+        guard !poetrySets.isEmpty else {
+            // Fallback to default poetry if no sets available
+            return (firstText: "دلا بسوز که سوز تو کارها بکند", secondText: "نیاز نیم‌شب‌ات آب در جگرها کند")
+        }
+        
+        // Calculate which poem to show based on time (changes every 24 seconds)
         let cycleNumber = Int(time / 24)
         
-        // Better pseudo-random using multiple operations
-        var hash = UInt(cycleNumber)
-        hash = hash ^ (hash &>> 16)
-        hash = hash &* 0x85ebca6b
-        hash = hash ^ (hash &>> 13)
-        hash = hash &* 0xc2b2ae35
-        hash = hash ^ (hash &>> 16)
+        // Use modulo to cycle through all poems in the set
+        let index = cycleNumber % poetrySets.count
         
-        let index = Int(hash % UInt(poetrySets.count))
-        
-        return poetrySets[index]
+        let poetrySet = poetrySets[index]
+        return (firstText: poetrySet.text1, secondText: poetrySet.text2)
     }
     
     // Helper functions for text opacity
@@ -1484,13 +1442,13 @@ struct TrackInfoCardSkeleton: View {
             
             Spacer()
         }
-        .padding(.horizontal, 8)
+        // .padding(.horizontal, 8)
         .padding(.vertical, 8)
         .frame(height: 64)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
-        )
+        // .background(
+        //     RoundedRectangle(cornerRadius: 16)
+        //         .fill(.ultraThinMaterial)
+        // )
     }
     
     private var skeletonColor: Color {

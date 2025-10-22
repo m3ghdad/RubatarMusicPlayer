@@ -17,6 +17,7 @@ class ContentManager: ObservableObject, ContentManagerProtocol {
     @Published var playlists: [FeaturedPlaylist] = []
     @Published var albums: [FeaturedAlbum] = []
     @Published var sections: [ContentSection] = []
+    @Published var poetrySets: [String: [PoetrySet]] = [:] // playlist_id -> poetry sets
     
     // MARK: - Private Properties
     
@@ -80,6 +81,15 @@ class ContentManager: ObservableObject, ContentManagerProtocol {
                 query: "is_visible=eq.true&order=display_order.asc&select=*"
             )
             
+            // Fetch poetry sets
+            let poetrySetsResponse: [PoetrySet] = try await fetchFromSupabase(
+                table: "poetry_sets",
+                query: "order=playlist_id.asc,display_order.asc&select=*"
+            )
+            
+            // Group poetry sets by playlist_id
+            let groupedPoetrySets = Dictionary(grouping: poetrySetsResponse) { $0.playlistId }
+            
             // Create content response
             let contentResponse = ContentResponse(
                 sections: sectionsResponse,
@@ -92,12 +102,13 @@ class ContentManager: ObservableObject, ContentManagerProtocol {
             self.sections = sectionsResponse
             self.playlists = playlistsResponse
             self.albums = albumsResponse
+            self.poetrySets = groupedPoetrySets
             self.loadingState = .loaded(contentResponse)
             
             // Cache the content
             cacheContent(contentResponse)
             
-            print("✅ ContentManager: Successfully loaded \(sectionsResponse.count) sections, \(playlistsResponse.count) playlists, \(albumsResponse.count) albums")
+            print("✅ ContentManager: Successfully loaded \(sectionsResponse.count) sections, \(playlistsResponse.count) playlists, \(albumsResponse.count) albums, \(poetrySetsResponse.count) poetry sets")
             
         } catch {
             print("❌ ContentManager: Failed to fetch content - \(error)")
@@ -441,5 +452,27 @@ extension ContentManager {
     /// Get albums section
     var albumsSection: ContentSection? {
         return section(ofType: "albums")
+    }
+    
+    /// Get poetry sets for a specific playlist
+    func getPoetrySets(for playlistId: String) -> [PoetrySet] {
+        return poetrySets[playlistId] ?? poetrySets["default"] ?? []
+    }
+}
+
+// MARK: - PoetrySet Model
+struct PoetrySet: Codable, Identifiable {
+    let id: String
+    let playlistId: String
+    let text1: String
+    let text2: String
+    let displayOrder: Int
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case playlistId = "playlist_id"
+        case text1
+        case text2
+        case displayOrder = "display_order"
     }
 }
