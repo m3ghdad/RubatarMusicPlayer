@@ -615,7 +615,7 @@ struct EnhancedMusicPlayer: View {
                 
                 Text(audioPlayer.currentArtist.isEmpty ? "Sohrab Pournazeri" : audioPlayer.currentArtist)
                     .font(.custom("Palatino", size: 14))
-                    .foregroundStyle(colorScheme == .dark ? Color(red: 0xE3/255.0, green: 0xB8/255.0, blue: 0x87/255.0) : Color(red: 0.72, green: 0.38, blue: 0.22))
+                    .foregroundStyle(colorScheme == .dark ? Color(hex: "D7D7D7") : Color(hex: "4F4F4F"))
                     .lineLimit(1)
                 }
                 
