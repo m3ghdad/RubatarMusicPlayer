@@ -11,8 +11,8 @@ import Foundation
 
 struct Config {
     // MARK: - OpenAI Configuration
-    // OpenAI API Key for poem translation
-    // IMPORTANT: Replace with your actual key or use Xcode Cloud environment variables
+    // OpenAI API Key for poem translation (DISABLED - Not needed)
+    // Translation feature is currently disabled in ProfileView
     static let openAIAPIKey = "YOUR_OPENAI_API_KEY_HERE"
     
     // Translation settings

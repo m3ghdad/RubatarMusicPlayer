@@ -141,8 +141,8 @@ struct ProfileView: View {
                 poems = newPoems
                 currentPage = 0
                 
-                // Automatically translate new poems
-                translatePoemsIfNeeded()
+                // Automatic translation disabled
+                // translatePoemsIfNeeded()
             }
         }
         
@@ -177,13 +177,13 @@ struct ProfileView: View {
                             cardIndex: index
                         )
                     }, currentPage: $currentPage)
-                } else if selectedLanguage == .farsi {
-                    // Show original Farsi poems
+                } else {
+                    // Show Farsi poems (translation disabled)
                     PagingScrollView(pageCount: poems.count, content: { index in
                         PoemCardView(
                             poem: poems[index],
                             isTranslated: false,
-                            selectedLanguage: selectedLanguage,
+                            selectedLanguage: .farsi, // Always show Farsi since translation is disabled
                             displayMode: selectedDisplayMode,
                             toFarsiNumber: toFarsiNumber,
                             showMenu: $showMenu,
@@ -194,47 +194,6 @@ struct ProfileView: View {
                             cardIndex: index
                         )
                     }, currentPage: $currentPage)
-                } else {
-                    // Show translated English poems
-                    let translatedPoemsList = poems.compactMap { poem -> PoemData? in
-                        translatedPoems[poem.id]
-                    }
-                    
-                    if translatedPoemsList.isEmpty {
-                        // Still translating, show skeleton
-                        PagingScrollView(pageCount: 3, content: { index in
-                            PoemCardView(
-                                poem: nil,
-                                isTranslated: false,
-                                selectedLanguage: selectedLanguage,
-                                displayMode: selectedDisplayMode,
-                                toFarsiNumber: toFarsiNumber,
-                                showMenu: $showMenu,
-                                activeCardIndex: $activeCardIndex,
-                                typewriterTrigger: $typewriterTrigger,
-                                completedPages: $completedTypewriterPages,
-                                menuNamespace: menuNamespace,
-                                cardIndex: index
-                            )
-                        }, currentPage: $currentPage)
-                    } else {
-                        // Show translated poems
-                        PagingScrollView(pageCount: translatedPoemsList.count, content: { index in
-                            PoemCardView(
-                                poem: translatedPoemsList[index],
-                                isTranslated: true,
-                                selectedLanguage: selectedLanguage,
-                                displayMode: selectedDisplayMode,
-                                toFarsiNumber: toFarsiNumber,
-                                showMenu: $showMenu,
-                                activeCardIndex: $activeCardIndex,
-                                typewriterTrigger: $typewriterTrigger,
-                                completedPages: $completedTypewriterPages,
-                                menuNamespace: menuNamespace,
-                                cardIndex: index
-                            )
-                        }, currentPage: $currentPage)
-                    }
                 }
             }
             .padding(.top, 24)
@@ -387,8 +346,8 @@ struct ProfileView: View {
                         currentPage = 0
                         print("🔀 Loaded and shuffled \(initialPoems.count) fresh poems")
                         
-                        // Automatically translate poems
-                        translatePoemsIfNeeded()
+                        // Automatic translation disabled
+                        // translatePoemsIfNeeded()
                     }
                 }
             } else {
