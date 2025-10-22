@@ -375,16 +375,26 @@ struct ProfileView: View {
         .navigationBarHidden(true)
         .animation(.snappy(duration: 0.3, extraBounce: 0), value: showMenu)
         .onAppear {
-            // Load initial poems from Supabase
-            Task {
-                let initialPoems = await poetryService.fetchPoems(limit: 10)
-                if !initialPoems.isEmpty {
-                    poems = initialPoems
-                    currentPage = 0
+            // Only fetch poems if they haven't been loaded yet (fresh app launch)
+            if poems.isEmpty {
+                Task {
+                    var initialPoems = await poetryService.fetchPoems(limit: 10)
                     
-                    // Automatically translate poems
-                    translatePoemsIfNeeded()
+                    // Shuffle poems for random order on fresh launch
+                    if !initialPoems.isEmpty {
+                        initialPoems.shuffle()
+                        poems = initialPoems
+                        currentPage = 0
+                        print("🔀 Loaded and shuffled \(initialPoems.count) fresh poems")
+                        
+                        // Automatically translate poems
+                        translatePoemsIfNeeded()
+                    }
                 }
+            } else {
+                // Poems already loaded - user is just switching back to this tab
+                // Position is preserved automatically via @State
+                print("📖 Returning to saved position: \(currentPage)")
             }
         }
         .onChange(of: currentPage) { _, newPage in
@@ -679,7 +689,7 @@ struct PoemCardView: View {
                             // Title and poet (right side in Farsi)
                             VStack(alignment: .trailing, spacing: 8) {
                                 Text(poemData.title)
-                                    .font(.custom("Palatino-Roman", size: 24))
+                                    .font(.custom("Palatino-Roman", size: 16))
                                     .foregroundColor(colorScheme == .dark ? .white : Color(red: 60/255, green: 60/255, blue: 67/255, opacity: 0.6))
                                     .kerning(-0.43)
                                     .lineSpacing(22)
@@ -696,7 +706,7 @@ struct PoemCardView: View {
                             // Title and poet (left side in English)
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(poemData.title)
-                                    .font(.custom("Palatino-Roman", size: 24))
+                                    .font(.custom("Palatino-Roman", size: 16))
                                     .foregroundColor(colorScheme == .dark ? .white : Color(red: 60/255, green: 60/255, blue: 67/255, opacity: 0.6))
                                     .kerning(-0.43)
                                     .lineSpacing(22)
