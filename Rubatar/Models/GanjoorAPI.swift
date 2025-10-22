@@ -31,6 +31,9 @@ struct PoemData: Identifiable {
     let title: String
     let poet: PoetInfo
     let verses: [[String]] // Array of couplets (each couplet is 2 lines)
+    let topic: String?
+    let mood: String?
+    let moodColor: String?
 }
 
 struct PoetInfo {
@@ -109,7 +112,10 @@ class GanjoorAPIManager: ObservableObject {
                     name: poetName,
                     fullName: poetFullName
                 ),
-                verses: verses
+                verses: verses,
+                topic: nil,
+                mood: nil,
+                moodColor: nil
             )
             
             // Add to used poems

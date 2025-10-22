@@ -141,7 +141,10 @@ class TranslationManager {
                     name: translatedPoetName,
                     fullName: translatedPoetName
                 ),
-                verses: translatedVerses
+                verses: translatedVerses,
+                topic: poem.topic,
+                mood: poem.mood,
+                moodColor: poem.moodColor
             )
             
             print("✓ Translated poem: '\(poem.title)' → '\(cleanedTitle)' by \(translatedPoetName)")

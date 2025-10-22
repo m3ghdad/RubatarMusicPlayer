@@ -75,7 +75,7 @@ struct ProfileView: View {
     @State private var selectedDisplayMode: DisplayMode // Display mode for poem text
     @State private var showToast = false
     @State private var toastMessage = ""
-    @StateObject private var apiManager = GanjoorAPIManager()
+    @StateObject private var poetryService = PoetryService()
     @Environment(\.colorScheme) var colorScheme
     @Namespace private var menuNamespace // For zoom animation
     @State private var activeCardIndex = 0 // Track which card's menu is open
@@ -135,8 +135,8 @@ struct ProfileView: View {
             translatedPoems = [:]
             completedTypewriterPages.removeAll() // Clear completed pages on refresh
             
-            // Fetch new poems
-            let newPoems = await apiManager.fetchMultiplePoems(count: 10)
+            // Fetch new poems from Supabase
+            let newPoems = await poetryService.fetchPoems(limit: 10)
             if !newPoems.isEmpty {
                 poems = newPoems
                 currentPage = 0
@@ -375,9 +375,9 @@ struct ProfileView: View {
         .navigationBarHidden(true)
         .animation(.snappy(duration: 0.3, extraBounce: 0), value: showMenu)
         .onAppear {
-            // Load initial poems from Ganjoor API
+            // Load initial poems from Supabase
             Task {
-                let initialPoems = await apiManager.fetchMultiplePoems(count: 10)
+                let initialPoems = await poetryService.fetchPoems(limit: 10)
                 if !initialPoems.isEmpty {
                     poems = initialPoems
                     currentPage = 0

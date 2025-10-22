@@ -1,0 +1,188 @@
+=== KHAYAM'S FIRST 10 RUBAIYAT (QUATRAINS) ===
+Fetched from Ganjoor API: https://api.ganjoor.net/index.html
+
+---
+
+RUBAI #1 (ID: 1119)
+Title: رباعی شمارهٔ ۱
+URL: https://ganjoor.net/khayyam/robaee/sh1
+
+Persian Text:
+برخیز بتا بیا ز بهر دل ما
+حل کن به جمال خویشتن مشکل ما
+یک کوزه شراب تا به هم نوش کنیم
+زآن پیش که کوزه ها کنند از گل ما
+
+English Translation:
+Arise, beloved, come for the sake of my heart
+Solve our problems with your beauty's art
+Let's share a jug of wine together
+Before they make jugs from our clay hereafter
+
+---
+
+RUBAI #2 (ID: 1120)
+Title: رباعی شمارهٔ ۲
+URL: https://ganjoor.net/khayyam/robaee/sh2
+
+Persian Text:
+چون عهده نمی شود کسی فردا را
+حالی خوش دار این دل پر سودا را
+می نوش به ماهتاب ای ماه که ماه
+بسیار بتابد و نیابد ما را
+
+English Translation:
+Since no one can guarantee tomorrow's fate
+Keep this melancholy heart in a happy state
+Drink wine in moonlight, O moon-like one, for the moon
+Will shine many times but won't find us late
+
+---
+
+RUBAI #3 (ID: 1121)
+Title: رباعی شمارهٔ ۳
+URL: https://ganjoor.net/khayyam/robaee/sh3
+
+Persian Text:
+قرآن که مهین کلام خوانند آن را
+گه گاه نه بر دوام خوانند آن را
+بر گرد پیاله آیتی هست مقیم
+کاندر همه جا مدام خوانند آن را
+
+English Translation:
+The Quran, which they call the greatest word
+Is read occasionally, not always heard
+But around the wine cup there's a verse that stays
+Which is read constantly, everywhere, always preferred
+
+---
+
+RUBAI #4 (ID: 1122)
+Title: رباعی شمارهٔ ۴
+URL: https://ganjoor.net/khayyam/robaee/sh4
+
+Persian Text:
+گر می نخوری طعنه مزن مستان را
+بنیاد مکن تو حیله و دستان را
+تو غره بدان مشو که می می نخوری
+صد لقمه خوری که می غلام است آن را
+
+English Translation:
+If you don't drink wine, don't mock the drunk
+Don't lay foundations of trickery and junk
+Don't be proud that you don't drink wine
+You eat a hundred morsels that wine is their monk
+
+---
+
+RUBAI #5 (ID: 1123)
+Title: رباعی شمارهٔ ۵
+URL: https://ganjoor.net/khayyam/robaee/sh5
+
+Persian Text:
+هر چند که رنگ و بوی زیباست مرا
+چون لاله رخ و چو سرو بالاست مرا
+معلوم نشد که در طرب خانه خاک
+نقاش ازل بهر چه آراست مرا
+
+English Translation:
+Although I have beautiful color and scent
+Like tulip-faced and cypress-tall, heaven-sent
+It's unclear why in this house of earthly pleasure
+The eternal painter adorned me with such intent
+
+---
+
+RUBAI #6 (ID: 1124)
+Title: رباعی شمارهٔ ۶
+URL: https://ganjoor.net/khayyam/robaee/sh6
+
+Persian Text:
+ماییم و می و مطرب و این کنج خراب
+جان و دل و جام و جامه پر درد شراب
+فارغ ز امید رحمت و بیم عذاب
+آزاد ز خاک و باد و از آتش و آب
+
+English Translation:
+We have wine, musician, and this ruined corner
+Soul, heart, cup, and clothes filled with wine's border
+Free from hope of mercy and fear of punishment
+Free from earth, wind, fire, and water's order
+
+---
+
+RUBAI #7 (ID: 1125)
+Title: رباعی شمارهٔ ۷
+URL: https://ganjoor.net/khayyam/robaee/sh7
+
+Persian Text:
+آن قصر که جمشید در او جام گرفت
+آهو بچه کرد و روبه آرام گرفت
+بهرام که گور می گرفتی همه عمر
+دیدی که چگونه گور بهرام گرفت
+
+English Translation:
+That palace where Jamshid held his cup high
+Now deer give birth and foxes peacefully lie
+Bahram who hunted wild asses all his life
+See how the grave took Bahram by and by
+
+---
+
+RUBAI #8 (ID: 1126)
+Title: رباعی شمارهٔ ۸
+URL: https://ganjoor.net/khayyam/robaee/sh8
+
+Persian Text:
+ابر آمد و باز بر سر سبزه گریست
+بی باده گل رنگ نمی باید زیست
+این سبزه که امروز تماشاگه ماست
+تا سبزه خاک ما تماشاگه کیست
+
+English Translation:
+The cloud came and wept upon the green again
+Without rose-colored wine, life is in vain
+This green that is our spectacle today
+When we become grass, whose spectacle will remain?
+
+---
+
+RUBAI #9 (ID: 1127)
+Title: رباعی شمارهٔ ۹
+URL: https://ganjoor.net/khayyam/robaee/sh9
+
+Persian Text:
+اکنون که گل سعادتت پربار است
+دست تو ز جام می چرا بیکار است
+می خور که زمانه دشمنی غدار است
+دریافتن روز چنین دشوار است
+
+English Translation:
+Now that your flower of fortune is in bloom
+Why is your hand idle from the wine's perfume?
+Drink wine, for time is a treacherous foe
+Finding such a day is difficult to assume
+
+---
+
+RUBAI #10 (ID: 1128)
+Title: رباعی شمارهٔ ۱۰
+URL: https://ganjoor.net/khayyam/robaee/sh10
+
+Persian Text:
+امروز تو را دسترس فردا نیست
+واندیشه فردات بجز سودا نیست
+ضایع مکن این دم ار دلت شیدا نیست
+کاین باقی عمر را بها پیدا نیست
+
+English Translation:
+Today you have no access to tomorrow's door
+And thoughts of tomorrow are melancholy, nothing more
+Don't waste this moment if your heart isn't mad with love
+For the remainder of life has no visible value in store
+
+---
+
+Note: These are the first 10 rubaiyat from Khayam's collection as edited by 
+Mohammad Ali Foroughi and Dr. Ghasem Ghani. The translations are approximate 
+interpretations of the philosophical and poetic meanings.
