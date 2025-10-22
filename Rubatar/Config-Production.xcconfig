@@ -1,0 +1,14 @@
+// Configuration settings file format documentation:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+// Production Configuration for App Store builds
+// These values will be compiled into the app
+
+SUPABASE_URL = https:/$()/pspybykovwrfdxpkjpzd.supabase.co
+SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzcHlieWtvdndyZmR4cGtqcHpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1NDIyMDksImV4cCI6MjA3NTExODIwOX0.NV3irlmKEDcThTGYnHOLy4LRA5qjAxUC4XhkKf4QpKA
+
+// OpenAI API Key - Set this in Xcode Cloud environment variables
+// Or replace YOUR_OPENAI_API_KEY_HERE in Config.swift with your actual key locally
+// OPENAI_API_KEY = [Set in Xcode Cloud Environment Variables]
+
+

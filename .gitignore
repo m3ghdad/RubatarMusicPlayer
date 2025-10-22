@@ -90,5 +90,7 @@ fastlane/test_output
 iOSInjectionProject/
 
 # API Keys and Secrets
-Rubatar/Config.swift
+# Note: Config.swift now contains only public Supabase anon key (safe to commit)
+# OpenAI key should be removed before committing in production
+
 

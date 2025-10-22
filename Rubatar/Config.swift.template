@@ -3,7 +3,7 @@
 //  Rubatar
 //
 //  Configuration template file for API keys and settings
-//  Copy this file to Config.swift and add your actual API key
+//  Copy this file to Config.swift and add your actual API keys
 //
 //  Created by Meghdad Abbaszadegan on 10/17/25.
 //
@@ -11,6 +11,7 @@
 import Foundation
 
 struct Config {
+    // MARK: - OpenAI Configuration
     // OpenAI API Key for poem translation
     // Get your key at: https://platform.openai.com/api-keys
     static let openAIAPIKey = "YOUR_OPENAI_API_KEY_HERE"
@@ -21,5 +22,14 @@ struct Config {
     static let translationModel = "gpt-4o-mini" // Fast, affordable, high quality
     static let translationTemperature = 0.7 // Creativity level (0.0 - 1.0)
     static let translationMaxTokens = 1000
+    
+    // MARK: - Supabase Configuration
+    // Supabase project URL
+    // Get from: https://app.supabase.com/project/YOUR_PROJECT/settings/api
+    static let supabaseURL = "YOUR_SUPABASE_URL_HERE"
+    
+    // Supabase Anon/Public API Key
+    // Get from: https://app.supabase.com/project/YOUR_PROJECT/settings/api
+    static let supabaseAnonKey = "YOUR_SUPABASE_ANON_KEY_HERE"
 }
 
