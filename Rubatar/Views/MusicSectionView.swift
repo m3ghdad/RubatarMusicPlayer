@@ -11,6 +11,7 @@ import MusicKit
 struct MusicSectionView: View {
     @StateObject private var musicManager = MusicManager()
     @EnvironmentObject var contentManager: ContentManager
+    @Environment(\.scenePhase) private var scenePhase
     @State private var showingAlbumAlert = false
     @State private var showingPlaylistAlert = false
     @State private var selectedAlbum: Album?
@@ -22,27 +23,27 @@ struct MusicSectionView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            // Section Header
-            HStack {
-                Spacer()
+            // // Section Header
+            // HStack {
+            //     Spacer()
                 
-                if musicManager.authorizationStatus != .authorized {
-                    Button("Connect Music") {
-                        Task {
-                            await musicManager.requestAuthorization()
-                        }
-                    }
-                    .font(.caption)
-                    .foregroundColor(.blue)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(.blue.opacity(0.1))
-                    )
-                }
-            }
-            .padding(.horizontal, 16)
+            //     if musicManager.authorizationStatus != .authorized {
+            //         Button("Connect Music") {
+            //             Task {
+            //                 await musicManager.requestAuthorization()
+            //             }
+            //         }
+            //         .font(.caption)
+            //         .foregroundColor(.blue)
+            //         .padding(.horizontal, 12)
+            //         .padding(.vertical, 6)
+            //         .background(
+            //             RoundedRectangle(cornerRadius: 8)
+            //                 .fill(.blue.opacity(0.1))
+            //         )
+            //     }
+            // }
+            // .padding(.horizontal, 16)
             
             
             if musicManager.authorizationStatus == .authorized {
@@ -102,11 +103,28 @@ struct MusicSectionView: View {
                         .font(.headline)
                         .fontWeight(.semibold)
                     
-                    Text("To display your music library, please grant access to Apple Music in Settings.")
+                    Text("To display curated playlists & albums, please grant access to Apple Music in Settings.")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 20)
+
+                    // Open App Settings button
+                    Button("Open App Settings") {
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            #if canImport(UIKit)
+                            UIApplication.shared.open(url)
+                            #endif
+                        }
+                    }
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(.blue)
+                    )
                 }
                 .padding(.vertical, 30)
                 .frame(maxWidth: .infinity)
@@ -131,7 +149,7 @@ struct MusicSectionView: View {
                         .font(.headline)
                         .fontWeight(.semibold)
                     
-                    Text("Access your Apple Music library to see your albums and playlists right here.")
+                    Text("Access Apple Music's library to see curated albums and playlists.")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -165,20 +183,20 @@ struct MusicSectionView: View {
             }
             
             // Demo button for testing
-            if musicManager.authorizationStatus == .authorized && musicManager.albums.isEmpty {
-                Button("Load Sample Music") {
-                    musicManager.loadSampleMusic()
-                }
-                .font(.headline)
-                .foregroundColor(.blue)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(.blue.opacity(0.1))
-                )
-                .frame(maxWidth: .infinity)
-            }
+            // if musicManager.authorizationStatus == .authorized && musicManager.albums.isEmpty {
+            //     Button("Load Sample Music") {
+            //         musicManager.loadSampleMusic()
+            //     }
+            //     .font(.headline)
+            //     .foregroundColor(.blue)
+            //     .padding(.horizontal, 24)
+            //     .padding(.vertical, 12)
+            //     .background(
+            //         RoundedRectangle(cornerRadius: 12)
+            //             .fill(.blue.opacity(0.1))
+            //     )
+            //     .frame(maxWidth: .infinity)
+            // }
         }
         .onAppear {
             if musicManager.authorizationStatus == .authorized {
@@ -188,6 +206,12 @@ struct MusicSectionView: View {
             } else {
                 // Load sample music for demo purposes
                 musicManager.loadSampleMusic()
+            }
+        }
+        // Re-check authorization when app becomes active to re-render UI promptly after user denies permission
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                musicManager.authorizationStatus = MusicAuthorization.currentStatus
             }
         }
         .alert("Album Selected", isPresented: $showingAlbumAlert) {
