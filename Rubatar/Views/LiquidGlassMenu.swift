@@ -77,13 +77,15 @@ struct LiquidGlassMenu: View {
                     isHovered: hoveredItem == "refresh"
                 )
                 
-                // Select Text
+                // Select Text - commented out
+                /*
                 MenuItemView(
                     id: "selecttext",
                     icon: "document.on.clipboard",
                     title: "Select Text",
                     isHovered: hoveredItem == "selecttext"
                 )
+                */
                 
                 // Go to poet - commented out
                 /*
@@ -349,24 +351,20 @@ struct LiquidGlassMenu: View {
             if menuY >= 0 && menuY < 40 {
                 setHoveredItem("refresh")
             }
-            // Select text: 40-80
-            else if menuY >= 40 && menuY < 80 {
-                setHoveredItem("selecttext")
-            }
-            // Separator + Language: 101-141
-            else if menuY >= 101 && menuY < 141 {
+            // Separator + Language: 61-101 (adjusted after removing Select Text)
+            else if menuY >= 61 && menuY < 101 {
                 setHoveredItem("language")
             }
-            // Configure: 141-181 (position doesn't change when submenu is open)
-            else if menuY >= 141 && menuY < 181 {
+            // Configure: 101-141 (adjusted after removing Select Text)
+            else if menuY >= 101 && menuY < 141 {
                 setHoveredItem("configure")
             }
             // Configure submenu items (when open)
-            else if showConfigureMenu && menuY >= 181 {
+            else if showConfigureMenu && menuY >= 141 {
                 // Check if we're in the submenu area
-                if menuY >= 181 && menuY < 221 { // Typewriter option
+                if menuY >= 141 && menuY < 181 { // Typewriter option
                     setHoveredItem("typewriter")
-                } else if menuY >= 221 && menuY < 261 { // Static option
+                } else if menuY >= 181 && menuY < 221 { // Static option
                     setHoveredItem("static")
                 } else {
                     hoveredItem = nil
