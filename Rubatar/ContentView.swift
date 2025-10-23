@@ -161,7 +161,7 @@ struct ContentView: View {
                 onButtonDismiss: { showLearnMore = false },
                 skipFirstPage: true
             )
-            .presentationDetents([.medium, .large])
+            .presentationDetents([.large])
             .presentationDragIndicator(.hidden)
             .presentationCornerRadius(16)
         }
@@ -207,7 +207,7 @@ struct ContentView: View {
             },
             skipFirstPage: false
         )
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
         .presentationDragIndicator(.hidden)
         .presentationCornerRadius(16)
         .interactiveDismissDisabled(false)
