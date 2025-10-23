@@ -69,7 +69,7 @@ struct ContentView: View {
                         Text("Home")
                             .font(.custom("Palatino", size: 10))
                     } icon: {
-                        Image(systemName: "house")
+                        Image(systemName: "music.note.house.fill")
                     }
                 }
 

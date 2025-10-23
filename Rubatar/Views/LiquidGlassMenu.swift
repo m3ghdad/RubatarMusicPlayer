@@ -31,7 +31,8 @@ struct LiquidGlassMenu: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Quick Actions - Top Section
+            // Quick Actions - Top Section - Commented out
+            /*
             HStack(spacing: 6) {
                 // Save Quick Action
                 QuickActionButton(
@@ -52,10 +53,12 @@ struct LiquidGlassMenu: View {
             .padding(.horizontal, 10)
             .padding(.top, 10)
             .padding(.bottom, 0)
+            */
             
             // Menu Items
             VStack(spacing: 0) {
-                // Separator
+                // Separator - commented out
+                /*
                 HStack {
                     Rectangle()
                         .fill(colorScheme == .dark ? Color.white.opacity(0.2) : Color(hex: "E6E6E6"))
@@ -63,6 +66,16 @@ struct LiquidGlassMenu: View {
                 }
                 .frame(height: 21)
                 .padding(.horizontal, 24)
+                .padding(.top, 10)
+                */
+                
+                // Refresh (moved above Select text)
+                MenuItemView(
+                    id: "refresh",
+                    icon: "arrow.clockwise",
+                    title: "Refresh",
+                    isHovered: hoveredItem == "refresh"
+                )
                 
                 // Select text
                 MenuItemView(
@@ -72,23 +85,18 @@ struct LiquidGlassMenu: View {
                     isHovered: hoveredItem == "selecttext"
                 )
                 
-                // Refresh
-                MenuItemView(
-                    id: "refresh",
-                    icon: "arrow.clockwise",
-                    title: "Refresh",
-                    isHovered: hoveredItem == "refresh"
-                )
-                
-                // Go to poet
+                // Go to poet - commented out
+                /*
                 MenuItemView(
                     id: "poet",
                     icon: "text.page.badge.magnifyingglass",
                     title: "Go to poet",
                     isHovered: hoveredItem == "poet"
                 )
+                */
                 
-                // Separator
+                // Separator - commented out
+                /*
                 HStack {
                     Rectangle()
                         .fill(colorScheme == .dark ? Color.white.opacity(0.2) : Color(hex: "E6E6E6"))
@@ -96,14 +104,17 @@ struct LiquidGlassMenu: View {
                 }
                 .frame(height: 21)
                 .padding(.horizontal, 24)
+                */
                 
-                // Interpretation
+                // Interpretation - commented out
+                /*
                 MenuItemView(
                     id: "interpretation",
                     icon: "book.pages",
                     title: "Interpretation",
                     isHovered: hoveredItem == "interpretation"
                 )
+                */
                 
                 // Separator
                 HStack {
@@ -292,7 +303,8 @@ struct LiquidGlassMenu: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
                 
-                // Themes
+                // Themes - commented out
+                /*
                 MenuItemView(
                     id: "themes",
                     icon: "square.text.square",
@@ -300,9 +312,11 @@ struct LiquidGlassMenu: View {
                     hasChevron: true,
                     isHovered: hoveredItem == "themes"
                 )
+                */
             }
-            .padding(.bottom, 10)
+            .padding(.bottom, 16)
         }
+        .padding(.top, 16)
         .frame(width: 238)
         .background(
             LiquidGlassBackground(cornerRadius: 34)
@@ -327,45 +341,36 @@ struct LiquidGlassMenu: View {
     }
     
     private func updateHoveredItem(at location: CGPoint) {
-        // Quick Actions area (top section)
-        if location.y >= 10 && location.y <= 76 { // 10 top padding + 56 height + 10 spacing
-            if location.x < 119 { // Half of 238
-                setHoveredItem("save")
-            } else {
-                setHoveredItem("share")
-            }
-        }
-        // Menu items area (starting after quick actions + separator)
-        else if location.y > 97 { // After separator
-            let menuY = location.y - 97
+        // Menu items area (starting from top, no separator)
+        if location.y > 16 { // After top padding
+            let menuY = location.y - 16
             
-            // Select text: 0-40
+            // Refresh: 0-40 (first item)
             if menuY >= 0 && menuY < 40 {
-                setHoveredItem("selecttext")
-            }
-            // Refresh: 40-80
-            else if menuY >= 40 && menuY < 80 {
                 setHoveredItem("refresh")
             }
-            // Go to poet: 80-120
-            else if menuY >= 80 && menuY < 120 {
-                setHoveredItem("poet")
+            // Select text: 40-80
+            else if menuY >= 40 && menuY < 80 {
+                setHoveredItem("selecttext")
             }
-            // Separator + Interpretation: 141-181
-            else if menuY >= 141 && menuY < 181 {
-                setHoveredItem("interpretation")
-            }
-            // Language: 202-242
-            else if menuY >= 202 && menuY < 242 {
+            // Separator + Language: 101-141
+            else if menuY >= 101 && menuY < 141 {
                 setHoveredItem("language")
             }
-            // Configure: 242-282
-            else if menuY >= 242 && menuY < 282 {
+            // Configure: 141-181 (position doesn't change when submenu is open)
+            else if menuY >= 141 && menuY < 181 {
                 setHoveredItem("configure")
             }
-            // Themes: 282-322
-            else if menuY >= 282 && menuY < 322 {
-                setHoveredItem("themes")
+            // Configure submenu items (when open)
+            else if showConfigureMenu && menuY >= 181 {
+                // Check if we're in the submenu area
+                if menuY >= 181 && menuY < 221 { // Typewriter option
+                    setHoveredItem("typewriter")
+                } else if menuY >= 221 && menuY < 261 { // Static option
+                    setHoveredItem("static")
+                } else {
+                    hoveredItem = nil
+                }
             }
             else {
                 hoveredItem = nil
@@ -408,6 +413,10 @@ struct LiquidGlassMenu: View {
             onLanguage()
         case "configure":
             onConfigure()
+        case "typewriter":
+            onSelectDisplayMode(.typewriter)
+        case "static":
+            onSelectDisplayMode(.staticMode)
         case "themes":
             onThemes()
         default:

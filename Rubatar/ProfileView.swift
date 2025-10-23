@@ -459,20 +459,31 @@ struct SkeletonLoadingView: View {
                             // Buttons first (left side in Farsi)
                             HStack(spacing: 8) {
                                 Button(action: {}) {
-                                    Image(systemName: "ellipsis")
-                                        .font(.system(size: 18, weight: .medium))
-                                        .foregroundColor(.primary)
-                                        .frame(width: 28, height: 28)
+                                    HStack {
+                                        Spacer()
+                                        Image(systemName: "ellipsis")
+                                            .font(.system(size: 18, weight: .medium))
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                    }
+                                    .frame(width: 32, height: 32)
                                 }
                                 .buttonStyle(.plain)
                                 
+                                // Save/Bookmark button - commented out
+                                /*
                                 Button(action: {}) {
-                                    Image(systemName: "bookmark")
-                                        .font(.system(size: 18, weight: .medium))
-                                        .foregroundColor(.primary)
-                                        .frame(width: 28, height: 28)
+                HStack {
+                                        Spacer()
+                                        Image(systemName: "bookmark")
+                                            .font(.system(size: 18, weight: .medium))
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                    }
+                                    .frame(width: 32, height: 32)
                                 }
                                 .buttonStyle(.plain)
+                                */
                             }
                             
                             Spacer()
@@ -511,19 +522,30 @@ struct SkeletonLoadingView: View {
                             
                             // Buttons (right side in English)
                             HStack(spacing: 8) {
+                                // Save/Bookmark button - commented out
+                                /*
                                 Button(action: {}) {
-                                    Image(systemName: "bookmark")
-                                        .font(.system(size: 18, weight: .medium))
-                                        .foregroundColor(.primary)
-                                        .frame(width: 28, height: 28)
+                                    HStack {
+                                        Spacer()
+                                        Image(systemName: "bookmark")
+                                            .font(.system(size: 18, weight: .medium))
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                    }
+                                    .frame(width: 32, height: 32)
                                 }
                                 .buttonStyle(.plain)
+                                */
                                 
                                 Button(action: {}) {
-                                    Image(systemName: "ellipsis")
-                                        .font(.system(size: 18, weight: .medium))
-                                        .foregroundColor(.primary)
-                                        .frame(width: 28, height: 28)
+                                    HStack {
+                                        Spacer()
+                                        Image(systemName: "ellipsis")
+                                            .font(.system(size: 18, weight: .medium))
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                    }
+                                    .frame(width: 32, height: 32)
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -670,18 +692,23 @@ struct PoemCardView: View {
                                     Image(systemName: "ellipsis")
                                         .font(.system(size: 18, weight: .medium))
                                         .foregroundColor(.primary)
-                                        .frame(width: 28, height: 28)
+                                        .frame(width: 32, height: 32)
+                                        .contentShape(Circle())
                                 }
-                                .buttonStyle(ElegantButtonStyle())
+                                .buttonStyle(CircularButtonStyle())
                                 .matchedTransitionSource(id: "MENUCONTENT\(cardIndex)", in: menuNamespace)
                                 
+                                // Save/Bookmark button - commented out
+                                /*
                                 Button(action: {}) {
                                     Image(systemName: "bookmark")
                                         .font(.system(size: 18, weight: .medium))
                                         .foregroundColor(.primary)
-                                        .frame(width: 28, height: 28)
+                                        .frame(width: 32, height: 32)
+                                        .contentShape(Circle())
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(CircularButtonStyle())
+                                */
                             }
                             
                             Spacer()
@@ -722,13 +749,17 @@ struct PoemCardView: View {
                             
                             // Buttons (right side in English)
                             HStack(spacing: 8) {
+                                // Save/Bookmark button - commented out
+                                /*
                                 Button(action: {}) {
                                     Image(systemName: "bookmark")
                                         .font(.system(size: 18, weight: .medium))
                                         .foregroundColor(.primary)
-                                        .frame(width: 28, height: 28)
+                                        .frame(width: 32, height: 32)
+                                        .contentShape(Circle())
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(CircularButtonStyle())
+                                */
                                 
                                 Button(action: {
                                     activeCardIndex = cardIndex
@@ -739,9 +770,10 @@ struct PoemCardView: View {
                                     Image(systemName: "ellipsis")
                                         .font(.system(size: 18, weight: .medium))
                                         .foregroundColor(.primary)
-                                        .frame(width: 28, height: 28)
+                                        .frame(width: 32, height: 32)
+                                        .contentShape(Circle())
                                 }
-                                .buttonStyle(ElegantButtonStyle())
+                                .buttonStyle(CircularButtonStyle())
                                 .matchedTransitionSource(id: "MENUCONTENT\(cardIndex)", in: menuNamespace)
                             }
                         }
@@ -1166,6 +1198,21 @@ struct ElegantButtonStyle: ButtonStyle {
                 Circle()
                     .fill(Color.primary.opacity(configuration.isPressed ? 0.15 : 0))
                     .frame(width: 28, height: 28)
+                    .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+            )
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
+// Circular button style for 32x32 tap targets
+struct CircularButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(
+                Circle()
+                    .fill(Color.primary.opacity(configuration.isPressed ? 0.15 : 0))
+                    .frame(width: 32, height: 32)
                     .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
             )
             .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
