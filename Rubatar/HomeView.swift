@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct HomeView: View {
-    @AppStorage("selectedBackgroundColor") private var selectedBackgroundColor = 0
     @Binding var showCard: Bool
     @Binding var showWelcomeModal: Bool
     @Binding var showVideoPlayer: Bool
@@ -16,7 +15,8 @@ struct HomeView: View {
     
     var body: some View {
         ZStack {
-            getBackgroundColors()[selectedBackgroundColor].gradient
+            // Simple black background
+            Color.black
                 .ignoresSafeArea()
             
             NavigationView {

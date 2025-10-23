@@ -1,11 +1,10 @@
 import SwiftUI
 
 struct TripsView: View {
-    @AppStorage("selectedBackgroundColor") private var selectedBackgroundColor = 0
-
     var body: some View {
         ZStack {
-            getBackgroundColors()[selectedBackgroundColor].gradient
+            // Simple black background
+            Color.black
                 .ignoresSafeArea()
             
             NavigationView {
