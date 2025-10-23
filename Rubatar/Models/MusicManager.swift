@@ -28,10 +28,8 @@ class MusicManager: ObservableObject {
     }
     
     func loadMusicLibrary() async {
-        if authorizationStatus != .authorized {
-            await requestAuthorization()
-        }
-        
+        // Do NOT request permission here to avoid prompting at app launch.
+        // Only proceed if already authorized; otherwise load sample data.
         guard authorizationStatus == .authorized else {
             loadSampleMusic()
             return

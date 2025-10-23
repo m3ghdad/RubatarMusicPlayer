@@ -17,7 +17,7 @@ struct ContentView: View {
     // MARK: - State Variables
     @State private var searchText = ""
     @AppStorage("isDarkMode") private var isDarkMode = false
-    @State private var showWelcomeModal = true
+    @State private var showWelcomeModal = false
     
     // MARK: - Content Management
     @StateObject private var contentManager = ContentManager()
@@ -32,6 +32,8 @@ struct ContentView: View {
     @State private var playerOpenedFrom: PlayerSource = .none
     @StateObject private var audioPlayer = AudioPlayer()
     @Namespace private var animation
+    @State private var showLearnMore = false
+    @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
     
     enum PlayerSource {
         case none
@@ -111,7 +113,7 @@ struct ContentView: View {
             .tabViewBottomAccessory {
                 miniPlayerView
             }
-            .onAppear { showWelcomeModal = true }
+            .onAppear { if !hasSeenWelcome { showWelcomeModal = true } }
             .sheet(isPresented: $showWelcomeModal) {
                 welcomeModalView
             }
@@ -130,6 +132,9 @@ struct ContentView: View {
             }
         }
         .onAppear { initializeVideoPlayer() }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ShowWelcomeLearnMore"))) { _ in
+            showLearnMore = true
+        }
         .onChange(of: showEnhancedPlayer) { oldValue, newValue in
             if oldValue == true && newValue == false {
                 // Dismissing - use snappy animation with no bounce
@@ -149,6 +154,17 @@ struct ContentView: View {
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.hidden)
                 .presentationCornerRadius(16)
+        }
+        .sheet(isPresented: $showLearnMore) {
+            WelcomeModalView(
+                isDarkMode: isDarkMode,
+                onButtonDismiss: { showLearnMore = false },
+                skipFirstPage: true
+            )
+            .presentationDetents([.fraction(0.86)])
+            .presentationDragIndicator(.visible)
+            .presentationCornerRadius(16)
+            .background(TransparentBackgroundView())
         }
         
     }
@@ -188,14 +204,14 @@ struct ContentView: View {
             isDarkMode: isDarkMode,
             onButtonDismiss: {
                 showWelcomeModal = false
+                hasSeenWelcome = true
             },
-            onPlayTapped: {
-                                showVideoPlayer = true
-            }
+            skipFirstPage: false
         )
-        .presentationDetents([.fraction(0.75)])
+        .presentationDetents([.fraction(0.86)])
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(16)
+        .background(TransparentBackgroundView())
         .interactiveDismissDisabled(false)
         .onAppear {
             showMiniPlayer = false
@@ -290,6 +306,21 @@ struct ContentView: View {
     }
 }
 
+#if canImport(UIKit)
+// Transparent background helper to remove sheet chrome so content can show through
+struct TransparentBackgroundView: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        DispatchQueue.main.async {
+            view.superview?.superview?.backgroundColor = .clear
+        }
+        return view
+    }
+    func updateUIView(_ uiView: UIView, context: Context) {}
+}
+#else
+struct TransparentBackgroundView: View { var body: some View { Color.clear } }
+#endif
 #Preview {
     ContentView()
 }

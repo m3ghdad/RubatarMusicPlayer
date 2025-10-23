@@ -123,7 +123,7 @@ struct MusicSectionView: View {
                     .padding(.vertical, 12)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(.blue)
+                            .fill(Color(hex: "F71A33"))
                     )
                 }
                 .padding(.vertical, 30)
@@ -166,7 +166,7 @@ struct MusicSectionView: View {
                     .padding(.vertical, 12)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(.blue)
+                            .fill(Color(hex: "F71A33"))
                     )
                 }
                 .padding(.vertical, 30)

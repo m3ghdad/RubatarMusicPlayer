@@ -77,6 +77,40 @@ struct ProfileBottomSheet: View {
                                 .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
                         )
                         .padding(.horizontal, 20)
+
+                    // Learn more about Rubatar (same styling as Appearance, no toggle)
+                    Button {
+                        // Dismiss this sheet first, then request Learn More sheet
+                        isPresented = false
+                        NotificationCenter.default.post(name: Notification.Name("ShowWelcomeLearnMore"), object: nil)
+                    } label: {
+                        HStack {
+                            Image(systemName: "info.circle.fill")
+                                .foregroundStyle(isDarkMode ? Color(hex: "E3B887") : Color(hex: "7A5C39"))
+                                .font(.title2)
+                            
+                            Text("Learn more about Rubatar")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                            
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 16)
+                    }
+                    .buttonStyle(.plain)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(.regularMaterial)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                            )
+                            .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+                    )
+                    .padding(.horizontal, 20)
                         
                         // Settings Rows - Commented out
                         /*

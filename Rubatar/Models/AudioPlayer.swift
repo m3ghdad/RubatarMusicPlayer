@@ -53,14 +53,16 @@ class AudioPlayer: ObservableObject {
         // Set up app lifecycle observers to save playback state
         setupAppLifecycleObservers()
         
-        // Load persisted playback state and restore if possible
-        Task { @MainActor in
-            await checkMusicKitPlaybackState()
-            
-            // If we couldn't restore from existing queue, try rebuilding from saved state
-            if !usingMusicKit && !lastQueueSongIDs.isEmpty {
-                print("🔄 No active MusicKit queue found, attempting to rebuild from saved state...")
-                await rebuildQueueFromSavedIDs()
+        // Load persisted playback state and restore if possible, but only if already authorized
+        if MusicAuthorization.currentStatus == .authorized {
+            Task { @MainActor in
+                await checkMusicKitPlaybackState()
+                
+                // If we couldn't restore from existing queue, try rebuilding from saved state
+                if !usingMusicKit && !lastQueueSongIDs.isEmpty {
+                    print("🔄 No active MusicKit queue found, attempting to rebuild from saved state...")
+                    await rebuildQueueFromSavedIDs()
+                }
             }
         }
     }
