@@ -1,8 +1,14 @@
-/*
+//
+//  AboutRubatarModalView.swift
+//  Rubatar
+//
+//  Created by Meghdad Abbaszadegan on 10/1/25.
+//
+
 import SwiftUI
 import MusicKit
 
-struct WelcomeModalView: View {
+struct AboutRubatarModalView: View {
     let isDarkMode: Bool
     let onButtonDismiss: () -> Void
     let skipFirstPage: Bool
@@ -18,8 +24,33 @@ struct WelcomeModalView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                // Pager (top image should be visually behind drag handle)
+            VStack(spacing: 20) {
+                // Header with Close Button
+                HStack {
+                    // Liquid Glass Close Button (48x48)
+                    Button(action: {
+                        print("🔘 Close button tapped")
+                        onButtonDismiss()
+                    }) {
+                        ZStack {
+                            Circle()
+                                .fill(.clear)
+                                .frame(width: 48, height: 48)
+                                .glassEffect(in: Circle())
+                            
+                            Image(systemName: "xmark")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.primary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                
+                // Carousel Content
                 TabView(selection: $currentPage) {
                     if skipFirstPage == false {
                         // Page 1 - Welcome
@@ -34,19 +65,19 @@ struct WelcomeModalView: View {
                         // Page 3
                         infoPage(
                             title: "How it works",
-                            text: "You’ll also find a daily selection of poems to read and enjoy, even without an Apple Music subscription.\n\nUpcoming features will let you analyze, bookmark, and annotate poems as you explore."
+                            text: "You'll also find a daily selection of poems to read and enjoy, even without an Apple Music subscription.\n\nUpcoming features will let you analyze, bookmark, and annotate poems as you explore."
                         )
                         .tag(2)
                         // Page 4
                         infoPage(
-                            title: "What’s next",
-                            text: "We’re working on new features, including:\n• Saving and sharing your favorite poems\n• Searching and filtering by poet, poems, songs, artists and more.\nWe’ll keep expanding Rubatar based on community interest, your feedback helps shape its future support@rubatar.com"
+                            title: "What's next",
+                            text: "We're working on new features, including:\n• Saving and sharing your favorite poems\n• Searching and filtering by poet, poems, songs, artists and more.\nWe'll keep expanding Rubatar based on community interest, your feedback helps shape its future support@rubatar.com"
                         )
                         .tag(3)
                         // Page 5
                         infoPage(
                             title: "Get featured",
-                            text: "If you curate traditional or regional playlists on Apple Music, or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we’d love to feature your work.\nYou don’t need a published album; we welcome all passionate musicians and independent poets from around the world. Contact us at support@rubatar.com"
+                            text: "If you curate traditional or regional playlists on Apple Music, or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we'd love to feature your work.\nYou don't need a published album; we welcome all passionate musicians and independent poets from around the world. Contact us at support@rubatar.com"
                         )
                         .tag(4)
                     } else {
@@ -58,17 +89,17 @@ struct WelcomeModalView: View {
                         .tag(0)
                         infoPage(
                             title: "How it works",
-                            text: "You’ll also find a daily selection of poems to read and enjoy, even without an Apple Music subscription.\n\nUpcoming features will let you analyze, bookmark, and annotate poems as you explore."
+                            text: "You'll also find a daily selection of poems to read and enjoy, even without an Apple Music subscription.\n\nUpcoming features will let you analyze, bookmark, and annotate poems as you explore."
                         )
                         .tag(1)
                         infoPage(
-                            title: "What’s next",
-                            text: "We’re working on new features, including:\n• Saving and sharing your favorite poems\n• Searching and filtering by poet, poems, songs, artists and more.\nWe’ll keep expanding Rubatar based on community interest, your feedback helps shape its future support@rubatar.com"
+                            title: "What's next",
+                            text: "We're working on new features, including:\n• Saving and sharing your favorite poems\n• Searching and filtering by poet, poems, songs, artists and more.\nWe'll keep expanding Rubatar based on community interest, your feedback helps shape its future support@rubatar.com"
                         )
                         .tag(2)
                         infoPage(
                             title: "Get featured",
-                            text: "If you curate traditional or regional playlists on Apple Music, or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we’d love to feature your work.\nYou don’t need a published album; we welcome all passionate musicians and independent poets from around the world. Contact us at support@rubatar.com"
+                            text: "If you curate traditional or regional playlists on Apple Music, or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we'd love to feature your work.\nYou don't need a published album; we welcome all passionate musicians and independent poets from around the world. Contact us at support@rubatar.com"
                         )
                         .tag(3)
                     }
@@ -76,44 +107,17 @@ struct WelcomeModalView: View {
                 .tabViewStyle(.page(indexDisplayMode: .always))
                 .indexViewStyle(.page(backgroundDisplayMode: .interactive))
                 
-                // Bottom area with CTA or permission result actions
-                VStack(spacing: 0) {
-                    Divider()
-                    // Footer buttons per spec
-                    footerButtons
-                }
-                .background(.regularMaterial)
+                // Footer buttons
+                footerButtons
+                    .padding(.bottom, 20)
             }
-            .ignoresSafeArea(.all, edges: .top)
             .navigationBarHidden(true)
-        }
-        .navigationViewStyle(StackNavigationViewStyle())
-        .overlay(alignment: .topLeading) {
-            // Close button at top-left (matching ProfileBottomSheet style)
-            Button {
-                print("🔘 Close button tapped")
-                onButtonDismiss()
-            } label: {
-                ZStack {
-                    Circle()
-                        .fill(.clear)
-                        .frame(width: 48, height: 48)
-                        .glassEffect(in: Circle())
-                    
-                    Image(systemName: "xmark")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.primary)
-                }
-            }
-            .buttonStyle(.plain)
-            .padding(.leading, 20)
-            .padding(.top, 16)
         }
     }
     
     // MARK: Pages
     private var welcomePage: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 16) {
             ZStack {
                 // Background image
                 Image("AppleMusic")
@@ -121,16 +125,17 @@ struct WelcomeModalView: View {
                     .scaledToFill()
                     .frame(maxWidth: .infinity)
                     .frame(height: topImageHeight)
-                    .clipped()
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
                     .overlay(
                         LinearGradient(
                             colors: [Color.black.opacity(0.2), Color.clear],
                             startPoint: .top,
                             endPoint: .bottom
                         )
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
                     )
             }
-            .ignoresSafeArea(.container, edges: .top)
+            .padding(.horizontal, 20)
             
             VStack(spacing: 12) {
                 Text("Welcome")
@@ -146,14 +151,12 @@ struct WelcomeModalView: View {
                     .lineLimit(nil)
                     .padding(.horizontal, 24)
             }
-            .padding(.top, 16)
-            .padding(.bottom, 12)
         }
     }
     
     private func infoPage(title: String, text: String) -> some View {
-        VStack(spacing: 0) {
-            // Placeholder gradient for images (edge-to-edge, full top area)
+        VStack(spacing: 16) {
+            // Placeholder gradient for images
             ZStack {
                 LinearGradient(
                     colors: [
@@ -172,8 +175,8 @@ struct WelcomeModalView: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: topImageHeight)
-            .clipped()
-            .ignoresSafeArea(.container, edges: .top)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .padding(.horizontal, 20)
             
             VStack(spacing: 12) {
                 Text(title)
@@ -189,14 +192,12 @@ struct WelcomeModalView: View {
                     .lineLimit(nil)
                     .padding(.horizontal, 24)
             }
-            .padding(.top, 16)
-            .padding(.bottom, 12)
         }
     }
 }
 
 // MARK: - Footer Buttons
-extension WelcomeModalView {
+extension AboutRubatarModalView {
     @ViewBuilder
     private var footerButtons: some View {
         // Determine effective status (current if no prior prompt)
@@ -224,7 +225,7 @@ extension WelcomeModalView {
                 primaryNextButton()
             }
         }
-        .padding(.bottom, 16)
+        .padding(.horizontal, 20)
     }
 
     @ViewBuilder
@@ -239,8 +240,6 @@ extension WelcomeModalView {
                 .frame(height: 50)
                 .background((isDarkMode ? Color(hex: "E3B887") : Color(hex: "7A5C39")), in: RoundedRectangle(cornerRadius: 12))
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
     }
 
     @ViewBuilder
@@ -262,7 +261,6 @@ extension WelcomeModalView {
                         .fill(.ultraThinMaterial)
                 )
         }
-        .padding(.horizontal, 20)
     }
 
     @ViewBuilder
@@ -283,7 +281,6 @@ extension WelcomeModalView {
                 .frame(height: 50)
                 .background(Color(hex: "F71A33"), in: RoundedRectangle(cornerRadius: 12))
         }
-        .padding(.horizontal, 20)
     }
 }
-*/
+

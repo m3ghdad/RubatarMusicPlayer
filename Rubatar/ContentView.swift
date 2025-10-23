@@ -156,15 +156,14 @@ struct ContentView: View {
                 .presentationCornerRadius(16)
         }
         .sheet(isPresented: $showLearnMore) {
-            WelcomeModalView(
+            AboutRubatarModalView(
                 isDarkMode: isDarkMode,
                 onButtonDismiss: { showLearnMore = false },
                 skipFirstPage: true
             )
-            .presentationDetents([.fraction(0.86)])
-            .presentationDragIndicator(.visible)
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.hidden)
             .presentationCornerRadius(16)
-            .background(TransparentBackgroundView())
         }
         
     }
@@ -200,7 +199,7 @@ struct ContentView: View {
     
     @ViewBuilder
     private var welcomeModalView: some View {
-        WelcomeModalView(
+        AboutRubatarModalView(
             isDarkMode: isDarkMode,
             onButtonDismiss: {
                 showWelcomeModal = false
@@ -208,10 +207,9 @@ struct ContentView: View {
             },
             skipFirstPage: false
         )
-        .presentationDetents([.fraction(0.86)])
-        .presentationDragIndicator(.visible)
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.hidden)
         .presentationCornerRadius(16)
-        .background(TransparentBackgroundView())
         .interactiveDismissDisabled(false)
         .onAppear {
             showMiniPlayer = false
