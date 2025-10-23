@@ -176,6 +176,7 @@ struct ProfileView: View {
                             menuNamespace: menuNamespace,
                             cardIndex: index
                         )
+                        .id("\(selectedDisplayMode.rawValue)-\(index)")
                     }, currentPage: $currentPage)
                 } else if selectedLanguage == .farsi {
                     // Show Farsi poems
@@ -193,6 +194,7 @@ struct ProfileView: View {
                             menuNamespace: menuNamespace,
                             cardIndex: index
                         )
+                        .id("\(selectedDisplayMode.rawValue)-\(index)")
                     }, currentPage: $currentPage)
                 } else {
                     // Show English poems from Supabase
@@ -216,6 +218,7 @@ struct ProfileView: View {
                                 menuNamespace: menuNamespace,
                                 cardIndex: index
                             )
+                            .id("\(selectedDisplayMode.rawValue)-\(index)")
                         }, currentPage: $currentPage)
                     } else {
                         // Some translations missing, show Farsi
@@ -233,6 +236,7 @@ struct ProfileView: View {
                                 menuNamespace: menuNamespace,
                                 cardIndex: index
                             )
+                            .id("\(selectedDisplayMode.rawValue)-\(index)")
                         }, currentPage: $currentPage)
                     }
                 }

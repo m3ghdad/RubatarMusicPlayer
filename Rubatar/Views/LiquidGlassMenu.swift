@@ -77,11 +77,11 @@ struct LiquidGlassMenu: View {
                     isHovered: hoveredItem == "refresh"
                 )
                 
-                // Select text
+                // Select Text
                 MenuItemView(
                     id: "selecttext",
                     icon: "document.on.clipboard",
-                    title: "Select text",
+                    title: "Select Text",
                     isHovered: hoveredItem == "selecttext"
                 )
                 
@@ -214,11 +214,11 @@ struct LiquidGlassMenu: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
                 
-                // Configure
+                // Display Mode
                 MenuItemView(
                     id: "configure",
                     icon: "textformat",
-                    title: "Configure",
+                    title: "Display Mode",
                     subtitle: selectedDisplayMode.rawValue,
                     hasChevron: true,
                     chevronDown: showConfigureMenu,
