@@ -4,11 +4,12 @@ struct SettingsRow: View {
     let icon: String
     let title: String
     let subtitle: String
+    @AppStorage("isDarkMode") private var isDarkMode = false
     
     var body: some View {
         HStack {
             Image(systemName: icon)
-                .foregroundStyle(.blue)
+                .foregroundStyle(isDarkMode ? Color(hex: "E3B887") : Color(hex: "7A5C39"))
                 .font(.title2)
                 .frame(width: 30)
             
