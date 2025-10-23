@@ -382,10 +382,30 @@ struct CompactPlaylistCardView: View {
                             )
                     }
                 } else {
-                    // Fallback to local instrument image
-                    Image("Setaar")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
+                    // Fallback with linear gradient and glare effect
+                    ZStack {
+                        // Base gradient background
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0.2, green: 0.2, blue: 0.3),
+                                Color(red: 0.1, green: 0.1, blue: 0.2)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                        
+                        // Glare effect
+                        RadialGradient(
+                            colors: [
+                                Color.white.opacity(0.3),
+                                Color.white.opacity(0.1),
+                                Color.clear
+                            ],
+                            center: .topLeading,
+                            startRadius: 0,
+                            endRadius: 100
+                        )
+                    }
                 }
             }
             .frame(width: 160, height: 160)
