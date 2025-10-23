@@ -177,13 +177,13 @@ struct ProfileView: View {
                             cardIndex: index
                         )
                     }, currentPage: $currentPage)
-                } else {
-                    // Show Farsi poems (translation disabled)
+                } else if selectedLanguage == .farsi {
+                    // Show Farsi poems
                     PagingScrollView(pageCount: poems.count, content: { index in
                         PoemCardView(
                             poem: poems[index],
                             isTranslated: false,
-                            selectedLanguage: .farsi, // Always show Farsi since translation is disabled
+                            selectedLanguage: .farsi,
                             displayMode: selectedDisplayMode,
                             toFarsiNumber: toFarsiNumber,
                             showMenu: $showMenu,
@@ -194,6 +194,47 @@ struct ProfileView: View {
                             cardIndex: index
                         )
                     }, currentPage: $currentPage)
+                } else {
+                    // Show English poems from Supabase
+                    let englishPoemsList = poems.compactMap { poem -> PoemData? in
+                        poetryService.englishPoems[poem.id]
+                    }
+                    
+                    if englishPoemsList.count == poems.count {
+                        // All poems have English translations
+                        PagingScrollView(pageCount: englishPoemsList.count, content: { index in
+                            PoemCardView(
+                                poem: englishPoemsList[index],
+                                isTranslated: true,
+                                selectedLanguage: .english,
+                                displayMode: selectedDisplayMode,
+                                toFarsiNumber: toFarsiNumber,
+                                showMenu: $showMenu,
+                                activeCardIndex: $activeCardIndex,
+                                typewriterTrigger: $typewriterTrigger,
+                                completedPages: $completedTypewriterPages,
+                                menuNamespace: menuNamespace,
+                                cardIndex: index
+                            )
+                        }, currentPage: $currentPage)
+                    } else {
+                        // Some translations missing, show Farsi
+                        PagingScrollView(pageCount: poems.count, content: { index in
+                            PoemCardView(
+                                poem: poems[index],
+                                isTranslated: false,
+                                selectedLanguage: .farsi,
+                                displayMode: selectedDisplayMode,
+                                toFarsiNumber: toFarsiNumber,
+                                showMenu: $showMenu,
+                                activeCardIndex: $activeCardIndex,
+                                typewriterTrigger: $typewriterTrigger,
+                                completedPages: $completedTypewriterPages,
+                                menuNamespace: menuNamespace,
+                                cardIndex: index
+                            )
+                        }, currentPage: $currentPage)
+                    }
                 }
             }
             .padding(.top, 24)

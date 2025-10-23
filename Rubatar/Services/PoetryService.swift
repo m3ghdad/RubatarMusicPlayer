@@ -80,6 +80,7 @@ struct SupabasePoemMood: Codable {
 class PoetryService: ObservableObject {
     @Published var isLoading = false
     @Published var error: String?
+    @Published var englishPoems: [Int: PoemData] = [:] // Cache: poem.id -> English poem
     
     private let baseURL = "https://pspybykovwrfdxpkjpzd.supabase.co"
     private let apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzcHlieWtvdndyZmR4cGtqcHpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1NDIyMDksImV4cCI6MjA3NTExODIwOX0.NV3irlmKEDcThTGYnHOLy4LRA5qjAxUC4XhkKf4QpKA"
@@ -187,10 +188,12 @@ class PoetryService: ObservableObject {
         print("📚 Found \(moodsData.count) moods")
         
         // Convert to app models
-        let convertedPoems = poemsData.compactMap { poem -> PoemData? in
+        var convertedPoems: [PoemData] = []
+        
+        for poem in poemsData {
             guard let poet = poetsData.first(where: { $0.id == poem.poet_id }) else {
                 print("⚠️ Poet not found for poem: \(poem.poem_name_fa)")
-                return nil
+                continue
             }
             let topic = topicsData.first { $0.id == poem.topic_id }
             let poemMood = poemMoodsData.first { $0.poem_id == poem.id }
@@ -198,8 +201,11 @@ class PoetryService: ObservableObject {
             
             print("✅ Converting poem: \(poem.poem_name_fa) by \(poet.name_fa)")
             
-            return PoemData(
-                id: Int(poem.id.suffix(8), radix: 16) ?? 0, // Convert UUID to Int
+            let poemId = Int(poem.id.suffix(8), radix: 16) ?? 0
+            
+            // Create Farsi poem
+            let farsiPoem = PoemData(
+                id: poemId,
                 title: poem.poem_name_fa,
                 poet: PoetInfo(
                     id: Int(poet.id.suffix(8), radix: 16) ?? 0,
@@ -211,6 +217,31 @@ class PoetryService: ObservableObject {
                 mood: mood?.mood_fa,
                 moodColor: mood?.color_hex
             )
+            
+            // Create English poem and store in cache
+            if !poem.poem_content_en.isEmpty {
+                let englishPoem = PoemData(
+                    id: poemId,
+                    title: poem.poem_name_en,
+                    poet: PoetInfo(
+                        id: Int(poet.id.suffix(8), radix: 16) ?? 0,
+                        name: poet.nickname_en ?? poet.name_en,
+                        fullName: poet.name_en
+                    ),
+                    verses: parsePoemContent(poem.poem_content_en),
+                    topic: topic?.topic_en,
+                    mood: mood?.mood_en,
+                    moodColor: mood?.color_hex
+                )
+                
+                // Store English version in cache
+                await MainActor.run {
+                    self.englishPoems[poemId] = englishPoem
+                }
+                print("✅ Cached English translation for poem \(poemId)")
+            }
+            
+            convertedPoems.append(farsiPoem)
         }
         
         print("📚 Successfully converted \(convertedPoems.count) poems")
