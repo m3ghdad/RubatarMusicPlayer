@@ -13,6 +13,7 @@ struct AboutRubatarModalView: View {
     let onButtonDismiss: () -> Void
     let skipFirstPage: Bool
     
+    @Environment(\.colorScheme) private var colorScheme
     @State private var currentPage: Int = 0
     @State private var showPermissionResult: Bool = false
     @State private var lastAuthStatus: MusicAuthorization.Status? = nil
@@ -23,33 +24,9 @@ struct AboutRubatarModalView: View {
     private var isLastPage: Bool { currentPage >= lastPageIndex }
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 20) {
-                // Header with Close Button
-                HStack {
-                    // Liquid Glass Close Button (48x48)
-                    Button(action: {
-                        print("🔘 Close button tapped")
-                        onButtonDismiss()
-                    }) {
-                        ZStack {
-                            Circle()
-                                .fill(.clear)
-                                .frame(width: 48, height: 48)
-                                .glassEffect(in: Circle())
-                            
-                            Image(systemName: "xmark")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.primary)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    
-                    Spacer()
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
-                
+        ZStack(alignment: .topLeading) {
+            // Main content container (green) filling the sheet
+            VStack(spacing: 0) {
                 // Carousel Content
                 TabView(selection: $currentPage) {
                     if skipFirstPage == false {
@@ -111,8 +88,34 @@ struct AboutRubatarModalView: View {
                 footerButtons
                     .padding(.bottom, 20)
             }
-            .navigationBarHidden(true)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            
         }
+        .overlay(alignment: .topLeading) {
+            Button(action: {
+                print("🔘 Close button tapped")
+                onButtonDismiss()
+            }) {
+                ZStack {
+                    Circle()
+                        .fill(.clear)
+                        .frame(width: 48, height: 48)
+                        .glassEffect(in: Circle())
+                    Image(systemName: "xmark")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.primary)
+                }
+            }
+            .buttonStyle(.plain)
+            .contentShape(Rectangle())
+            .allowsHitTesting(true)
+            .padding(.leading, 20)
+            .padding(.top, 16)
+            .zIndex(1000)
+        }
+        .onAppear { updatePageControl(for: colorScheme) }
+        .onChange(of: colorScheme) { _, newValue in updatePageControl(for: newValue) }
+        
     }
     
     // MARK: Pages
@@ -125,33 +128,33 @@ struct AboutRubatarModalView: View {
                     .scaledToFill()
                     .frame(maxWidth: .infinity)
                     .frame(height: topImageHeight)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .clipped()
                     .overlay(
                         LinearGradient(
                             colors: [Color.black.opacity(0.2), Color.clear],
                             startPoint: .top,
                             endPoint: .bottom
                         )
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
                     )
             }
-            .padding(.horizontal, 20)
             
             VStack(spacing: 12) {
                 Text("Welcome")
-                    .font(.title2)
+                    .font(.custom("Palatino", size: 22))
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
                     .multilineTextAlignment(.center)
                 
                 Text("Rubatar connects traditional regional music with classical poetry.\n\nConnect to Apple Music to explore curated playlists of traditional regional music.")
-                    .font(.body)
+                    .font(.custom("Palatino", size: 16))
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(nil)
                     .padding(.horizontal, 24)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            
     }
     
     private func infoPage(title: String, text: String) -> some View {
@@ -175,24 +178,41 @@ struct AboutRubatarModalView: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: topImageHeight)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .padding(.horizontal, 20)
+            
             
             VStack(spacing: 12) {
                 Text(title)
-                    .font(.title2)
+                    .font(.custom("Palatino", size: 22))
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
                     .multilineTextAlignment(.center)
                 
                 Text(text)
-                    .font(.body)
+                    .font(.custom("Palatino", size: 16))
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.leading)
                     .lineLimit(nil)
                     .padding(.horizontal, 24)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        
+    }
+}
+
+// MARK: - UIPageControl Styling
+extension AboutRubatarModalView {
+    private func updatePageControl(for scheme: ColorScheme) {
+        #if canImport(UIKit)
+        let pageControl = UIPageControl.appearance()
+        if scheme == .dark {
+            pageControl.currentPageIndicatorTintColor = UIColor.white
+            pageControl.pageIndicatorTintColor = UIColor(white: 1.0, alpha: 0.35)
+        } else {
+            pageControl.currentPageIndicatorTintColor = UIColor.black
+            pageControl.pageIndicatorTintColor = UIColor(white: 0.0, alpha: 0.25)
+        }
+        #endif
     }
 }
 
@@ -234,11 +254,19 @@ extension AboutRubatarModalView {
             if isLastPage { onButtonDismiss() } else { currentPage += 1 }
         } label: {
             Text(isLastPage ? "Done" : "Next")
-                .font(.headline)
-                .foregroundColor(.white)
+                .font(.custom("Palatino", size: 17).weight(.semibold))
+                .foregroundColor(isLastPage ? .white : .primary)
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
-                .background((isDarkMode ? Color(hex: "E3B887") : Color(hex: "7A5C39")), in: RoundedRectangle(cornerRadius: 12))
+                .background(
+                    {
+                        if isLastPage {
+                            (isDarkMode ? Color(hex: "E3B887") : Color(hex: "7A5C39"))
+                        } else {
+                            Color.secondary.opacity(0.2)
+                        }
+                    }(), in: RoundedRectangle(cornerRadius: 12)
+                )
         }
     }
 
@@ -252,7 +280,7 @@ extension AboutRubatarModalView {
             }
         } label: {
             Text("Open App Settings")
-                .font(.headline)
+                .font(.custom("Palatino", size: 17).weight(.semibold))
                 .foregroundColor(.primary)
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
@@ -275,7 +303,7 @@ extension AboutRubatarModalView {
             }
         } label: {
             Text("Connect to Apple Music")
-                .font(.headline)
+                .font(.custom("Palatino", size: 17).weight(.semibold))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
