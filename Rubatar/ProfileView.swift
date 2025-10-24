@@ -90,7 +90,12 @@ struct ProfileView: View {
     }
     
     // Multiple poems from API
-    @State private var poems: [PoemData] = []
+    @State private var allPoems: [PoemData] = [] // All fetched poems
+    @State private var displayedPoems: [PoemData] = [] // Currently displayed poems (sets of 10)
+    @State private var currentPageSet = 0 // Current set of 10 poems
+    @State private var isLoadingMore = false // Loading state for pagination
+    @State private var hasMorePoems = true // Whether there are more poems to load
+    @State private var viewedPoemIds: Set<Int> = [] // Track viewed poems for refresh logic
     @State private var translatedPoems: [Int: PoemData] = [:] // Cache: poem.id -> translated poem
     @State private var isTranslating = false
     
@@ -109,7 +114,7 @@ struct ProfileView: View {
     // Translate poems automatically
     private func translatePoemsIfNeeded() {
         Task {
-            for poem in poems {
+            for poem in displayedPoems {
                 // Skip if already translated
                 guard translatedPoems[poem.id] == nil else { continue }
                 
@@ -131,14 +136,21 @@ struct ProfileView: View {
         
         Task {
             // Clear existing poems and translations
-            poems = []
+            allPoems = []
+            displayedPoems = []
             translatedPoems = [:]
+            viewedPoemIds.removeAll()
+            currentPageSet = 0
             completedTypewriterPages.removeAll() // Clear completed pages on refresh
             
             // Fetch new poems from Supabase
-            let newPoems = await poetryService.fetchPoems(limit: 10)
+            let newPoems = await poetryService.fetchPoems(limit: 100, offset: 0)
             if !newPoems.isEmpty {
-                poems = newPoems
+                // Shuffle poems for random order
+                var shuffledPoems = newPoems
+                shuffledPoems.shuffle()
+                allPoems = shuffledPoems
+                updateDisplayedPoems()
                 currentPage = 0
                 
                 // Automatic translation disabled
@@ -152,6 +164,54 @@ struct ProfileView: View {
         }
     }
     
+    // Update displayed poems based on current page set
+    private func updateDisplayedPoems() {
+        let poemsPerSet = 10
+        let startIndex = currentPageSet * poemsPerSet
+        let endIndex = min(startIndex + poemsPerSet, allPoems.count)
+        
+        if startIndex < allPoems.count {
+            // Show all poems from start to endIndex (cumulative)
+            displayedPoems = Array(allPoems[0..<endIndex])
+            hasMorePoems = endIndex < allPoems.count
+        } else {
+            displayedPoems = []
+            hasMorePoems = false
+        }
+    }
+    
+    // Load next set of poems
+    private func loadNextSet() {
+        guard !isLoadingMore && hasMorePoems else { return }
+        
+        isLoadingMore = true
+        
+        Task {
+            // If we have more poems in our current batch, just show them
+            if (currentPageSet + 1) * 10 < allPoems.count {
+                currentPageSet += 1
+                updateDisplayedPoems()
+            } else {
+                // Need to fetch more poems from server
+                let nextOffset = allPoems.count
+                let newPoems = await poetryService.fetchPoems(limit: 100, offset: nextOffset)
+                
+                if !newPoems.isEmpty {
+                    // Shuffle new poems and append to existing ones
+                    var shuffledNewPoems = newPoems
+                    shuffledNewPoems.shuffle()
+                    allPoems.append(contentsOf: shuffledNewPoems)
+                    currentPageSet += 1
+                    updateDisplayedPoems()
+                } else {
+                    hasMorePoems = false
+                }
+            }
+            
+            isLoadingMore = false
+        }
+    }
+    
     var body: some View {
         ZStack {
             // Background - adapts to dark mode
@@ -160,7 +220,7 @@ struct ProfileView: View {
             
             // Paging carousel with peek of adjacent cards
             VStack(spacing: 0) {
-                if poems.isEmpty {
+                if displayedPoems.isEmpty {
                     // Show loading skeleton cards until poems are fetched
                     PagingScrollView(pageCount: 3, content: { index in
                         PoemCardView(
@@ -180,9 +240,9 @@ struct ProfileView: View {
                     }, currentPage: $currentPage)
                 } else if selectedLanguage == .farsi {
                     // Show Farsi poems
-                    PagingScrollView(pageCount: poems.count, content: { index in
+                    PagingScrollView(pageCount: displayedPoems.count, content: { index in
                         PoemCardView(
-                            poem: poems[index],
+                            poem: displayedPoems[index],
                             isTranslated: false,
                             selectedLanguage: .farsi,
                             displayMode: selectedDisplayMode,
@@ -195,14 +255,16 @@ struct ProfileView: View {
                             cardIndex: index
                         )
                         .id("\(selectedDisplayMode.rawValue)-\(index)")
-                    }, currentPage: $currentPage)
+                    }, currentPage: $currentPage, onLoadMore: {
+                        loadNextSet()
+                    })
                 } else {
                     // Show English poems from Supabase
-                    let englishPoemsList = poems.compactMap { poem -> PoemData? in
+                    let englishPoemsList = displayedPoems.compactMap { poem -> PoemData? in
                         poetryService.englishPoems[poem.id]
                     }
                     
-                    if englishPoemsList.count == poems.count {
+                    if englishPoemsList.count == displayedPoems.count {
                         // All poems have English translations
                         PagingScrollView(pageCount: englishPoemsList.count, content: { index in
                             PoemCardView(
@@ -219,12 +281,14 @@ struct ProfileView: View {
                                 cardIndex: index
                             )
                             .id("\(selectedDisplayMode.rawValue)-\(index)")
-                        }, currentPage: $currentPage)
+                        }, currentPage: $currentPage, onLoadMore: {
+                            loadNextSet()
+                        })
                     } else {
                         // Some translations missing, show Farsi
-                        PagingScrollView(pageCount: poems.count, content: { index in
+                        PagingScrollView(pageCount: displayedPoems.count, content: { index in
                             PoemCardView(
-                                poem: poems[index],
+                                poem: displayedPoems[index],
                                 isTranslated: false,
                                 selectedLanguage: .farsi,
                                 displayMode: selectedDisplayMode,
@@ -237,7 +301,9 @@ struct ProfileView: View {
                                 cardIndex: index
                             )
                             .id("\(selectedDisplayMode.rawValue)-\(index)")
-                        }, currentPage: $currentPage)
+                        }, currentPage: $currentPage, onLoadMore: {
+                            loadNextSet()
+                        })
                     }
                 }
             }
@@ -380,16 +446,18 @@ struct ProfileView: View {
         .animation(.snappy(duration: 0.3, extraBounce: 0), value: showMenu)
         .onAppear {
             // Only fetch poems if they haven't been loaded yet (fresh app launch)
-            if poems.isEmpty {
+            if allPoems.isEmpty {
                 Task {
-                    var initialPoems = await poetryService.fetchPoems(limit: 10)
+                    let initialPoems = await poetryService.fetchPoems(limit: 100, offset: 0)
                     
                     // Shuffle poems for random order on fresh launch
                     if !initialPoems.isEmpty {
-                        initialPoems.shuffle()
-                        poems = initialPoems
+                        var shuffledPoems = initialPoems
+                        shuffledPoems.shuffle()
+                        allPoems = shuffledPoems
+                        updateDisplayedPoems()
                         currentPage = 0
-                        print("🔀 Loaded and shuffled \(initialPoems.count) fresh poems")
+                        print("🔀 Loaded and shuffled \(shuffledPoems.count) fresh poems")
                         
                         // Automatic translation disabled
                         // translatePoemsIfNeeded()
@@ -403,8 +471,18 @@ struct ProfileView: View {
         }
         .onChange(of: currentPage) { _, newPage in
             // Reset verse page when changing cards
-            if newPage < poems.count {
+            if newPage < displayedPoems.count {
                 versePage = 0
+                
+                // Track viewed poems
+                if newPage < displayedPoems.count {
+                    viewedPoemIds.insert(displayedPoems[newPage].id)
+                }
+                
+                // Check if we need to load more poems
+                if newPage >= displayedPoems.count - 2 && hasMorePoems && !isLoadingMore {
+                    loadNextSet()
+                }
             }
         }
     }

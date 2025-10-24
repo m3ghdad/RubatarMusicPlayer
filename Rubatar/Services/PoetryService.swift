@@ -90,7 +90,7 @@ class PoetryService: ObservableObject {
     }
     
     // Fetch poems with poet, topic, and mood information
-    func fetchPoems(limit: Int = 10) async -> [PoemData] {
+    func fetchPoems(limit: Int = 100, offset: Int = 0) async -> [PoemData] {
         await MainActor.run {
             isLoading = true
             error = nil
@@ -99,7 +99,7 @@ class PoetryService: ObservableObject {
         do {
             // Fetch poems from Supabase
             print("📚 PoetryService: Starting to fetch poems from Supabase...")
-            let poems = try await fetchPoemsFromSupabase(limit: limit)
+            let poems = try await fetchPoemsFromSupabase(limit: limit, offset: offset)
             print("📚 PoetryService: Successfully fetched \(poems.count) poems")
             
             await MainActor.run {
@@ -121,11 +121,11 @@ class PoetryService: ObservableObject {
     }
     
     // Fetch poems from Supabase API
-    private func fetchPoemsFromSupabase(limit: Int) async throws -> [PoemData] {
+    private func fetchPoemsFromSupabase(limit: Int, offset: Int) async throws -> [PoemData] {
         print("📚 Fetching poems from: \(baseURL)/rest/v1/poems")
         
         // Fetch poems
-        let poemsURL = "\(baseURL)/rest/v1/poems?select=*&limit=\(limit)"
+        let poemsURL = "\(baseURL)/rest/v1/poems?select=*&limit=\(limit)&offset=\(offset)"
         let poemsResponse = try await makeRequest(url: poemsURL)
         let poemsData: [SupabasePoem] = try JSONDecoder().decode([SupabasePoem].self, from: poemsResponse)
         print("📚 Found \(poemsData.count) poems")

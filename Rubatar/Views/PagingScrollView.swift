@@ -12,9 +12,17 @@ struct PagingScrollView<Content: View>: View {
     let pageCount: Int
     let content: (Int) -> Content
     @Binding var currentPage: Int
+    let onLoadMore: (() -> Void)? // Callback for loading more content
     
     @State private var dragOffset: CGFloat = 0
     @State private var lastPage: Int = 0
+    
+    init(pageCount: Int, content: @escaping (Int) -> Content, currentPage: Binding<Int>, onLoadMore: (() -> Void)? = nil) {
+        self.pageCount = pageCount
+        self.content = content
+        self._currentPage = currentPage
+        self.onLoadMore = onLoadMore
+    }
     
     var body: some View {
         GeometryReader { geometry in
@@ -45,6 +53,11 @@ struct PagingScrollView<Content: View>: View {
                             newPage = currentPage - 1
                         } else if dragAmount < -threshold && currentPage < pageCount - 1 {
                             newPage = currentPage + 1
+                        }
+                        
+                        // Check if we need to load more content when reaching the end
+                        if newPage == pageCount - 1 && onLoadMore != nil {
+                            onLoadMore?()
                         }
                         
                         // Trigger haptic feedback if page changed
