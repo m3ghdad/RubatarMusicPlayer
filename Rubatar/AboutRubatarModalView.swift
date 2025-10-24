@@ -18,9 +18,10 @@ struct AboutRubatarModalView: View {
     @State private var currentPage: Int = 0
     @State private var showPermissionResult: Bool = false
     @State private var lastAuthStatus: MusicAuthorization.Status? = nil
-    private let topImageHeight: CGFloat = 300
+    private let topImageHeight: CGFloat = 453.6
 
-    private var totalPages: Int { skipFirstPage ? 4 : 5 }
+    // When opened on first launch (skipFirstPage == false), only show 3 pages: Welcome, About, How it works
+    private var totalPages: Int { skipFirstPage ? 4 : 3 }
     private var lastPageIndex: Int { totalPages - 1 }
     private var isLastPage: Bool { currentPage >= lastPageIndex }
     
@@ -43,23 +44,13 @@ struct AboutRubatarModalView: View {
                         // Page 3
                         infoPage(
                             title: "How it works",
-                            text: "You'll also find a daily selection of poems to read and enjoy, even without an Apple Music subscription.\n\nUpcoming features will let you analyze, bookmark, and annotate poems as you explore."
+                            text: "You'll find a daily selection of poems to read and enjoy.\n\nUpcoming features will let you analyze, bookmark, and annotate poems as you explore."
                         )
                         .tag(2)
-                        // Page 4
-                        infoPage(
-                            title: "What's next",
-                            text: "We're working on new features, including:\n• Saving and sharing your favorite poems\n• Searching and filtering by poet, poems, songs, artists and more.\nWe'll keep expanding Rubatar based on community interest, your feedback helps shape its future support@rubatar.com"
-                        )
-                        .tag(3)
-                        // Page 5
-                        infoPage(
-                            title: "Get featured",
-                            text: "If you curate traditional or regional playlists on Apple Music, or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we'd love to feature your work.\nYou don't need a published album; we welcome all passionate musicians and independent poets from around the world. Contact us at support@rubatar.com"
-                        )
-                        .tag(4)
+                        // Page 4 (What's next) and Page 5 (Get featured) are hidden on first launch
+                        // They remain visible when opened from Profile (skipFirstPage == true)
                     } else {
-                        // Skipping first page; re-tag remaining as 0..3
+                        // Skipping first page; re-tag remaining as 0..3 (full set including 'What's next' and 'Get featured')
                         infoPage(
                             title: "About Rubatar",
                             text: "Rubatar connects traditional regional music with classical poetry.\n\nThe name Rubatar blends Rubaii (رباعیات), a Persian four-line poetic form, with Tār (تار), an 18th-century Persian string instrument central to Iranian music."
@@ -123,51 +114,7 @@ struct AboutRubatarModalView: View {
     private var welcomePage: some View {
         VStack(spacing: 16) {
             ZStack {
-                // Background image
-                Image("AppleMusic")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(maxWidth: .infinity)
-                    .frame(height: topImageHeight)
-                    .clipped()
-                    .overlay(
-                        LinearGradient(
-                            colors: [Color.black.opacity(0.2), Color.clear],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-            }
-            
-            VStack(spacing: 12) {
-                Text("Welcome")
-                    .font(.custom("Palatino", size: 22))
-                    .fontWeight(.bold)
-                    .foregroundColor(.primary)
-                    .multilineTextAlignment(.center)
-
-                // Description container - fills remaining space and centers its content
-                VStack {
-                    Text("Connect to Apple Music to explore curated playlists of traditional regional music.")
-                        .font(.custom("Palatino", size: 16))
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(nil)
-                        .padding(.horizontal, 24)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-            }
-            .padding(.top, 24)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            
-    }
-    
-    private func infoPage(title: String, text: String) -> some View {
-        VStack(spacing: 16) {
-            // Placeholder gradient for images
-            ZStack {
+                // Gradient background (same style as other pages)
                 LinearGradient(
                     colors: [
                         Color(red: 0.2, green: 0.2, blue: 0.3),
@@ -186,24 +133,88 @@ struct AboutRubatarModalView: View {
             .frame(maxWidth: .infinity)
             .frame(height: topImageHeight)
             
+            VStack(spacing: 12) {
+                Text("Welcome")
+                    .font(.custom("Palatino", size: 22))
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24)
+
+                // Description container - fills remaining space and centers its content
+                HStack {
+                    Spacer(minLength: 0)
+                    Text("Connect to Apple Music to explore curated playlists of traditional regional music.")
+                        .font(.custom("Palatino", size: 16))
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(nil)
+                        .padding(.horizontal, 24)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Spacer(minLength: 0)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            }
+            .padding(.top, 24)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             
+    }
+    
+    private func infoPage(title: String, text: String) -> some View {
+        VStack(spacing: 16) {
+            // Image container (conditional for About Rubatar)
+            ZStack {
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.2, green: 0.2, blue: 0.3),
+                        Color(red: 0.1, green: 0.1, blue: 0.2)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                RadialGradient(
+                    colors: [Color.white.opacity(0.25), Color.clear],
+                    center: .topLeading,
+                    startRadius: 0,
+                    endRadius: 160
+                )
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: topImageHeight)
+
             VStack(spacing: 12) {
                 Text(title)
                     .font(.custom("Palatino", size: 22))
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
-                    .multilineTextAlignment(.center)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24)
 
                 // Description container - fills remaining space and centers its content
-                VStack {
-                    Text(text)
-                        .font(.custom("Palatino", size: 16))
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(nil)
-                        .padding(.horizontal, 24)
+                HStack {
+                    Spacer(minLength: 0)
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(bulletLines(for: text), id: \.self) { line in
+                            HStack(alignment: .top, spacing: 8) {
+                                Text("•")
+                                    .font(.custom("Palatino", size: 16))
+                                    .foregroundColor(.secondary)
+                                Text(line)
+                                    .font(.custom("Palatino", size: 16))
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.leading)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    Spacer(minLength: 0)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
             .padding(.top, 24)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -226,6 +237,21 @@ extension AboutRubatarModalView {
             pageControl.pageIndicatorTintColor = UIColor(white: 0.0, alpha: 0.25)
         }
         #endif
+    }
+}
+
+// MARK: - Helpers
+extension AboutRubatarModalView {
+    private func bulletLines(for text: String) -> [String] {
+        // Split by line breaks or '•' and trim whitespace; filter empties
+        let manualSplit = text
+            .replacingOccurrences(of: "\r", with: "")
+            .components(separatedBy: .newlines)
+            .flatMap { $0.split(separator: "•").map(String.init) }
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        if manualSplit.isEmpty { return [text] }
+        return manualSplit
     }
 }
 
@@ -266,7 +292,7 @@ extension AboutRubatarModalView {
         Button {
             if isLastPage { onButtonDismiss() } else { currentPage += 1 }
         } label: {
-            Text(isLastPage ? "Done" : ((skipFirstPage == false && currentPage == 0) ? "Skip" : "Continue"))
+            Text(isLastPage ? "Done" : ((skipFirstPage == false && (currentPage == 0 ? true : (currentPage == totalPages - 1)))) ? (currentPage == 0 ? "Skip" : "Done") : "Continue")
                 .font(.custom("Palatino", size: 17).weight(.semibold))
                 .foregroundColor(isLastPage ? .white : .primary)
                 .frame(maxWidth: .infinity)
