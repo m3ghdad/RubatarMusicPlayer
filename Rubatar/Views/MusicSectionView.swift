@@ -22,7 +22,7 @@ struct MusicSectionView: View {
     let onPlaylistSelected: (String, String, String, URL?) -> Void
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 32) {
             // // Section Header
             // HStack {
             //     Spacer()
