@@ -37,14 +37,14 @@ struct AboutRubatarModalView: View {
                             .tag(0)
                         // Page 2
                         infoPage(
-                            title: "About Rubatar",
+                            title: "About the App",
                             text: "Rubatar connects traditional regional music with classical poetry.\n\nThe name Rubatar blends Rubaii (رباعیات), a Persian four-line poetic form, with Tār (تار), an 18th-century Persian string instrument central to Iranian music."
                         )
                         .tag(1)
                         // Page 3
                         infoPage(
-                            title: "How it works",
-                            text: "You'll find a daily selection of poems to read and enjoy.\n\nUpcoming features will let you analyze, bookmark, and annotate poems as you explore."
+                            title: "How it Works",
+                            text: "You'll find a daily selection of poems to read and enjoy while listening to traditional regional music.\n\nUpcoming features will let you analyze, bookmark, and annotate poems as you explore."
                         )
                         .tag(2)
                         // Page 4 (What's next) and Page 5 (Get featured) are hidden on first launch
@@ -57,18 +57,18 @@ struct AboutRubatarModalView: View {
                         )
                         .tag(0)
                         infoPage(
-                            title: "How it works",
+                            title: "How it Works",
                             text: "You'll also find a daily selection of poems to read and enjoy, even without an Apple Music subscription.\n\nUpcoming features will let you analyze, bookmark, and annotate poems as you explore."
                         )
                         .tag(1)
                         infoPage(
-                            title: "What's next",
-                            text: "We're working on new features, including:\n• Saving and sharing your favorite poems\n• Searching and filtering by poet, poems, songs, artists and more.\nWe'll keep expanding Rubatar based on community interest, your feedback helps shape its future support@rubatar.com"
+                            title: "What's Next",
+                            text: "We're working on new features, including:\n• Saving and sharing your favorite poems\n• Searching and filtering by poet, poems, songs, artists and more.\nWe'll keep expanding Rubatar based on community interest, your feedback helps shape its future."
                         )
                         .tag(2)
                         infoPage(
-                            title: "Get featured",
-                            text: "If you curate traditional or regional playlists on Apple Music, or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we'd love to feature your work.\nYou don't need a published album; we welcome all passionate musicians and independent poets from around the world. Contact us at support@rubatar.com"
+                            title: "Get Featured",
+                            text: "If you curate traditional or regional playlists on Apple Music, \n Or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we'd love to feature your work.\nYou don't need a published album; we welcome all passionate musicians and independent poets from around the world. \n Contact us at support@rubatar.com"
                         )
                         .tag(3)
                     }
@@ -134,7 +134,7 @@ struct AboutRubatarModalView: View {
             .frame(height: topImageHeight)
             
             VStack(spacing: 12) {
-                Text("Welcome")
+                Text("Welcome to Rubatar")
                     .font(.custom("Palatino", size: 22))
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
@@ -194,19 +194,37 @@ struct AboutRubatarModalView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 24)
 
-                // Description container - fills remaining space and centers its content
+                // Description container - fills remaining space; top-aligned; special layout for "What's next"
                 HStack {
                     Spacer(minLength: 0)
                     VStack(alignment: .leading, spacing: 8) {
-                        ForEach(bulletLines(for: text), id: \.self) { line in
-                            HStack(alignment: .top, spacing: 8) {
-                                Text("•")
-                                    .font(.custom("Palatino", size: 16))
-                                    .foregroundColor(.secondary)
-                                Text(line)
-                                    .font(.custom("Palatino", size: 16))
-                                    .foregroundColor(.secondary)
-                                    .multilineTextAlignment(.leading)
+                        if title == "What's next" {
+                            let lines = text
+                                .replacingOccurrences(of: "\r", with: "")
+                                .components(separatedBy: .newlines)
+                                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                                .filter { !$0.isEmpty }
+                            if let first = lines.first {
+                                // Intro line (no bullet)
+                                emailText(first)
+                            }
+                            ForEach(Array(lines.dropFirst()), id: \.self) { rawLine in
+                                let lineNoBullet = rawLine.hasPrefix("•") ? String(rawLine.dropFirst()).trimmingCharacters(in: .whitespaces) : rawLine
+                                HStack(alignment: .top, spacing: 8) {
+                                    Text("•")
+                                        .font(.custom("Palatino", size: 16))
+                                        .foregroundColor(.secondary)
+                                    emailText(lineNoBullet)
+                                }
+                            }
+                        } else {
+                            ForEach(bulletLines(for: text), id: \.self) { line in
+                                HStack(alignment: .top, spacing: 8) {
+                                    Text("•")
+                                        .font(.custom("Palatino", size: 16))
+                                        .foregroundColor(.secondary)
+                                    emailText(line)
+                                }
                             }
                         }
                     }
@@ -252,6 +270,29 @@ extension AboutRubatarModalView {
             .filter { !$0.isEmpty }
         if manualSplit.isEmpty { return [text] }
         return manualSplit
+    }
+
+    @ViewBuilder
+    private func emailText(_ content: String) -> some View {
+        // Detect 'support@rubatar.com' and render as tappable link
+        if content.contains("support@rubatar.com") {
+            let parts = content.components(separatedBy: "support@rubatar.com")
+            HStack(alignment: .firstTextBaseline, spacing: 0) {
+                Text(parts.first ?? "")
+                    .font(.custom("Palatino", size: 16))
+                    .foregroundColor(.secondary)
+                Link("support@rubatar.com", destination: URL(string: "mailto:support@rubatar.com")!)
+                    .font(.custom("Palatino", size: 16))
+                Text(parts.dropFirst().joined(separator: "support@rubatar.com"))
+                    .font(.custom("Palatino", size: 16))
+                    .foregroundColor(.secondary)
+            }
+        } else {
+            Text(content)
+                .font(.custom("Palatino", size: 16))
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.leading)
+        }
     }
 }
 
