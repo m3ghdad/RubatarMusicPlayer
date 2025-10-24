@@ -748,6 +748,10 @@ struct PoemCardView: View {
                         }
                     }
                 }
+                .onChange(of: colorScheme) { _, _ in
+                    // Force re-render when color scheme changes to update backgrounds
+                    // This ensures PageCurlView and other components update their backgrounds
+                }
         }
     }
     
@@ -981,7 +985,7 @@ struct PoemCardView: View {
                         typewriterTrigger[key] = (typewriterTrigger[key] ?? 0) + 1
                     }
                 }
-                .id(poemData.id)
+                .id("\(poemData.id)-\(colorScheme)")
                 .onChange(of: versePage) { _, newPage in
                     // Trigger typewriter animation when page changes
                     let key = "\(poemData.id)-\(newPage)-\(cardIndex)"
