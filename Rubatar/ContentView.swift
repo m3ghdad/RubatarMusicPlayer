@@ -17,7 +17,9 @@ struct ContentView: View {
     // MARK: - State Variables
     @State private var searchText = ""
     @AppStorage("isDarkMode") private var isDarkMode = false
+    @AppStorage("didInitializeTheme") private var didInitializeTheme = false
     @State private var showWelcomeModal = false
+    @Environment(\.colorScheme) private var systemColorScheme
     
     // MARK: - Content Management
     @StateObject private var contentManager = ContentManager()
@@ -113,7 +115,19 @@ struct ContentView: View {
             .tabViewBottomAccessory {
                 miniPlayerView
             }
-            .onAppear { if !hasSeenWelcome { showWelcomeModal = true } }
+            .onAppear {
+                // Initialize app theme to match system on first launch
+                if !didInitializeTheme {
+                    isDarkMode = (systemColorScheme == .dark)
+                    didInitializeTheme = true
+                }
+                // Present welcome after a tick so updated color scheme propagates to the sheet
+                if !hasSeenWelcome {
+                    DispatchQueue.main.async {
+                        showWelcomeModal = true
+                    }
+                }
+            }
             .sheet(isPresented: $showWelcomeModal) {
                 welcomeModalView
             }
@@ -199,8 +213,8 @@ struct ContentView: View {
     
     @ViewBuilder
     private var welcomeModalView: some View {
-        AboutRubatarModalView(
-            isDarkMode: isDarkMode,
+            AboutRubatarModalView(
+                isDarkMode: (systemColorScheme == .dark),
             onButtonDismiss: {
                 showWelcomeModal = false
                 hasSeenWelcome = true
