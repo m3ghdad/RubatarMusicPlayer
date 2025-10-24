@@ -14,6 +14,7 @@ struct AboutRubatarModalView: View {
     let skipFirstPage: Bool
     
     @Environment(\.colorScheme) private var colorScheme
+    @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
     @State private var currentPage: Int = 0
     @State private var showPermissionResult: Bool = false
     @State private var lastAuthStatus: MusicAuthorization.Status? = nil
@@ -36,7 +37,7 @@ struct AboutRubatarModalView: View {
                         // Page 2
                         infoPage(
                             title: "About Rubatar",
-                            text: "The name Rubatar blends Rubaii (رباعیات), a Persian four-line poetic form, with Tār (تار), an 18th-century Persian string instrument central to Iranian music."
+                            text: "Rubatar connects traditional regional music with classical poetry.\n\nThe name Rubatar blends Rubaii (رباعیات), a Persian four-line poetic form, with Tār (تار), an 18th-century Persian string instrument central to Iranian music."
                         )
                         .tag(1)
                         // Page 3
@@ -61,7 +62,7 @@ struct AboutRubatarModalView: View {
                         // Skipping first page; re-tag remaining as 0..3
                         infoPage(
                             title: "About Rubatar",
-                            text: "The name Rubatar blends Rubaii (رباعیات), a Persian four-line poetic form, with Tār (تار), an 18th-century Persian string instrument central to Iranian music."
+                            text: "Rubatar connects traditional regional music with classical poetry.\n\nThe name Rubatar blends Rubaii (رباعیات), a Persian four-line poetic form, with Tār (تار), an 18th-century Persian string instrument central to Iranian music."
                         )
                         .tag(0)
                         infoPage(
@@ -144,14 +145,20 @@ struct AboutRubatarModalView: View {
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
                     .multilineTextAlignment(.center)
-                
-                Text("Rubatar connects traditional regional music with classical poetry.\n\nConnect to Apple Music to explore curated playlists of traditional regional music.")
-                    .font(.custom("Palatino", size: 16))
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(nil)
-                    .padding(.horizontal, 24)
+
+                // Description container - fills remaining space and centers its content
+                VStack {
+                    Text("Connect to Apple Music to explore curated playlists of traditional regional music.")
+                        .font(.custom("Palatino", size: 16))
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(nil)
+                        .padding(.horizontal, 24)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
+            .padding(.top, 24)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             
@@ -186,14 +193,20 @@ struct AboutRubatarModalView: View {
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
                     .multilineTextAlignment(.center)
-                
-                Text(text)
-                    .font(.custom("Palatino", size: 16))
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.leading)
-                    .lineLimit(nil)
-                    .padding(.horizontal, 24)
+
+                // Description container - fills remaining space and centers its content
+                VStack {
+                    Text(text)
+                        .font(.custom("Palatino", size: 16))
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(nil)
+                        .padding(.horizontal, 24)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
+            .padding(.top, 24)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         
@@ -253,7 +266,7 @@ extension AboutRubatarModalView {
         Button {
             if isLastPage { onButtonDismiss() } else { currentPage += 1 }
         } label: {
-            Text(isLastPage ? "Done" : "Next")
+            Text(isLastPage ? "Done" : ((skipFirstPage == false && currentPage == 0) ? "Skip" : "Continue"))
                 .font(.custom("Palatino", size: 17).weight(.semibold))
                 .foregroundColor(isLastPage ? .white : .primary)
                 .frame(maxWidth: .infinity)
@@ -299,6 +312,10 @@ extension AboutRubatarModalView {
                 await MainActor.run {
                     lastAuthStatus = status
                     showPermissionResult = true
+                    if status == .authorized {
+                        hasSeenWelcome = true
+                        if currentPage == 0 { currentPage = 1 }
+                    }
                 }
             }
         } label: {
