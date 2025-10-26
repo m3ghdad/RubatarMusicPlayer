@@ -298,7 +298,7 @@ struct AboutRubatarModalView: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .scaleEffect(0.8)
-                    .offset(y: imageName == "HowItWorks" ? 6 : -24)
+                    .offset(y: imageName == "HowItWorks" ? -2 : -24)
             }
             .frame(maxWidth: .infinity)
             .frame(height: topImageHeight)
@@ -443,7 +443,7 @@ struct AboutRubatarModalView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .offset(y: title == "How it Works" ? -80 : -112)
+            .offset(y: title == "How it Works" ? -88 : -112)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         
