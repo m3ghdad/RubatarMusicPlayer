@@ -144,11 +144,11 @@ struct AboutRubatarModalView: View {
                         // Dark mode gradient
                         LinearGradient(
                             stops: [
-                                .init(color: Color(hex: "EED6AA").opacity(1.0), location: 0.0),
-                                .init(color: Color(hex: "F2BB56").opacity(0.8), location: 0.2),
-                                .init(color: Color(hex: "C88100").opacity(0.6), location: 0.45),
-                                .init(color: Color(hex: "765822").opacity(0.4), location: 0.8),
-                                .init(color: Color(hex: "000000").opacity(0.1), location: 1.0)
+                                .init(color: Color(hex: "C98200"), location: 0.0),
+                                .init(color: Color(hex: "C78102").opacity(0.8), location: 0.25),
+                                .init(color: Color(hex: "BD7A00").opacity(0.5), location: 0.5),
+                                .init(color: Color(hex: "7D5100").opacity(0.5), location: 0.75),
+                                .init(color: Color(hex: "000000").opacity(0.5), location: 1.0)
                             ],
                             startPoint: .top,
                             endPoint: .bottom
