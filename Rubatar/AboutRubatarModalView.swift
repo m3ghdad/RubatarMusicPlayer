@@ -114,18 +114,35 @@ struct AboutRubatarModalView: View {
     private var welcomePage: some View {
         VStack(spacing: 16) {
             ZStack {
-                // Custom gradient from top center to bottom center
-                LinearGradient(
-                    stops: [
-                        .init(color: Color(hex: "EED6AA").opacity(1.0), location: 0.0),
-                        .init(color: Color(hex: "F2BB56").opacity(0.8), location: 0.2),
-                        .init(color: Color(hex: "C88100").opacity(0.6), location: 0.45),
-                        .init(color: Color(hex: "765822").opacity(0.4), location: 0.8),
-                        .init(color: Color(hex: "000000").opacity(0.1), location: 1.0)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
+                // Custom gradient - different for light/dark mode
+                Group {
+                    if colorScheme == .dark {
+                        // Dark mode gradient
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color(hex: "EED6AA").opacity(1.0), location: 0.0),
+                                .init(color: Color(hex: "F2BB56").opacity(0.8), location: 0.2),
+                                .init(color: Color(hex: "C88100").opacity(0.6), location: 0.45),
+                                .init(color: Color(hex: "765822").opacity(0.4), location: 0.8),
+                                .init(color: Color(hex: "000000").opacity(0.1), location: 1.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    } else {
+                        // Light mode gradient
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color(hex: "D78F0C").opacity(0.5), location: 0.0),
+                                .init(color: Color(hex: "FFDB99").opacity(0.75), location: 0.25),
+                                .init(color: Color(hex: "EFD9B2").opacity(0.5), location: 0.5),
+                                .init(color: Color(hex: "FFFFFF").opacity(1.0), location: 1.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    }
+                }
                 
                 // WelcomeImageOne centered in the container (20% smaller)
                 Image("WelcomeImageOne")
@@ -156,7 +173,7 @@ struct AboutRubatarModalView: View {
                         (Text("Rubatar")
                             .bold()
                             .italic()
-                            .foregroundColor(Color(hex: "FFFFFF")) +
+                            .foregroundColor(colorScheme == .dark ? Color(hex: "FFFFFF") : Color.black) +
                          Text(" connects traditional regional music with classical poetry.")
                             .foregroundColor(Color.secondary))
                             .font(.custom("Palatino", size: 16))
@@ -172,17 +189,17 @@ struct AboutRubatarModalView: View {
                          Text("Rubatar")
                             .bold()
                             .italic()
-                            .foregroundColor(Color(hex: "FFFFFF")) +
+                            .foregroundColor(colorScheme == .dark ? Color(hex: "FFFFFF") : Color.black) +
                          Text(" blends ") +
                          Text("Rubaii")
                             .bold()
                             .italic()
-                            .foregroundColor(Color(hex: "FFFFFF")) +
+                            .foregroundColor(colorScheme == .dark ? Color(hex: "FFFFFF") : Color.black) +
                          Text(" (رباعیات), a Persian four-line poetic form, with ") +
                          Text("Tār")
                             .bold()
                             .italic()
-                            .foregroundColor(Color(hex: "FFFFFF")) +
+                            .foregroundColor(colorScheme == .dark ? Color(hex: "FFFFFF") : Color.black) +
                          Text(" (تار), an 18th-century Persian string instrument central to Iranian music."))
                             .font(.custom("Palatino", size: 16))
                             .foregroundColor(Color.secondary)
@@ -192,7 +209,7 @@ struct AboutRubatarModalView: View {
                          Text("Apple Music")
                             .bold()
                             .italic()
-                            .foregroundColor(Color(hex: "FFFFFF")) +
+                            .foregroundColor(colorScheme == .dark ? Color(hex: "FFFFFF") : Color.black) +
                          Text(" to explore curated playlists of traditional regional music."))
                             .font(.custom("Palatino", size: 16))
                             .foregroundColor(Color.secondary)
@@ -217,18 +234,35 @@ struct AboutRubatarModalView: View {
         VStack(spacing: 16) {
             // Image container with custom gradient
             ZStack {
-                // Custom gradient from top center to bottom center
-                LinearGradient(
-                    stops: [
-                        .init(color: Color(hex: "EED6AA").opacity(1.0), location: 0.0),
-                        .init(color: Color(hex: "F2BB56").opacity(0.8), location: 0.2),
-                        .init(color: Color(hex: "C88100").opacity(0.6), location: 0.45),
-                        .init(color: Color(hex: "765822").opacity(0.4), location: 0.8),
-                        .init(color: Color(hex: "000000").opacity(0.1), location: 1.0)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
+                // Custom gradient - different for light/dark mode
+                Group {
+                    if colorScheme == .dark {
+                        // Dark mode gradient
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color(hex: "EED6AA").opacity(1.0), location: 0.0),
+                                .init(color: Color(hex: "F2BB56").opacity(0.8), location: 0.2),
+                                .init(color: Color(hex: "C88100").opacity(0.6), location: 0.45),
+                                .init(color: Color(hex: "765822").opacity(0.4), location: 0.8),
+                                .init(color: Color(hex: "000000").opacity(0.1), location: 1.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    } else {
+                        // Light mode gradient
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color(hex: "D78F0C").opacity(0.5), location: 0.0),
+                                .init(color: Color(hex: "FFDB99").opacity(0.75), location: 0.25),
+                                .init(color: Color(hex: "EFD9B2").opacity(0.5), location: 0.5),
+                                .init(color: Color(hex: "FFFFFF").opacity(1.0), location: 1.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    }
+                }
                 
                 // Image centered in the container (20% smaller)
                 Image(imageName)
@@ -263,12 +297,12 @@ struct AboutRubatarModalView: View {
                                  Text("read")
                                     .bold()
                                     .italic()
-                                    .foregroundColor(Color(hex: "FFFFFF")) +
+                                    .foregroundColor(colorScheme == .dark ? Color(hex: "FFFFFF") : Color.black) +
                                  Text(" and enjoy while ") +
                                  Text("listening")
                                     .bold()
                                     .italic()
-                                    .foregroundColor(Color(hex: "FFFFFF")) +
+                                    .foregroundColor(colorScheme == .dark ? Color(hex: "FFFFFF") : Color.black) +
                                  Text(" to traditional regional music."))
                                     .font(.custom("Palatino", size: 16))
                                     .foregroundColor(Color.secondary)
