@@ -114,33 +114,38 @@ struct AboutRubatarModalView: View {
     private var welcomePage: some View {
         VStack(spacing: 16) {
             ZStack {
-                // Gradient background (same style as other pages)
+                // Custom gradient from top center to bottom center
                 LinearGradient(
-                    colors: [
-                        Color(red: 0.2, green: 0.2, blue: 0.3),
-                        Color(red: 0.1, green: 0.1, blue: 0.2)
+                    stops: [
+                        .init(color: Color(hex: "EED6AA").opacity(1.0), location: 0.0),
+                        .init(color: Color(hex: "F2BB56").opacity(0.8), location: 0.2),
+                        .init(color: Color(hex: "C88100").opacity(0.6), location: 0.45),
+                        .init(color: Color(hex: "765822").opacity(0.4), location: 0.8),
+                        .init(color: Color(hex: "000000").opacity(0.1), location: 1.0)
                     ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
+                    startPoint: .top,
+                    endPoint: .bottom
                 )
-                RadialGradient(
-                    colors: [Color.white.opacity(0.25), Color.clear],
-                    center: .topLeading,
-                    startRadius: 0,
-                    endRadius: 160
-                )
+                
+                // WelcomeImageOne centered in the container (20% smaller)
+                Image("WelcomeImageOne")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .scaleEffect(0.8)
             }
             .frame(maxWidth: .infinity)
             .frame(height: topImageHeight)
             
             VStack(spacing: 12) {
-                Text("Welcome to Rubatar")
-                    .font(.custom("Palatino", size: 22))
+                Text("Welcome to\nRubatar")
+                    .font(.custom("Palatino", size: 32))
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 24)
+                    .padding(.top, 24)
 
                 // Description container - fills remaining space and centers its content
                 HStack {
@@ -156,8 +161,8 @@ struct AboutRubatarModalView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
-            .padding(.top, 24)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .offset(y: -64)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             
@@ -165,22 +170,27 @@ struct AboutRubatarModalView: View {
     
     private func infoPage(title: String, text: String) -> some View {
         VStack(spacing: 16) {
-            // Image container (conditional for About Rubatar)
+            // Image container with custom gradient
             ZStack {
+                // Custom gradient from top center to bottom center
                 LinearGradient(
-                    colors: [
-                        Color(red: 0.2, green: 0.2, blue: 0.3),
-                        Color(red: 0.1, green: 0.1, blue: 0.2)
+                    stops: [
+                        .init(color: Color(hex: "EED6AA").opacity(1.0), location: 0.0),
+                        .init(color: Color(hex: "F2BB56").opacity(0.8), location: 0.2),
+                        .init(color: Color(hex: "C88100").opacity(0.6), location: 0.45),
+                        .init(color: Color(hex: "765822").opacity(0.4), location: 0.8),
+                        .init(color: Color(hex: "000000").opacity(0.1), location: 1.0)
                     ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
+                    startPoint: .top,
+                    endPoint: .bottom
                 )
-                RadialGradient(
-                    colors: [Color.white.opacity(0.25), Color.clear],
-                    center: .topLeading,
-                    startRadius: 0,
-                    endRadius: 160
-                )
+                
+                // WelcomeImageOne centered in the container (20% smaller)
+                Image("WelcomeImageOne")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .scaleEffect(0.8)
             }
             .frame(maxWidth: .infinity)
             .frame(height: topImageHeight)
