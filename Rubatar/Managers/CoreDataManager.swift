@@ -271,7 +271,7 @@ class CoreDataManager {
                 guard let trackName = item.trackName, let artistName = item.artistName else {
                     return nil
                 }
-                return (trackName: trackName, artistName: artistName, artworkUrl: item.artworkUrl, playedAt: item.playedAt!)
+                return (trackName: trackName, artistName: artistName, artworkUrl: item.artworkUrl, playedAt: item.playedAt)
             }
         } catch {
             print("❌ Failed to fetch recently played: \(error.localizedDescription)")
