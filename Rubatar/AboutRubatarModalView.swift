@@ -62,14 +62,14 @@ struct AboutRubatarModalView: View {
                             .tag(0)
                         // Page 2 - How it Works
                         infoPage(
-                            title: "How it\nWorks",
+                            title: "How it Works",
                             text: "You'll find a daily selection of poems to read and enjoy while listening to traditional regional music.\n\nUpcoming features will let you analyze, bookmark, and annotate poems. In future realses you will be able to:.",
                             imageName: "HowItWorks"
                         )
                         .tag(1)
                         // Page 3 - Get Featured
                         infoPage(
-                            title: "Get\nFeatured",
+                            title: "Get Featured",
                             text: "If you curate traditional or regional playlists on Apple Music, Or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we'd love to feature your work.\n\nDon't have an album published? No problem, we welcome all passionate musicians and independent poets from around the world.\n\nContact us at support@rubatar.com",
                             imageName: "GetFeatured"
                         )
@@ -83,14 +83,14 @@ struct AboutRubatarModalView: View {
                             .tag(0)
                         // Page 2 - How it Works
                         infoPage(
-                            title: "How it\nWorks",
+                            title: "How it Works",
                             text: "You'll find a daily selection of poems to read and enjoy while listening to traditional regional music.\n\nUpcoming features will let you analyze, bookmark, and annotate poems as you explore.",
                             imageName: "HowItWorks"
                         )
                         .tag(1)
                         // Page 3 - Get Featured
                         infoPage(
-                            title: "Get\nFeatured",
+                            title: "Get Featured",
                             text: "If you curate traditional or regional playlists on Apple Music,  Or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we'd love to feature your work.\n\nDon't have an album published? No problem, we welcome all passionate musicians and independent poets from around the world.\n\nContact us at support@rubatar.com",
                             imageName: "GetFeatured"
                         )
@@ -313,7 +313,7 @@ struct AboutRubatarModalView: View {
                 HStack {
                     Spacer(minLength: 0)
                     VStack(alignment: .leading, spacing: 16) {
-                        if title == "How it\nWorks" {
+                        if title == "How it Works" {
                             // Custom styled text for "How it Works"
                             VStack(alignment: .leading, spacing: 16) {
                                 // First paragraph
@@ -375,7 +375,7 @@ struct AboutRubatarModalView: View {
                                 }
                             }
                             .fixedSize(horizontal: false, vertical: true)
-                        } else if title == "Get\nFeatured" {
+                        } else if title == "Get Featured" {
                             // Custom styled text for "Get Featured"
                             VStack(alignment: .leading, spacing: 16) {
                                 // First paragraph
