@@ -85,7 +85,7 @@ struct ProfileBottomSheet: View {
                         NotificationCenter.default.post(name: Notification.Name("ShowWelcomeLearnMore"), object: nil)
                     } label: {
                         HStack {
-                            Image(systemName: "info.circle.fill")
+                            Image(systemName: "info.circle.text.page.fill")
                                 .foregroundStyle(isDarkMode ? Color(hex: "E3B887") : Color(hex: "7A5C39"))
                                 .font(.title2)
                             
