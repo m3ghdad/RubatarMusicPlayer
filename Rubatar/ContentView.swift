@@ -217,7 +217,6 @@ struct ContentView: View {
                 isDarkMode: (systemColorScheme == .dark),
             onButtonDismiss: {
                 showWelcomeModal = false
-                hasSeenWelcome = true
             },
             skipFirstPage: false
         )

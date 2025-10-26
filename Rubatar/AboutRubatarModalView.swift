@@ -129,7 +129,11 @@ struct AboutRubatarModalView: View {
             .padding(.top, 16)
             .zIndex(1000)
         }
-        .onAppear { updatePageControl(for: colorScheme) }
+        .onAppear { 
+            updatePageControl(for: colorScheme)
+            // Set hasSeenWelcome to true as soon as the modal appears
+            hasSeenWelcome = true
+        }
         .onChange(of: colorScheme) { _, newValue in updatePageControl(for: newValue) }
         
     }
