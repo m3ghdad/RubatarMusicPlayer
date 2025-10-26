@@ -534,7 +534,7 @@ extension AboutRubatarModalView {
 
     @ViewBuilder
     private func primaryNextButton() -> some View {
-        let buttonText = isLastPage ? "Done" : ((skipFirstPage == false && (currentPage == 0 ? true : (currentPage == totalPages - 1)))) ? (currentPage == 0 ? "Skip" : "Done") : "Continue"
+        let buttonText = isLastPage ? "Done" : ((skipFirstPage == false && (currentPage == 0 ? true : (currentPage == totalPages - 1)))) ? (currentPage == 0 ? "Continue" : "Done") : "Continue"
         
         Button {
             if isLastPage { onButtonDismiss() } else { currentPage += 1 }
