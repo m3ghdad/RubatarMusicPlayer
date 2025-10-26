@@ -177,10 +177,6 @@ struct MusicSectionView: View {
                 .background(
                     RoundedRectangle(cornerRadius: 16)
                         .fill(colorScheme == .dark ? Color.black : Color.white)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(.separator, lineWidth: 0.5)
-                        )
                 )
                 .padding(.horizontal, 16)
                 
@@ -265,10 +261,6 @@ struct MusicSectionView: View {
                 .background(
                     RoundedRectangle(cornerRadius: 16)
                         .fill(colorScheme == .dark ? Color.black : Color.white)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(.separator, lineWidth: 0.5)
-                        )
                 )
                 .padding(.horizontal, 16)
             }
