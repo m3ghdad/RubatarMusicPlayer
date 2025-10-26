@@ -181,6 +181,8 @@ struct MusicSectionView: View {
                             .aspectRatio(contentMode: .fit)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .padding(20)
+                            .scaleEffect(1.1)
+                            .offset(y: 24)
                     }
                     .frame(height: 200)
                     .cornerRadius(16, corners: [.topLeft, .topRight])
