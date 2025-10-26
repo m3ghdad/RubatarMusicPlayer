@@ -95,43 +95,88 @@ struct MusicSectionView: View {
                 
             } else if musicManager.authorizationStatus == .denied {
                 // Permission denied state
-                VStack(spacing: 12) {
-                    Image(systemName: "music.note.slash")
-                        .font(.system(size: 40))
-                        .foregroundColor(.secondary)
-                    
-                    Text("Music Access Required")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                    
-                    Text("To display curated playlists & albums, please grant access to Apple Music in Settings.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 20)
-
-                    // Open App Settings button
-                    Button("Open App Settings") {
-                        if let url = URL(string: UIApplication.openSettingsURLString) {
-                            #if canImport(UIKit)
-                            UIApplication.shared.open(url)
-                            #endif
+                VStack(spacing: 0) {
+                    // Image container with gradient
+                    ZStack {
+                        // Custom gradient - different for light/dark mode
+                        Group {
+                            if colorScheme == .dark {
+                                // Dark mode gradient - warm tone
+                                LinearGradient(
+                                    stops: [
+                                        .init(color: Color(hex: "EED6AA").opacity(1.0), location: 0.0),
+                                        .init(color: Color(hex: "F2BB56").opacity(0.8), location: 0.2),
+                                        .init(color: Color(hex: "C88100").opacity(0.6), location: 0.45),
+                                        .init(color: Color(hex: "765822").opacity(0.4), location: 0.8),
+                                        .init(color: Color(hex: "000000").opacity(0.1), location: 1.0)
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            } else {
+                                // Light mode gradient - lighter warm tone
+                                LinearGradient(
+                                    stops: [
+                                        .init(color: Color(hex: "F5E6D3").opacity(1.0), location: 0.0),
+                                        .init(color: Color(hex: "F8D49C").opacity(0.8), location: 0.2),
+                                        .init(color: Color(hex: "E5A83F").opacity(0.6), location: 0.45),
+                                        .init(color: Color(hex: "C89D66").opacity(0.4), location: 0.8),
+                                        .init(color: Color(hex: "FFFFFF").opacity(0.1), location: 1.0)
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            }
                         }
+                        
+                        // WelcomeImageOne centered in the container
+                        Image("WelcomeImageOne")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .padding(20)
+                            .scaleEffect(1.1)
+                            .offset(y: 24)
                     }
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(hex: "F71A33"))
-                    )
+                    .frame(height: 200)
+                    .cornerRadius(16, corners: [.topLeft, .topRight])
+                    
+                    // Content container
+                    VStack(spacing: 12) {
+                        Text("Music Access Required")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(colorScheme == .dark ? .white : .black)
+                        
+                        Text("To display curated playlists & albums, please grant access to Apple Music in Settings.")
+                            .font(.subheadline)
+                            .foregroundColor(Color(hex: "ADADAD"))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 20)
+                        
+                        // Open App Settings button
+                        Button("Open App Settings") {
+                            if let url = URL(string: UIApplication.openSettingsURLString) {
+                                #if canImport(UIKit)
+                                UIApplication.shared.open(url)
+                                #endif
+                            }
+                        }
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color(hex: "BF8121"))
+                        )
+                    }
+                    .padding(.vertical, 30)
                 }
-                .padding(.vertical, 30)
                 .frame(maxWidth: .infinity)
                 .background(
                     RoundedRectangle(cornerRadius: 16)
-                        .fill(.regularMaterial)
+                        .fill(colorScheme == .dark ? Color.black : Color.white)
                         .overlay(
                             RoundedRectangle(cornerRadius: 16)
                                 .stroke(.separator, lineWidth: 0.5)
