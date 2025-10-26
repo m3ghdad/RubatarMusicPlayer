@@ -35,16 +35,17 @@ struct AboutRubatarModalView: View {
                         // Page 1 - Welcome
                         welcomePage
                             .tag(0)
-                        // Page 2
+                        // Page 2 - How it Works
+                        infoPage(
+                            title: "How it Works",
+                            text: "You'll find a daily selection of poems to read and enjoy while listening to traditional regional music.\n\nUpcoming features will let you analyze, bookmark, and annotate poems as you explore.",
+                            imageName: "HowItWorks"
+                        )
+                        .tag(1)
+                        // Page 3 - About the App
                         infoPage(
                             title: "About the App",
                             text: "Rubatar connects traditional regional music with classical poetry.\n\nThe name Rubatar blends Rubaii (رباعیات), a Persian four-line poetic form, with Tār (تار), an 18th-century Persian string instrument central to Iranian music."
-                        )
-                        .tag(1)
-                        // Page 3
-                        infoPage(
-                            title: "How it Works",
-                            text: "You'll find a daily selection of poems to read and enjoy while listening to traditional regional music.\n\nUpcoming features will let you analyze, bookmark, and annotate poems as you explore."
                         )
                         .tag(2)
                         // Page 4 (What's next) and Page 5 (Get featured) are hidden on first launch
@@ -58,7 +59,8 @@ struct AboutRubatarModalView: View {
                         .tag(0)
                         infoPage(
                             title: "How it Works",
-                            text: "You'll also find a daily selection of poems to read and enjoy, even without an Apple Music subscription.\n\nUpcoming features will let you analyze, bookmark, and annotate poems as you explore."
+                            text: "You'll find a daily selection of poems to read and enjoy while listening to traditional regional music.\n\nUpcoming features will let you analyze, bookmark, and annotate poems as you explore.",
+                            imageName: "HowItWorks"
                         )
                         .tag(1)
                         infoPage(
@@ -133,6 +135,7 @@ struct AboutRubatarModalView: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .scaleEffect(0.8)
+                    .offset(y: -24)
             }
             .frame(maxWidth: .infinity)
             .frame(height: topImageHeight)
@@ -150,25 +153,69 @@ struct AboutRubatarModalView: View {
                 // Description container - fills remaining space and centers its content
                 HStack {
                     Spacer(minLength: 0)
-                    Text("Connect to Apple Music to explore curated playlists of traditional regional music.")
-                        .font(.custom("Palatino", size: 16))
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.leading)
-                        .lineLimit(nil)
-                        .padding(.horizontal, 24)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 16) {
+                        // First paragraph
+                        (Text("Rubatar")
+                            .bold()
+                            .italic()
+                            .foregroundColor(Color(hex: "FFFFFF")) +
+                         Text(" connects traditional regional music with classical poetry.")
+                            .foregroundColor(Color.secondary))
+                            .font(.custom("Palatino", size: 16))
+                        
+                        // Divider
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(height: 1)
+                            .padding(.vertical, 8)
+                        
+                        // Second paragraph
+                        (Text("The name ") +
+                         Text("Rubatar")
+                            .bold()
+                            .italic()
+                            .foregroundColor(Color(hex: "FFFFFF")) +
+                         Text(" blends ") +
+                         Text("Rubaii")
+                            .bold()
+                            .italic()
+                            .foregroundColor(Color(hex: "FFFFFF")) +
+                         Text(" (رباعیات), a Persian four-line poetic form, with ") +
+                         Text("Tār")
+                            .bold()
+                            .italic()
+                            .foregroundColor(Color(hex: "FFFFFF")) +
+                         Text(" (تار), an 18th-century Persian string instrument central to Iranian music."))
+                            .font(.custom("Palatino", size: 16))
+                            .foregroundColor(Color.secondary)
+                        
+                        // Third paragraph
+                        (Text("Connect to ") +
+                         Text("Apple Music")
+                            .bold()
+                            .italic()
+                            .foregroundColor(Color(hex: "FFFFFF")) +
+                         Text(" to explore curated playlists of traditional regional music."))
+                            .font(.custom("Palatino", size: 16))
+                            .foregroundColor(Color.secondary)
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(nil)
+                    .padding(.horizontal, 24)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     Spacer(minLength: 0)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .offset(y: -64)
+            .offset(y: -112)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             
     }
     
-    private func infoPage(title: String, text: String) -> some View {
+    private func infoPage(title: String, text: String, imageName: String = "WelcomeImageOne", customText: [Text]? = nil) -> some View {
         VStack(spacing: 16) {
             // Image container with custom gradient
             ZStack {
@@ -185,30 +232,62 @@ struct AboutRubatarModalView: View {
                     endPoint: .bottom
                 )
                 
-                // WelcomeImageOne centered in the container (20% smaller)
-                Image("WelcomeImageOne")
+                // Image centered in the container (20% smaller)
+                Image(imageName)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .scaleEffect(0.8)
+                    .offset(y: -24)
             }
             .frame(maxWidth: .infinity)
             .frame(height: topImageHeight)
 
             VStack(spacing: 12) {
                 Text(title)
-                    .font(.custom("Palatino", size: 22))
+                    .font(.custom("Palatino", size: 32))
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 24)
+                    .padding(.top, 24)
 
-                // Description container - fills remaining space; top-aligned; special layout for "What's next"
+                // Description container - fills remaining space; top-aligned; special layout for "What's next" and "How it Works"
                 HStack {
                     Spacer(minLength: 0)
-                    VStack(alignment: .leading, spacing: 8) {
-                        if title == "What's next" {
+                    VStack(alignment: .leading, spacing: 16) {
+                        if title == "How it Works" {
+                            // Custom styled text for "How it Works"
+                            VStack(alignment: .leading, spacing: 16) {
+                                // First paragraph
+                                (Text("You'll find a daily selection of poems to ") +
+                                 Text("read")
+                                    .bold()
+                                    .italic()
+                                    .foregroundColor(Color(hex: "FFFFFF")) +
+                                 Text(" and enjoy while ") +
+                                 Text("listening")
+                                    .bold()
+                                    .italic()
+                                    .foregroundColor(Color(hex: "FFFFFF")) +
+                                 Text(" to traditional regional music."))
+                                    .font(.custom("Palatino", size: 16))
+                                    .foregroundColor(Color.secondary)
+                                
+                                // Divider
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .frame(height: 1)
+                                    .padding(.vertical, 8)
+                                
+                                // Second paragraph
+                                Text("Upcoming features will let you analyze, bookmark, and annotate poems as you explore.")
+                                    .font(.custom("Palatino", size: 16))
+                                    .foregroundColor(Color.secondary)
+                            }
+                            .fixedSize(horizontal: false, vertical: true)
+                        } else if title == "What's next" {
                             let lines = text
                                 .replacingOccurrences(of: "\r", with: "")
                                 .components(separatedBy: .newlines)
@@ -244,8 +323,8 @@ struct AboutRubatarModalView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
-            .padding(.top, 24)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .offset(y: -112)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         
