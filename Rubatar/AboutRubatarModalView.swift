@@ -20,8 +20,9 @@ struct AboutRubatarModalView: View {
     @State private var lastAuthStatus: MusicAuthorization.Status? = nil
     private let topImageHeight: CGFloat = 453.6
 
-    // When opened on first launch (skipFirstPage == false), only show 3 pages: Welcome, About, How it works
-    private var totalPages: Int { skipFirstPage ? 4 : 3 }
+    // When opened on first launch (skipFirstPage == false), only show 3 pages: Welcome, How it Works, Get Featured
+    // When opened from profile (skipFirstPage == true), show 3 pages: Welcome, How it Works, Get Featured
+    private var totalPages: Int { 3 }
     private var lastPageIndex: Int { totalPages - 1 }
     private var isLastPage: Bool { currentPage >= lastPageIndex }
     
@@ -42,37 +43,34 @@ struct AboutRubatarModalView: View {
                             imageName: "HowItWorks"
                         )
                         .tag(1)
-                        // Page 3 - About the App
+                        // Page 3 - Get Featured
                         infoPage(
-                            title: "About the App",
-                            text: "Rubatar connects traditional regional music with classical poetry.\n\nThe name Rubatar blends Rubaii (رباعیات), a Persian four-line poetic form, with Tār (تار), an 18th-century Persian string instrument central to Iranian music."
+                            title: "Get Featured",
+                            text: "If you curate traditional or regional playlists on Apple Music,  Or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we'd love to feature your work.\n\nDon't have an album published? No problem, we welcome all passionate musicians and independent poets from around the world.\n\nContact us at support@rubatar.com",
+                            imageName: "GetFeatured"
                         )
                         .tag(2)
                         // Page 4 (What's next) and Page 5 (Get featured) are hidden on first launch
                         // They remain visible when opened from Profile (skipFirstPage == true)
                     } else {
-                        // Skipping first page; re-tag remaining as 0..3 (full set including 'What's next' and 'Get featured')
-                        infoPage(
-                            title: "About Rubatar",
-                            text: "Rubatar connects traditional regional music with classical poetry.\n\nThe name Rubatar blends Rubaii (رباعیات), a Persian four-line poetic form, with Tār (تار), an 18th-century Persian string instrument central to Iranian music."
-                        )
-                        .tag(0)
+                        // Opened from profile; same pages as first launch
+                        // Page 1 - Welcome
+                        welcomePage
+                            .tag(0)
+                        // Page 2 - How it Works
                         infoPage(
                             title: "How it Works",
                             text: "You'll find a daily selection of poems to read and enjoy while listening to traditional regional music.\n\nUpcoming features will let you analyze, bookmark, and annotate poems as you explore.",
                             imageName: "HowItWorks"
                         )
                         .tag(1)
-                        infoPage(
-                            title: "What's Next",
-                            text: "We're working on new features, including:\n• Saving and sharing your favorite poems\n• Searching and filtering by poet, poems, songs, artists and more.\nWe'll keep expanding Rubatar based on community interest, your feedback helps shape its future."
-                        )
-                        .tag(2)
+                        // Page 3 - Get Featured
                         infoPage(
                             title: "Get Featured",
-                            text: "If you curate traditional or regional playlists on Apple Music, \n Or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we'd love to feature your work.\nYou don't need a published album; we welcome all passionate musicians and independent poets from around the world. \n Contact us at support@rubatar.com"
+                            text: "If you curate traditional or regional playlists on Apple Music,  Or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we'd love to feature your work.\n\nDon't have an album published? No problem, we welcome all passionate musicians and independent poets from around the world.\n\nContact us at support@rubatar.com",
+                            imageName: "GetFeatured"
                         )
-                        .tag(3)
+                        .tag(2)
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .always))
@@ -281,10 +279,69 @@ struct AboutRubatarModalView: View {
                                     .frame(height: 1)
                                     .padding(.vertical, 8)
                                 
-                                // Second paragraph
-                                Text("Upcoming features will let you analyze, bookmark, and annotate poems as you explore.")
+                                // Second paragraph with colon
+                                Text("Upcoming features will let you analyze, bookmark, and annotate poems as you explore:")
                                     .font(.custom("Palatino", size: 16))
                                     .foregroundColor(Color.secondary)
+                                
+                                // Empty line
+                                Text("")
+                                    .font(.custom("Palatino", size: 16))
+                                
+                                // Bullet points
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack(alignment: .top, spacing: 8) {
+                                        Text("•")
+                                            .font(.custom("Palatino", size: 16))
+                                            .foregroundColor(.secondary)
+                                        Text("Saving and sharing your favorite poems")
+                                            .font(.custom("Palatino", size: 16))
+                                            .foregroundColor(.secondary)
+                                    }
+                                    HStack(alignment: .top, spacing: 8) {
+                                        Text("•")
+                                            .font(.custom("Palatino", size: 16))
+                                            .foregroundColor(.secondary)
+                                        Text("Searching and filtering by poet, poems, songs, artists and more.")
+                                            .font(.custom("Palatino", size: 16))
+                                            .foregroundColor(.secondary)
+                                    }
+                                    HStack(alignment: .top, spacing: 8) {
+                                        Text("•")
+                                            .font(.custom("Palatino", size: 16))
+                                            .foregroundColor(.secondary)
+                                        Text("We'll keep expanding Rubatar based on community interest, your feedback helps shape its future.")
+                                            .font(.custom("Palatino", size: 16))
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+                            .fixedSize(horizontal: false, vertical: true)
+                        } else if title == "Get Featured" {
+                            // Custom styled text for "Get Featured"
+                            VStack(alignment: .leading, spacing: 16) {
+                                // First paragraph
+                                Text("If you curate traditional or regional playlists on Apple Music,  Or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we'd love to feature your work.")
+                                    .font(.custom("Palatino", size: 16))
+                                    .foregroundColor(Color.secondary)
+                                
+                                // Empty line
+                                Text("")
+                                    .font(.custom("Palatino", size: 16))
+                                
+                                // Second paragraph
+                                Text("Don't have an album published? No problem, we welcome all passionate musicians and independent poets from around the world.")
+                                    .font(.custom("Palatino", size: 16))
+                                    .foregroundColor(Color.secondary)
+                                
+                                // Divider
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .frame(height: 1)
+                                    .padding(.vertical, 8)
+                                
+                                // Contact email
+                                emailText("Contact us at support@rubatar.com")
                             }
                             .fixedSize(horizontal: false, vertical: true)
                         } else if title == "What's next" {
