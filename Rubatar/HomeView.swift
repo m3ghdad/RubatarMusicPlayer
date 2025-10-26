@@ -41,9 +41,7 @@ struct HomeView: View {
                             onPlaylistSelected: { playlistId, playlistTitle, curatorName, artwork in
                                 onPlaylistSelected(playlistId, playlistTitle, curatorName, artwork)
                             },
-                            isPreloading: contentPreloader.isLoading,
-                            preloadedPlaylists: contentPreloader.preloadedPlaylists,
-                            preloadedAlbums: contentPreloader.preloadedAlbums
+                            isPreloading: contentPreloader.isLoading
                         )
 
                         

@@ -24,8 +24,6 @@ struct MusicSectionView: View {
     
     // Preloading support
     var isPreloading: Bool = false
-    var preloadedPlaylists: [Playlist] = []
-    var preloadedAlbums: [Album] = []
     
     var body: some View {
         VStack(alignment: .leading, spacing: 32) {
@@ -68,9 +66,7 @@ struct MusicSectionView: View {
                                 section: section,
                                 contentManager: contentManager,
                                 onMusicSelected: onMusicSelected,
-                                onPlaylistSelected: onPlaylistSelected,
-                                preloadedPlaylists: preloadedPlaylists,
-                                preloadedAlbums: preloadedAlbums
+                                onPlaylistSelected: onPlaylistSelected
                             )
                         }
                     
@@ -370,8 +366,6 @@ struct DynamicSectionView: View {
     let contentManager: ContentManager
     let onMusicSelected: (String, String, URL) -> Void
     let onPlaylistSelected: (String, String, String, URL?) -> Void
-    var preloadedPlaylists: [Playlist] = []
-    var preloadedAlbums: [Album] = []
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -463,40 +457,10 @@ struct DynamicSectionView: View {
     }
     
     private func getAlbumsForSection() -> [FeaturedAlbum] {
-        // Use preloaded data if available and contentManager hasn't loaded yet
-        if contentManager.albums.isEmpty && !preloadedAlbums.isEmpty {
-            // Convert preloaded albums to FeaturedAlbum format
-            return preloadedAlbums.map { album in
-                FeaturedAlbum(
-                    id: UUID().uuidString,
-                    sectionId: section.id,
-                    albumId: album.id.rawValue,
-                    albumName: album.title,
-                    artistName: album.artistName,
-                    artworkUrl: album.artwork?.url(width: 300, height: 300)?.absoluteString,
-                    displayOrder: 0
-                )
-            }
-        }
         return contentManager.albums.filter { $0.sectionId == section.id }
     }
     
     private func getPlaylistsForSection() -> [FeaturedPlaylist] {
-        // Use preloaded data if available and contentManager hasn't loaded yet
-        if contentManager.playlists.isEmpty && !preloadedPlaylists.isEmpty {
-            // Convert preloaded playlists to FeaturedPlaylist format
-            return preloadedPlaylists.map { playlist in
-                FeaturedPlaylist(
-                    id: UUID().uuidString,
-                    sectionId: section.id,
-                    playlistId: playlist.id.rawValue,
-                    playlistName: playlist.name,
-                    curatorName: playlist.curatorName ?? "Apple Music",
-                    artworkUrl: playlist.artwork?.url(width: 300, height: 300)?.absoluteString,
-                    displayOrder: 0
-                )
-            }
-        }
         return contentManager.playlists.filter { $0.sectionId == section.id }
     }
 }

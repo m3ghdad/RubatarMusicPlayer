@@ -8,6 +8,7 @@
 import Foundation
 import MusicKit
 import SwiftUI
+import Combine
 
 @MainActor
 class ContentPreloader: ObservableObject {
@@ -94,7 +95,7 @@ class ContentPreloader: ObservableObject {
         
         do {
             // Fetch curated playlists (similar to what's shown in HomeView)
-            var request = MusicCatalogSearchRequest(term: "persian classical", types: [Playlist.self])
+            var request = MusicCatalogSearchRequest(term: "persian classical", types: [MusicKit.Playlist.self])
             request.limit = 10
             
             let response = try await request.response()
@@ -142,7 +143,7 @@ class ContentPreloader: ObservableObject {
         
         do {
             // Fetch albums (similar to what's shown in HomeView)
-            var request = MusicCatalogSearchRequest(term: "persian traditional", types: [Album.self])
+            var request = MusicCatalogSearchRequest(term: "persian traditional", types: [MusicKit.Album.self])
             request.limit = 10
             
             let response = try await request.response()
