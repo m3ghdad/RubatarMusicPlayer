@@ -589,9 +589,7 @@ extension AboutRubatarModalView {
                     lastAuthStatus = status
                     showPermissionResult = true
                     if status == .authorized {
-                        hasSeenWelcome = true
-                        // Dismiss the modal when access is granted
-                        onButtonDismiss()
+                        if currentPage == 0 { currentPage = 1 }
                     }
                 }
             }
