@@ -198,7 +198,7 @@ struct AboutRubatarModalView: View {
                             .bold()
                             .italic()
                             .foregroundColor(colorScheme == .dark ? Color(hex: "FFFFFF") : Color.black) +
-                         Text(" connects traditional regional music with classical poetry.")
+                         Text(" connects regional music with classical poetry.")
                             .foregroundColor(Color.secondary))
                             .font(.custom("Palatino", size: 16))
                         
@@ -234,7 +234,7 @@ struct AboutRubatarModalView: View {
                             .bold()
                             .italic()
                             .foregroundColor(colorScheme == .dark ? Color(hex: "FFFFFF") : Color.black) +
-                         Text(" to explore curated playlists of traditional regional music."))
+                         Text(" to explore curated playlists & albums."))
                             .font(.custom("Palatino", size: 16))
                             .foregroundColor(Color.secondary)
                     }
@@ -322,12 +322,12 @@ struct AboutRubatarModalView: View {
                                     .bold()
                                     .italic()
                                     .foregroundColor(colorScheme == .dark ? Color(hex: "FFFFFF") : Color.black) +
-                                 Text(" and enjoy while ") +
+                                 Text(" while ") +
                                  Text("listening")
                                     .bold()
                                     .italic()
                                     .foregroundColor(colorScheme == .dark ? Color(hex: "FFFFFF") : Color.black) +
-                                 Text(" to traditional regional music."))
+                                 Text(" to regional music."))
                                     .font(.custom("Palatino", size: 16))
                                     .foregroundColor(Color.secondary)
                                 
@@ -338,7 +338,7 @@ struct AboutRubatarModalView: View {
                                     .padding(.vertical, 8)
                                 
                                 // Second paragraph with colon
-                                Text("Upcoming features will let you analyze, bookmark, and annotate poems as you explore:")
+                                Text("Upcoming features will let you analyze, bookmark, and annotate poems, and the following will be released soon:")
                                     .font(.custom("Palatino", size: 16))
                                     .foregroundColor(Color.secondary)
                                 
@@ -368,7 +368,7 @@ struct AboutRubatarModalView: View {
                                         Text("•")
                                             .font(.custom("Palatino", size: 16))
                                             .foregroundColor(.secondary)
-                                        Text("We'll keep expanding Rubatar based on community interest, your feedback helps shape its future.")
+                                        Text("And more! We'll keep expanding Rubatar based on community interest")
                                             .font(.custom("Palatino", size: 16))
                                             .foregroundColor(.secondary)
                                     }
@@ -379,7 +379,7 @@ struct AboutRubatarModalView: View {
                             // Custom styled text for "Get Featured"
                             VStack(alignment: .leading, spacing: 16) {
                                 // First paragraph
-                                Text("If you curate traditional or regional playlists on Apple Music,  or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we'd love to feature your work.")
+                                Text("If you curate traditional or regional playlists on Apple Music, or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we'd love to feature your work.")
                                     .font(.custom("Palatino", size: 16))
                                     .foregroundColor(Color.secondary)
                                 
@@ -590,7 +590,8 @@ extension AboutRubatarModalView {
                     showPermissionResult = true
                     if status == .authorized {
                         hasSeenWelcome = true
-                        if currentPage == 0 { currentPage = 1 }
+                        // Dismiss the modal when access is granted
+                        onButtonDismiss()
                     }
                 }
             }
