@@ -443,7 +443,7 @@ struct AboutRubatarModalView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .offset(y: title == "How it Works" ? -88 : -112)
+            .offset(y: title == "How it Works" ? -92 : -112)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         
