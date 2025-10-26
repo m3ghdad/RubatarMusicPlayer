@@ -139,7 +139,6 @@ struct MusicSectionView: View {
                             .offset(y: 24)
                     }
                     .frame(height: 200)
-                    .background(.ultraThinMaterial)
                     .cornerRadius(16, corners: [.topLeft, .topRight])
                     
                     // Content container
@@ -227,7 +226,6 @@ struct MusicSectionView: View {
                             .offset(y: 24)
                     }
                     .frame(height: 200)
-                    .background(.ultraThinMaterial)
                     .cornerRadius(16, corners: [.topLeft, .topRight])
                     
                     // Content container
