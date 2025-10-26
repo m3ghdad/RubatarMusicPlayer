@@ -39,14 +39,14 @@ struct AboutRubatarModalView: View {
                         // Page 2 - How it Works
                         infoPage(
                             title: "How it Works",
-                            text: "You'll find a daily selection of poems to read and enjoy while listening to traditional regional music.\n\nUpcoming features will let you analyze, bookmark, and annotate poems as you explore.",
+                            text: "You'll find a daily selection of poems to read and enjoy while listening to traditional regional music.\n\nUpcoming features will let you analyze, bookmark, and annotate poems. In future realses you will be able to:.",
                             imageName: "HowItWorks"
                         )
                         .tag(1)
                         // Page 3 - Get Featured
                         infoPage(
                             title: "Get Featured",
-                            text: "If you curate traditional or regional playlists on Apple Music,  Or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we'd love to feature your work.\n\nDon't have an album published? No problem, we welcome all passionate musicians and independent poets from around the world.\n\nContact us at support@rubatar.com",
+                            text: "If you curate traditional or regional playlists on Apple Music, Or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we'd love to feature your work.\n\nDon't have an album published? No problem, we welcome all passionate musicians and independent poets from around the world.\n\nContact us at support@rubatar.com",
                             imageName: "GetFeatured"
                         )
                         .tag(2)
@@ -321,7 +321,7 @@ struct AboutRubatarModalView: View {
                             // Custom styled text for "Get Featured"
                             VStack(alignment: .leading, spacing: 16) {
                                 // First paragraph
-                                Text("If you curate traditional or regional playlists on Apple Music,  Or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we'd love to feature your work.")
+                                Text("If you curate traditional or regional playlists on Apple Music,  or play instruments like Tār, Setār, Santoor, Oud, or Tonbak, get in touch, we'd love to feature your work.")
                                     .font(.custom("Palatino", size: 16))
                                     .foregroundColor(Color.secondary)
                                 
@@ -476,20 +476,25 @@ extension AboutRubatarModalView {
 
     @ViewBuilder
     private func primaryNextButton() -> some View {
+        let buttonText = isLastPage ? "Done" : ((skipFirstPage == false && (currentPage == 0 ? true : (currentPage == totalPages - 1)))) ? (currentPage == 0 ? "Skip" : "Done") : "Continue"
+        
         Button {
             if isLastPage { onButtonDismiss() } else { currentPage += 1 }
         } label: {
-            Text(isLastPage ? "Done" : ((skipFirstPage == false && (currentPage == 0 ? true : (currentPage == totalPages - 1)))) ? (currentPage == 0 ? "Skip" : "Done") : "Continue")
+            Text(buttonText)
                 .font(.custom("Palatino", size: 17).weight(.semibold))
-                .foregroundColor(isLastPage ? .white : .primary)
+                .foregroundColor(
+                    isLastPage ? Color.white : (isDarkMode ? Color.black : Color.white)
+                )
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
                 .background(
                     {
                         if isLastPage {
-                            (isDarkMode ? Color(hex: "E3B887") : Color(hex: "7A5C39"))
+                            Color(hex: "BF8121")
                         } else {
-                            Color.secondary.opacity(0.2)
+                            // Skip/Continue buttons - white in dark mode, black in light mode
+                            (isDarkMode ? Color.white : Color.black)
                         }
                     }(), in: RoundedRectangle(cornerRadius: 12)
                 )
@@ -537,7 +542,7 @@ extension AboutRubatarModalView {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
-                .background(Color(hex: "F71A33"), in: RoundedRectangle(cornerRadius: 12))
+                .background(Color(hex: "BF8121"), in: RoundedRectangle(cornerRadius: 12))
         }
     }
 }
