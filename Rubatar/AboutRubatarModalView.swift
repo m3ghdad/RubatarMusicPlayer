@@ -28,6 +28,30 @@ struct AboutRubatarModalView: View {
     
     var body: some View {
         ZStack(alignment: .topLeading) {
+            // Background gradient for the entire bottom sheet
+            Group {
+                if colorScheme == .dark {
+                    LinearGradient(
+                        stops: [
+                            .init(color: Color(hex: "000000"), location: 0.5),
+                            .init(color: Color(hex: "0B0701"), location: 1.0)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                } else {
+                    LinearGradient(
+                        stops: [
+                            .init(color: Color(hex: "FFFFFF"), location: 0.5),
+                            .init(color: Color(hex: "F7EBD7"), location: 1.0)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
+            }
+            .ignoresSafeArea()
+            
             // Main content container (green) filling the sheet
             VStack(spacing: 0) {
                 // Carousel Content
