@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22225" systemVersion="23A344" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="CachedPoem" representedClassName="CachedPoem" syncable="YES">
+        <attribute name="cacheDate" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="NO" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="poemText" optional="YES" attributeType="String"/>
+        <attribute name="poemTextEn" optional="YES" attributeType="String"/>
+        <attribute name="poemNameFa" optional="YES" attributeType="String"/>
+        <attribute name="poemNameEn" optional="YES" attributeType="String"/>
+        <attribute name="poetNameFa" optional="YES" attributeType="String"/>
+        <attribute name="poetNameEn" optional="YES" attributeType="String"/>
+        <attribute name="topicNameFa" optional="YES" attributeType="String"/>
+        <attribute name="topicNameEn" optional="YES" attributeType="String"/>
+        <attribute name="playlistId" optional="YES" attributeType="String"/>
+        <attribute name="playlistName" optional="YES" attributeType="String"/>
+        <attribute name="curatorName" optional="YES" attributeType="String"/>
+        <attribute name="artworkUrl" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="CachedPlaylist" representedClassName="CachedPlaylist" syncable="YES">
+        <attribute name="cacheDate" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="playlistId" optional="NO" attributeType="String"/>
+        <attribute name="playlistName" optional="YES" attributeType="String"/>
+        <attribute name="curatorName" optional="YES" attributeType="String"/>
+        <attribute name="artworkUrl" optional="YES" attributeType="String"/>
+        <attribute name="trackCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="category" optional="YES" attributeType="String"/>
+        <attribute name="lastPlayed" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="playCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="CachedAlbum" representedClassName="CachedAlbum" syncable="YES">
+        <attribute name="cacheDate" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="albumId" optional="NO" attributeType="String"/>
+        <attribute name="albumName" optional="YES" attributeType="String"/>
+        <attribute name="artistName" optional="YES" attributeType="String"/>
+        <attribute name="artworkUrl" optional="YES" attributeType="String"/>
+        <attribute name="trackCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="releaseDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastPlayed" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="playCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="RecentlyPlayed" representedClassName="RecentlyPlayed" syncable="YES">
+        <attribute name="playedAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="trackId" optional="YES" attributeType="String"/>
+        <attribute name="trackName" optional="YES" attributeType="String"/>
+        <attribute name="artistName" optional="YES" attributeType="String"/>
+        <attribute name="artworkUrl" optional="YES" attributeType="String"/>
+        <attribute name="playlistId" optional="YES" attributeType="String"/>
+        <attribute name="albumId" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="AppPreferences" representedClassName="AppPreferences" syncable="YES">
+        <attribute name="key" optional="NO" attributeType="String"/>
+        <attribute name="value" optional="YES" attributeType="String"/>
+        <attribute name="updatedAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+</model>
+

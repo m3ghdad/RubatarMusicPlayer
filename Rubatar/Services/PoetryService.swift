@@ -90,10 +90,28 @@ class PoetryService: ObservableObject {
     }
     
     // Fetch poems with poet, topic, and mood information
-    func fetchPoems(limit: Int = 100, offset: Int = 0) async -> [PoemData] {
+    func fetchPoems(limit: Int = 100, offset: Int = 0, useCache: Bool = true) async -> [PoemData] {
         await MainActor.run {
             isLoading = true
             error = nil
+        }
+        
+        // Try to load from cache first if enabled
+        if useCache && offset == 0 {
+            let cachedPoems = CoreDataManager.shared.fetchCachedPoems(limit: limit)
+            if !cachedPoems.isEmpty {
+                print("📚 PoetryService: Loaded \(cachedPoems.count) poems from cache")
+                await MainActor.run {
+                    isLoading = false
+                }
+                
+                // Fetch fresh data in background
+                Task {
+                    _ = await fetchPoems(limit: limit, offset: offset, useCache: false)
+                }
+                
+                return cachedPoems
+            }
         }
         
         do {
@@ -101,6 +119,12 @@ class PoetryService: ObservableObject {
             print("📚 PoetryService: Starting to fetch poems from Supabase...")
             let poems = try await fetchPoemsFromSupabase(limit: limit, offset: offset)
             print("📚 PoetryService: Successfully fetched \(poems.count) poems")
+            
+            // Cache the poems if this is the first page
+            if offset == 0 && !poems.isEmpty {
+                CoreDataManager.shared.cachePoems(poems)
+                print("📚 PoetryService: Cached \(poems.count) poems")
+            }
             
             await MainActor.run {
                 isLoading = false
@@ -115,7 +139,16 @@ class PoetryService: ObservableObject {
                 isLoading = false
                 self.error = error.localizedDescription
             }
-            // Return empty array on error
+            
+            // If network fails, try to return cached data
+            if useCache {
+                let cachedPoems = CoreDataManager.shared.fetchCachedPoems(limit: limit)
+                if !cachedPoems.isEmpty {
+                    print("📚 PoetryService: Network failed, returning \(cachedPoems.count) cached poems")
+                    return cachedPoems
+                }
+            }
+            
             return []
         }
     }

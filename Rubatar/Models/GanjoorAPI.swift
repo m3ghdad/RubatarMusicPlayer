@@ -26,7 +26,7 @@ struct GanjoorPoet: Codable {
 }
 
 // MARK: - Internal App Models
-struct PoemData: Identifiable {
+struct PoemData: Identifiable, Codable {
     let id: Int
     let title: String
     let poet: PoetInfo
@@ -34,9 +34,25 @@ struct PoemData: Identifiable {
     let topic: String?
     let mood: String?
     let moodColor: String?
+    
+    // Additional fields for music integration (optional)
+    var poem_text_en: String?
+    var poem_name_en: String?
+    var poet_name_en: String?
+    var topic_name_en: String?
+    var playlist_id: String?
+    var playlist_name: String?
+    var curator_name: String?
+    var artwork_url: String?
+    
+    // Computed properties for consistency
+    var poem_text: String { verses.flatMap { $0 }.joined(separator: "\n") }
+    var poem_name_fa: String { title }
+    var poet_name_fa: String { poet.fullName }
+    var topic_name_fa: String? { topic }
 }
 
-struct PoetInfo {
+struct PoetInfo: Codable {
     let id: Int
     let name: String
     let fullName: String

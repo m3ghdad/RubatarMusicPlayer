@@ -11,6 +11,13 @@ import Combine
 import MusicKit
 import UIKit
 
+// MARK: - Array Safe Subscript Extension
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        return indices.contains(index) ? self[index] : nil
+    }
+}
+
 @MainActor
 class AudioPlayer: ObservableObject {
     @Published var isPlaying = false
@@ -461,6 +468,19 @@ class AudioPlayer: ObservableObject {
         currentArtwork = artwork
         currentPlaylistId = playlistId // Store the playlist ID
         saveLastPlayedTrack() // Save immediately when playlist is selected
+        
+        // Cache playlist metadata
+        CoreDataManager.shared.cachePlaylist(
+            id: playlistId,
+            name: playlistTitle,
+            curator: curatorName,
+            artworkUrl: artwork?.absoluteString
+        )
+        
+        // Preload artwork
+        if let artwork = artwork {
+            ImageCacheManager.shared.preloadImages(urls: [artwork])
+        }
 
         // Try MusicKit playlist playback by ID
         Task { @MainActor in
@@ -470,6 +490,10 @@ class AudioPlayer: ObservableObject {
                 isPlaying = true
                 savePlaybackState()
                 startPeriodicStateSaving()
+                
+                // Record playlist play
+                CoreDataManager.shared.recordPlaylistPlay(id: playlistId)
+                
                 print("✅ MusicKit playlist playback started")
             } catch {
                 print("⚠️ MusicKit playlist playback failed (\(error)). No fallback - playlist playback requires MusicKit.")
@@ -788,21 +812,53 @@ class AudioPlayer: ObservableObject {
                 return
             }
             
-                let player = ApplicationMusicPlayer.shared
-                do {
-                    try await player.skipToNextEntry()
-                    isPlaying = true
+            let player = ApplicationMusicPlayer.shared
+            do {
+                try await player.skipToNextEntry()
+                isPlaying = true
                 
                 // Update our queue index and track info
                 currentQueueIndex = (currentQueueIndex + 1) % musicKitQueue.count
                 updateCurrentTrackInfo()
                 savePlaybackState()
+                
+                // Record recently played
+                recordCurrentlyPlayingTrack()
+                
+                // Prefetch next track artwork
+                await prefetchNextTrackArtwork()
             } catch {
                 print("❌ Failed to skip to next entry: \(error)")
                 isPlaying = false
                 savePlaybackState()
             }
         }
+    }
+    
+    // Record currently playing track to recently played
+    private func recordCurrentlyPlayingTrack() {
+        guard let currentSong = musicKitQueue[safe: currentQueueIndex] else { return }
+        
+        CoreDataManager.shared.addRecentlyPlayed(
+            trackId: currentSong.id.rawValue,
+            trackName: currentSong.title,
+            artistName: currentSong.artistName,
+            artworkUrl: currentSong.artwork?.url(width: 300, height: 300)?.absoluteString,
+            playlistId: currentPlaylistId
+        )
+    }
+    
+    // Prefetch next track artwork
+    private func prefetchNextTrackArtwork() async {
+        let nextIndex = (currentQueueIndex + 1) % musicKitQueue.count
+        guard let nextSong = musicKitQueue[safe: nextIndex],
+              let artworkURL = nextSong.artwork?.url(width: 300, height: 300) else {
+            return
+        }
+        
+        // Preload next track artwork
+        _ = await ImageCacheManager.shared.loadImage(from: artworkURL)
+        print("🎨 Prefetched artwork for next track: \(nextSong.title)")
     }
     
     func playPreviousTrack() {
