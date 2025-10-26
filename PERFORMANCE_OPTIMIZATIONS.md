@@ -269,7 +269,41 @@ MusicAuthCacheManager.shared.clearCache()
 // Core Data cache is auto-managed
 ```
 
-## 13. Future Optimizations
+## 13. Content Preloading
+
+### ContentPreloader
+- Preloads content on app launch (max 2 seconds)
+- Runs tasks in parallel for efficiency
+- Shows skeleton loading during preload
+
+### What Gets Preloaded
+- **100 poems** from PoetryService (cached)
+- **10 playlists** from Apple Music (if authorized)
+- **10 albums** from Apple Music (if authorized)
+- **First 5 artworks** from each category
+
+### Benefits
+- Instant content display (no waiting)
+- Smooth user experience
+- Cached data available immediately
+- Background refresh keeps data fresh
+
+### Integration
+```swift
+@StateObject private var contentPreloader = ContentPreloader()
+
+// Preload on app start
+Task {
+    await contentPreloader.preloadContent()
+}
+
+// Use loading state
+if contentPreloader.isLoading {
+    SkeletonView()
+}
+```
+
+## 14. Future Optimizations
 
 Potential improvements for next phase:
 - [ ] Batch API requests optimization
