@@ -76,25 +76,5 @@ class MusicAuthCacheManager {
 }
 
 // MARK: - MusicAuthorization.Status Extension
-extension MusicAuthorization.Status: RawRepresentable {
-    public var rawValue: String {
-        switch self {
-        case .notDetermined: return "notDetermined"
-        case .denied: return "denied"
-        case .restricted: return "restricted"
-        case .authorized: return "authorized"
-        @unknown default: return "unknown"
-        }
-    }
-    
-    public init?(rawValue: String) {
-        switch rawValue {
-        case "notDetermined": self = .notDetermined
-        case "denied": self = .denied
-        case "restricted": self = .restricted
-        case "authorized": self = .authorized
-        default: return nil
-        }
-    }
-}
+// Note: MusicAuthorization.Status already conforms to RawRepresentable in MusicKit
 

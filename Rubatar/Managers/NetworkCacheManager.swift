@@ -32,8 +32,7 @@ class NetworkCacheManager {
     func createOptimizedSession() -> URLSession {
         let configuration = URLSessionConfiguration.default
         
-        // Enable HTTP/2
-        configuration.httpShouldUsePipelining = true
+        // HTTP/2 and HTTP/3 are enabled by default in modern iOS
         
         // Configure timeouts
         configuration.timeoutIntervalForRequest = 30

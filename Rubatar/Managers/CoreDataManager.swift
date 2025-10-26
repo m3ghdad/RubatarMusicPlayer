@@ -50,7 +50,7 @@ class CoreDataManager {
             // Clear existing cache first
             let deleteRequest: NSFetchRequest<NSFetchRequestResult> = CachedPoem.fetchRequest()
             let batchDelete = NSBatchDeleteRequest(fetchRequest: deleteRequest)
-            try? context.execute(batchDelete)
+            _ = try? context.execute(batchDelete)
             
             for poem in poems {
                 let cachedPoem = CachedPoem(context: context)
@@ -271,7 +271,7 @@ class CoreDataManager {
                 guard let trackName = item.trackName, let artistName = item.artistName else {
                     return nil
                 }
-                return (trackName: trackName, artistName: artistName, artworkUrl: item.artworkUrl, playedAt: item.playedAt ?? Date())
+                return (trackName: trackName, artistName: artistName, artworkUrl: item.artworkUrl, playedAt: item.playedAt!)
             }
         } catch {
             print("❌ Failed to fetch recently played: \(error.localizedDescription)")

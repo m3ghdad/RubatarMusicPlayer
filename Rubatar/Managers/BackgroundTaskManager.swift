@@ -63,7 +63,7 @@ class BackgroundTaskManager {
 }
 
 // MARK: - Background Refresh Operation
-class BackgroundRefreshOperation: Operation {
+class BackgroundRefreshOperation: Operation, @unchecked Sendable {
     override func main() {
         guard !isCancelled else { return }
         

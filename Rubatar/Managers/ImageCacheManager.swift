@@ -8,8 +8,7 @@
 import UIKit
 import SwiftUI
 
-@MainActor
-class ImageCacheManager: ObservableObject {
+class ImageCacheManager {
     static let shared = ImageCacheManager()
     
     // Memory cache using NSCache
