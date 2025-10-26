@@ -23,6 +23,7 @@ struct ContentView: View {
     
     // MARK: - Content Management
     @StateObject private var contentManager = ContentManager()
+    @StateObject private var contentPreloader = ContentPreloader()
     @State private var showMiniPlayer = false
     @State private var showCard = false
     @State private var showVideoPlayer = false
@@ -68,6 +69,7 @@ struct ContentView: View {
                         showProfileSheet: $showProfileSheet
                     )
                     .environmentObject(contentManager)
+                    .environmentObject(contentPreloader)
                 } label: {
                     Label {
                         Text("Home")
@@ -121,10 +123,16 @@ struct ContentView: View {
                     isDarkMode = (systemColorScheme == .dark)
                     didInitializeTheme = true
                 }
-                // Present welcome after a tick so updated color scheme propagates to the sheet
-                if !hasSeenWelcome {
-                    DispatchQueue.main.async {
-                        showWelcomeModal = true
+                
+                // Preload content
+                Task {
+                    await contentPreloader.preloadContent()
+                    
+                    // Present welcome after preloading
+                    if !hasSeenWelcome {
+                        DispatchQueue.main.async {
+                            showWelcomeModal = true
+                        }
                     }
                 }
             }

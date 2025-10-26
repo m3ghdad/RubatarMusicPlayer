@@ -22,6 +22,11 @@ struct MusicSectionView: View {
     let onMusicSelected: (String, String, URL?) -> Void
     let onPlaylistSelected: (String, String, String, URL?) -> Void
     
+    // Preloading support
+    var isPreloading: Bool = false
+    var preloadedPlaylists: [Playlist] = []
+    var preloadedAlbums: [Album] = []
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 32) {
             // // Section Header
@@ -48,36 +53,42 @@ struct MusicSectionView: View {
             
             
             if musicManager.authorizationStatus == .authorized {
-                // Show loading state for ContentManager
-                switch contentManager.loadingState {
-                case .loading:
+                // Show loading state for ContentManager or preloader
+                if isPreloading {
                     ContentSkeletonView()
+                } else {
+                    switch contentManager.loadingState {
+                    case .loading:
+                        ContentSkeletonView()
+                        
+                    case .loaded(_), .offline(_):
+                        // Dynamic sections based on database configuration  
+                        ForEach(contentManager.sections.sorted(by: { $0.displayOrder < $1.displayOrder })) { section in
+                            DynamicSectionView(
+                                section: section,
+                                contentManager: contentManager,
+                                onMusicSelected: onMusicSelected,
+                                onPlaylistSelected: onPlaylistSelected,
+                                preloadedPlaylists: preloadedPlaylists,
+                                preloadedAlbums: preloadedAlbums
+                            )
+                        }
                     
-                case .loaded(_), .offline(_):
-                    // Dynamic sections based on database configuration
-                    ForEach(contentManager.sections.sorted(by: { $0.displayOrder < $1.displayOrder })) { section in
-                        DynamicSectionView(
-                            section: section,
-                            contentManager: contentManager,
-                            onMusicSelected: onMusicSelected,
-                            onPlaylistSelected: onPlaylistSelected
-                        )
+                    case .error(let errorMessage):
+                        VStack {
+                            Image(systemName: "exclamationmark.triangle")
+                                .font(.system(size: 30))
+                                .foregroundColor(.orange)
+                            Text("Content Error")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            Text(errorMessage)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .padding()
                     }
-                
-                case .error(let errorMessage):
-                    VStack {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.system(size: 30))
-                            .foregroundColor(.orange)
-                        Text("Content Error")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                        Text(errorMessage)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding()
                 }
                 
                 if musicManager.isLoading {
@@ -359,6 +370,8 @@ struct DynamicSectionView: View {
     let contentManager: ContentManager
     let onMusicSelected: (String, String, URL) -> Void
     let onPlaylistSelected: (String, String, String, URL?) -> Void
+    var preloadedPlaylists: [Playlist] = []
+    var preloadedAlbums: [Album] = []
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -450,10 +463,40 @@ struct DynamicSectionView: View {
     }
     
     private func getAlbumsForSection() -> [FeaturedAlbum] {
+        // Use preloaded data if available and contentManager hasn't loaded yet
+        if contentManager.albums.isEmpty && !preloadedAlbums.isEmpty {
+            // Convert preloaded albums to FeaturedAlbum format
+            return preloadedAlbums.map { album in
+                FeaturedAlbum(
+                    id: UUID().uuidString,
+                    sectionId: section.id,
+                    albumId: album.id.rawValue,
+                    albumName: album.title,
+                    artistName: album.artistName,
+                    artworkUrl: album.artwork?.url(width: 300, height: 300)?.absoluteString,
+                    displayOrder: 0
+                )
+            }
+        }
         return contentManager.albums.filter { $0.sectionId == section.id }
     }
     
     private func getPlaylistsForSection() -> [FeaturedPlaylist] {
+        // Use preloaded data if available and contentManager hasn't loaded yet
+        if contentManager.playlists.isEmpty && !preloadedPlaylists.isEmpty {
+            // Convert preloaded playlists to FeaturedPlaylist format
+            return preloadedPlaylists.map { playlist in
+                FeaturedPlaylist(
+                    id: UUID().uuidString,
+                    sectionId: section.id,
+                    playlistId: playlist.id.rawValue,
+                    playlistName: playlist.name,
+                    curatorName: playlist.curatorName ?? "Apple Music",
+                    artworkUrl: playlist.artwork?.url(width: 300, height: 300)?.absoluteString,
+                    displayOrder: 0
+                )
+            }
+        }
         return contentManager.playlists.filter { $0.sectionId == section.id }
     }
 }

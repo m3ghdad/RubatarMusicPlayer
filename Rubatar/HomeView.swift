@@ -10,6 +10,7 @@ struct HomeView: View {
     let onPlaylistSelected: (String, String, String, URL?) -> Void
     @Binding var showProfileSheet: Bool
     @EnvironmentObject var contentManager: ContentManager
+    @EnvironmentObject var contentPreloader: ContentPreloader
     
     @State private var lastScrollOffset: CGFloat = 0
     
@@ -39,7 +40,10 @@ struct HomeView: View {
                             },
                             onPlaylistSelected: { playlistId, playlistTitle, curatorName, artwork in
                                 onPlaylistSelected(playlistId, playlistTitle, curatorName, artwork)
-                            }
+                            },
+                            isPreloading: contentPreloader.isLoading,
+                            preloadedPlaylists: contentPreloader.preloadedPlaylists,
+                            preloadedAlbums: contentPreloader.preloadedAlbums
                         )
 
                         
