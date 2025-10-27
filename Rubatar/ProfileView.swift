@@ -70,8 +70,13 @@ struct ProfileView: View {
     @State private var currentPage = 0 // Current page within a poem (verse index)
     @State private var showMenu = false
     @State private var showLanguageMenu = false // Language submenu state
-    @State private var selectedLanguage: AppLanguage = .english // Current language
+    @AppStorage("selectedLanguage") private var selectedLanguageRaw = AppLanguage.english.rawValue
     @State private var showConfigureMenu = false // Configure submenu state
+    
+    private var selectedLanguage: AppLanguage {
+        get { AppLanguage(rawValue: selectedLanguageRaw) ?? .english }
+        set { selectedLanguageRaw = newValue.rawValue }
+    }
     @State private var selectedDisplayMode: DisplayMode // Display mode for poem text
     @State private var showToast = false
     @State private var toastMessage = ""
@@ -388,7 +393,7 @@ struct ProfileView: View {
                     onSelectLanguage: { language in
                         // Update selected language and close menus
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                            selectedLanguage = language
+                            selectedLanguageRaw = language.rawValue
                             showLanguageMenu = false
                             showMenu = false
                             showConfigureMenu = false
@@ -487,6 +492,8 @@ struct ProfileView: View {
         }
     }
 }
+
+// MARK: - Navigation Helpers (removed programmatic push helper; using NotificationCenter directly)
 
 // Animated Shimmer Effect
 struct ShimmerEffect: ViewModifier {
@@ -808,7 +815,11 @@ struct PoemCardView: View {
                                     .lineSpacing(22)
                                     .multilineTextAlignment(.trailing)
                                 
-                                Text(poemData.poet.name)
+                                Button(action: {
+                                    NotificationCenter.default.post(name: Notification.Name("ShowPoetDetail"), object: poemData.poet.name)
+                                }) {
+                                    Text(poemData.poet.name)
+                                }
                                     .font(.custom("Palatino-Roman", size: 16))
                                     .foregroundColor(colorScheme == .dark ? Color(hex: "E3B887") : Color(red: 122/255, green: 92/255, blue: 57/255))
                                     .kerning(-0.23)
@@ -824,7 +835,11 @@ struct PoemCardView: View {
                                     .kerning(-0.43)
                                     .lineSpacing(22)
                                 
-                                Text(poemData.poet.name)
+                                Button(action: {
+                                    NotificationCenter.default.post(name: Notification.Name("ShowPoetDetail"), object: poemData.poet.name)
+                                }) {
+                                    Text(poemData.poet.name)
+                                }
                                     .font(.custom("Palatino-Roman", size: 16))
                                     .foregroundColor(colorScheme == .dark ? Color(hex: "E3B887") : Color(red: 122/255, green: 92/255, blue: 57/255))
                                     .kerning(-0.23)

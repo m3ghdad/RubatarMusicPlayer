@@ -2,39 +2,38 @@ import SwiftUI
 
 struct SearchTabContent: View {
     var searchText: String
-    @State private var currentPoemIndex = 0
-    @State private var currentLanguage: Language = .farsi
-    @State private var displayedText = ""
-    @State private var currentCharIndex = 0
-    @State private var isTyping = false
+    @StateObject private var poetService = PoetService()
+    @AppStorage("selectedLanguage") private var selectedLanguageRaw = AppLanguage.english.rawValue
     @Environment(\.colorScheme) var colorScheme
     
-    enum Language {
-        case farsi, english
+    private var selectedLanguage: AppLanguage {
+        AppLanguage(rawValue: selectedLanguageRaw) ?? .english
     }
     
-    let patiencePoems = [
-        // Saadi
-        (farsi: "صبوری کن که تلخی‌ها گذارد\nکه بعد از هر شبی روزی برآید", english: "Be patient, for bitterness will pass —\nAfter every night, a day will rise."),
-        // Hafez
-        (farsi: "صبوری می‌کنم تا کام دل یابم، ولی دانم\nکه این دریا به خون دل، شدن آسان نمی‌گردد", english: "I am patient till my heart's desire I gain —\nBut I know this sea won't calm without the blood of pain."),
-        // Rumi
-        (farsi: "صبر کن ای دل که در پایان شب\nصبح امیدت دمَد از آفتاب", english: "Be patient, my heart —\nAt the night's end, the sun of hope will rise."),
-        // Ferdowsi
-        (farsi: "به صبر اندر آری به هر کار دست\nکز آتش، خردمند، آرد شکر ز پست", english: "With patience, you'll master any deed —\nFor even from fire, the wise draw sweetness."),
-        // Attar
-        (farsi: "صبر کن، تا بر تو گردد روزگار\nکز شکیبایی، گل آید زین خار", english: "Be patient till fate turns your way —\nFrom patience, flowers bloom from thorns."),
-        // Baba Taher
-        (farsi: "دلا صبر کن، کار دنیا گذاره\nغم و شادی و تیمار دنیا گذاره", english: "O heart, be patient, this world will pass —\nIts sorrow, its joy, its burden will pass."),
-        // Khayyam
-        (farsi: "چون نیست رهی به جاودانی، صبر است\nدر ناملایمات جهانی، صبر است", english: "Since no road leads to eternity, be patient —\nIn all this world's hardships, patience is the way."),
-        // Nizami
-        (farsi: "هر که صبر آموخت، کام یافت\nهر که شتاب کرد، زیان یافت", english: "He who learned patience, found delight;\nHe who rushed, met loss outright."),
-        // Sanai
-        (farsi: "صبوری، کلید گنج مراد است\nکه در بی‌تابی، درِ دل گشاد است", english: "Patience is the key to the treasure of desire —\nFor restlessness only opens the heart to fire."),
-        // Bedil Dehlavi
-        (farsi: "صبری که تلخ نیست، صبر نیست\nشیرینیِ آن، در تلخی‌ست", english: "Patience that isn't bitter isn't patience —\nIts sweetness lies in its bitterness.")
-    ]
+    // Sorted and filtered poets based on language and search text
+    var filteredPoets: [SupabasePoetDetail] {
+        let allPoets: [SupabasePoetDetail]
+        
+        // Sort based on selected language
+        if selectedLanguage == .farsi {
+            allPoets = poetService.poets.sorted { $0.displayNameFa < $1.displayNameFa }
+        } else {
+            allPoets = poetService.poets.sorted { $0.displayNameEn < $1.displayNameEn }
+        }
+        
+        // Filter based on search text
+        if searchText.isEmpty {
+            return allPoets
+        } else {
+            return allPoets.filter { poet in
+                if selectedLanguage == .farsi {
+                    return poet.displayNameFa.localizedCaseInsensitiveContains(searchText)
+                } else {
+                    return poet.displayNameEn.localizedCaseInsensitiveContains(searchText)
+                }
+            }
+        }
+    }
 
     var body: some View {
         ZStack {
@@ -42,68 +41,88 @@ struct SearchTabContent: View {
             (colorScheme == .dark ? Color.black : Color(red: 244/255, green: 244/255, blue: 244/255))
                 .ignoresSafeArea(.all)
             
-            VStack {
-                Spacer()
-                
-                VStack(spacing: 30) {
-                    Text("Coming soon")
-                        .font(.custom("Palatino", size: 24))
-                        .fontWeight(.medium)
-                        .foregroundColor(colorScheme == .dark ? .white : .black)
-                        .multilineTextAlignment(.center)
-                    
-                    VStack(spacing: 20) {
-                        Text(displayedText)
-                            .font(.custom("Palatino", size: 18))
-                            .foregroundColor(colorScheme == .dark ? .white : .black)
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(8)
-                            .frame(minHeight: 120)
-                    }
-                    .padding(.horizontal, 20)
+            if poetService.isLoading {
+                ProgressView("Loading poets...")
+                    .foregroundColor(colorScheme == .dark ? .white : .black)
+            } else if poetService.poets.isEmpty {
+                VStack(spacing: 16) {
+                    Image(systemName: "person.text.rectangle")
+                        .font(.system(size: 64))
+                        .foregroundColor(.secondary)
+                    Text("No poets found")
+                        .font(.custom("Palatino", size: 20))
+                        .foregroundColor(.secondary)
                 }
-                
-                Spacer()
+            } else {
+                List {
+                    ForEach(filteredPoets) { poet in
+                        NavigationLink(value: ContentView.PoetRoute(name: selectedLanguage == .farsi ? poet.displayNameFa : poet.displayNameEn)) {
+                            HStack(spacing: 16) {
+                                if selectedLanguage == .farsi {
+                                    // Farsi: Right-to-left layout - text first, then avatar
+                                    VStack(alignment: .trailing, spacing: 4) {
+                                        Text(poet.displayNameFa)
+                                            .font(.custom("Palatino", size: 17))
+                                            .foregroundColor(colorScheme == .dark ? .white : .black)
+                                        
+                                        Text("شاعر")
+                                            .font(.custom("Palatino", size: 14))
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+                                    
+                                    // Avatar placeholder
+                                    Circle()
+                                        .fill(colorScheme == .dark ? Color(hex: "E3B887").opacity(0.2) : Color(hex: "7A5C39").opacity(0.1))
+                                        .frame(width: 48, height: 48)
+                                        .overlay(
+                                            Text(String(poet.displayNameFa.prefix(1)))
+                                                .font(.custom("Palatino", size: 20))
+                                                .fontWeight(.semibold)
+                                                .foregroundColor(colorScheme == .dark ? Color(hex: "E3B887") : Color(hex: "7A5C39"))
+                                        )
+                                } else {
+                                    // English: Left-to-right layout - avatar first, then text
+                                    Circle()
+                                        .fill(colorScheme == .dark ? Color(hex: "E3B887").opacity(0.2) : Color(hex: "7A5C39").opacity(0.1))
+                                        .frame(width: 48, height: 48)
+                                        .overlay(
+                                            Text(String(poet.displayNameEn.prefix(1)))
+                                                .font(.custom("Palatino", size: 20))
+                                                .fontWeight(.semibold)
+                                                .foregroundColor(colorScheme == .dark ? Color(hex: "E3B887") : Color(hex: "7A5C39"))
+                                        )
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(poet.displayNameEn)
+                                            .font(.custom("Palatino", size: 17))
+                                            .foregroundColor(colorScheme == .dark ? .white : .black)
+                                        
+                                        Text("Poet")
+                                            .font(.custom("Palatino", size: 14))
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                            }
+                            .padding(.vertical, 8)
+                        }
+                    }
+                }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
             }
-            .padding(.horizontal, 16)
+        }
+        .navigationTitle("Poets")
+        .navigationDestination(for: ContentView.PoetRoute.self) { route in
+            PoetDetailView(poetName: route.name)
         }
         .onAppear {
-            startTyping()
-        }
-    }
-    
-    private func startTyping() {
-        isTyping = true
-        displayedText = ""
-        currentCharIndex = 0
-        
-        let currentPoem = patiencePoems[currentPoemIndex]
-        let textToType = currentLanguage == .farsi ? currentPoem.farsi : currentPoem.english
-        
-        typeText(textToType)
-    }
-    
-    private func typeText(_ text: String) {
-        guard currentCharIndex < text.count else {
-            // Finished typing, wait then move to next poem
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                nextPoem()
+            if poetService.poets.isEmpty {
+                Task {
+                    await poetService.fetchPoets()
+                }
             }
-            return
         }
-        
-        let index = text.index(text.startIndex, offsetBy: currentCharIndex)
-        displayedText = String(text[..<index])
-        currentCharIndex += 1
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            typeText(text)
-        }
-    }
-    
-    private func nextPoem() {
-        currentPoemIndex = (currentPoemIndex + 1) % patiencePoems.count
-        currentLanguage = currentLanguage == .farsi ? .english : .farsi
-        startTyping()
     }
 }

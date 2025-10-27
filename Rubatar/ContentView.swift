@@ -32,6 +32,8 @@ struct ContentView: View {
     @State private var showEnhancedPlayer = false
     @State private var shouldShowMiniPlayer = false
     @State private var showProfileSheet = false
+    struct PoetRoute: Identifiable, Hashable { let name: String; var id: String { name } }
+    @State private var rubatarPath = NavigationPath()
     @State private var playerOpenedFrom: PlayerSource = .none
     @StateObject private var audioPlayer = AudioPlayer()
     @Namespace private var animation
@@ -101,7 +103,12 @@ struct ContentView: View {
                 */
 
                 Tab("Rubatar", systemImage: "apple.books.pages.fill") {
-                    ProfileView()
+                    NavigationStack(path: $rubatarPath) {
+                        ProfileView()
+                            .navigationDestination(for: PoetRoute.self) { route in
+                                PoetDetailView(poetName: route.name)
+                            }
+                    }
                 }
 
                 Tab("Search", systemImage: "magnifyingglass", role: .search) {
@@ -171,12 +178,16 @@ struct ContentView: View {
         .fullScreenCover(isPresented: $showVideoPlayer) {
             videoPlayerView
         }
-        .sheet(isPresented: $showProfileSheet) {
-            ProfileBottomSheet(isPresented: $showProfileSheet)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.hidden)
-                .presentationCornerRadius(16)
-        }
+            .sheet(isPresented: $showProfileSheet) {
+                ProfileBottomSheet(isPresented: $showProfileSheet)
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.hidden)
+                    .presentationCornerRadius(16)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ShowPoetDetail"))) { notif in
+                guard let poetName = notif.object as? String else { return }
+                rubatarPath.append(PoetRoute(name: poetName))
+            }
         .sheet(isPresented: $showLearnMore) {
             AboutRubatarModalView(
                 isDarkMode: isDarkMode,
