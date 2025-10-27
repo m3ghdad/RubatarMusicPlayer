@@ -114,6 +114,9 @@ struct ContentView: View {
                 Tab("Search", systemImage: "magnifyingglass", role: .search) {
                     NavigationStack {
                         SearchTabContent(searchText: searchText)
+                            .navigationDestination(for: PoetRoute.self) { route in
+                                PoetDetailView(poetName: route.name)
+                            }
                     }
                 }
             }
@@ -351,6 +354,9 @@ struct TransparentBackgroundView: UIViewRepresentable {
 #else
 struct TransparentBackgroundView: View { var body: some View { Color.clear } }
 #endif
+#Preview {
+    ContentView()
+}
 #Preview {
     ContentView()
 }

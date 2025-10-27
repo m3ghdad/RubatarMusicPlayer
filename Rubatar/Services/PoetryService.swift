@@ -320,6 +320,84 @@ class PoetryService: ObservableObject {
     }
     
     
+    // Search poems by query
+    func searchPoems(query: String, language: AppLanguage) async throws -> [PoemData] {
+        print("🔍 Searching poems with query: \(query)")
+        
+        // Build search URL based on language - search in both name and content
+        let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
+        
+        let searchURL: String
+        if language == .farsi {
+            searchURL = "\(baseURL)/rest/v1/poems?select=*&or=(poem_name_fa.ilike.*\(encodedQuery)*,poem_content_fa.ilike.*\(encodedQuery)*)&limit=20"
+        } else {
+            searchURL = "\(baseURL)/rest/v1/poems?select=*&or=(poem_name_en.ilike.*\(encodedQuery)*,poem_content_en.ilike.*\(encodedQuery)*)&limit=20"
+        }
+        
+        print("🔍 Search URL: \(searchURL)")
+        
+        let poemsResponse = try await makeRequest(url: searchURL)
+        let poemsData: [SupabasePoem] = try JSONDecoder().decode([SupabasePoem].self, from: poemsResponse)
+        print("🔍 Found \(poemsData.count) poems matching query")
+        
+        guard !poemsData.isEmpty else {
+            return []
+        }
+        
+        // Get unique poet IDs
+        let poetIds = Set(poemsData.map { $0.poet_id })
+        let poetIdsString = poetIds.map { "\"\($0)\"" }.joined(separator: ",")
+        
+        // Fetch poets
+        let poetsURL = "\(baseURL)/rest/v1/poets?select=*&id=in.(\(poetIdsString))"
+        let poetsResponse = try await makeRequest(url: poetsURL)
+        let poetsData: [SupabasePoet] = try JSONDecoder().decode([SupabasePoet].self, from: poetsResponse)
+        
+        // Get unique topic IDs
+        let topicIds = Set(poemsData.compactMap { $0.topic_id })
+        var topicsData: [SupabaseTopic] = []
+        if !topicIds.isEmpty {
+            let topicIdsString = topicIds.map { "\($0)" }.joined(separator: ",")
+            let topicsURL = "\(baseURL)/rest/v1/topics?select=*&id=in.(\(topicIdsString))"
+            let topicsResponse = try await makeRequest(url: topicsURL)
+            topicsData = try JSONDecoder().decode([SupabaseTopic].self, from: topicsResponse)
+        }
+        
+        // Convert to app models
+        var convertedPoems: [PoemData] = []
+        
+        for poem in poemsData {
+            guard let poet = poetsData.first(where: { $0.id == poem.poet_id }) else {
+                continue
+            }
+            let topic = topicsData.first { $0.id == poem.topic_id }
+            
+            let poemId = Int(poem.id.suffix(8), radix: 16) ?? 0
+            
+            let poemData = PoemData(
+                id: poemId,
+                title: language == .farsi ? poem.poem_name_fa : poem.poem_name_en,
+                poet: PoetInfo(
+                    id: Int(poet.id.suffix(8), radix: 16) ?? 0,
+                    name: language == .farsi ? (poet.nickname_fa ?? poet.name_fa) : (poet.nickname_en ?? poet.name_en),
+                    fullName: language == .farsi ? poet.name_fa : poet.name_en
+                ),
+                verses: parsePoemContent(language == .farsi ? poem.poem_content_fa : poem.poem_content_en),
+                topic: language == .farsi ? topic?.topic_fa : topic?.topic_en,
+                mood: nil,
+                moodColor: nil,
+                poem_text_en: poem.poem_content_en,
+                poem_name_en: poem.poem_name_en,
+                poet_name_en: poet.name_en
+            )
+            
+            convertedPoems.append(poemData)
+        }
+        
+        print("🔍 Successfully converted \(convertedPoems.count) search results")
+        return convertedPoems
+    }
+    
     // Parse poem content into verses (couplets)
     private func parsePoemContent(_ content: String) -> [[String]] {
         // Replace literal \n with actual newlines

@@ -15,6 +15,9 @@ struct SupabasePoetDetail: Codable, Identifiable, Hashable {
     let name_en: String?
     let nickname_fa: String?
     let nickname_en: String?
+    let era: String?
+    let birthdate: String?
+    let passingdate: String?
     
     var displayNameFa: String {
         nickname_fa ?? name_fa
@@ -38,7 +41,7 @@ class PoetService: ObservableObject {
         await MainActor.run { isLoading = true }
         
         do {
-            let url = "\(baseURL)/rest/v1/poets?select=id,name_fa,name_en,nickname_fa,nickname_en&order=name_fa.asc"
+            let url = "\(baseURL)/rest/v1/poets?select=id,name_fa,name_en,nickname_fa,nickname_en,era,birthdate,passingdate&order=name_fa.asc"
             
             guard let requestURL = URL(string: url) else {
                 print("❌ Invalid URL")
