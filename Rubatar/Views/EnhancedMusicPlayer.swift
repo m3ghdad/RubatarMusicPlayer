@@ -233,6 +233,7 @@ struct EnhancedMusicPlayer: View {
                 guard shouldRestoreOnReturn else { return }
                 shouldRestoreOnReturn = false
                 isRestoringPlaybackPosition = true
+                
                 // Defer slightly to allow the player to settle, then restore
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                     // Ensure we have a current entry before restoring
@@ -241,11 +242,12 @@ struct EnhancedMusicPlayer: View {
                         // Try again a bit later if not ready
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                             restorePlaybackPositionIfAvailable()
-                            // Reinforce once
+                            // Update UI state to reflect actual playback state
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                // Optionally resume playback if it was playing before background
-                                if wasPlayingOnBackground {
-                                    Task { try? await ApplicationMusicPlayer.shared.play() }
+                                // Check actual playback state and update UI accordingly
+                                let actualPlaybackState = player.state.playbackStatus
+                                DispatchQueue.main.async {
+                                    self.audioPlayer.isPlaying = (actualPlaybackState == .playing)
                                 }
                                 isRestoringPlaybackPosition = false
                             }
@@ -254,11 +256,12 @@ struct EnhancedMusicPlayer: View {
                     }
 
                     restorePlaybackPositionIfAvailable()
-                    // Reinforce once
+                    // Update UI state to reflect actual playback state
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        // Optionally resume playback if it was playing before background
-                        if wasPlayingOnBackground {
-                            Task { try? await ApplicationMusicPlayer.shared.play() }
+                        // Check actual playback state and update UI accordingly
+                        let actualPlaybackState = player.state.playbackStatus
+                        DispatchQueue.main.async {
+                            self.audioPlayer.isPlaying = (actualPlaybackState == .playing)
                         }
                         isRestoringPlaybackPosition = false
                     }
