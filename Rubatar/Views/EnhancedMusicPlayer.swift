@@ -310,7 +310,7 @@ struct EnhancedMusicPlayer: View {
                     
                     // Use AsyncImage for URL-based images, fallback to local for hardcoded names
                     if imageUrl.hasPrefix("http") {
-                        AsyncImage(url: URL(string: imageUrl)) { image in
+                        CachedAsyncImage(url: URL(string: imageUrl)) { image in
                             image
                                 .resizable()
                                 .scaledToFit()
@@ -360,7 +360,7 @@ struct EnhancedMusicPlayer: View {
                         // Use the same image logic for the mask
             Group {
                             if imageUrl.hasPrefix("http") {
-                                AsyncImage(url: URL(string: imageUrl)) { image in
+                                CachedAsyncImage(url: URL(string: imageUrl)) { image in
                                     image
                                         .resizable()
                                         .scaledToFill()
@@ -580,7 +580,7 @@ struct EnhancedMusicPlayer: View {
         } else {
             HStack(spacing: 12) {
             // Album artwork - 48x48 with 12px border radius
-            AsyncImage(url: audioPlayer.currentArtwork) { image in
+            CachedAsyncImage(url: audioPlayer.currentArtwork) { image in
                 image
                             .resizable()
                             .aspectRatio(contentMode: .fill)

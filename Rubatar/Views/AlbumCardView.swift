@@ -29,25 +29,25 @@ struct AlbumCardView: View {
                     }
             } else if let imageURL = customImageName, imageURL.hasPrefix("http"), let url = URL(string: imageURL) {
                 // Use URL-based image
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(1, contentMode: .fill)
-                } placeholder: {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(
-                            LinearGradient(
-                                colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+            CachedAsyncImage(url: url) { image in
+                image
+                    .resizable()
+                    .aspectRatio(1, contentMode: .fill)
+            } placeholder: {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(
+                        LinearGradient(
+                            colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
                         )
-                        .overlay(
-                            Image(systemName: "music.note")
-                                .font(.title)
-                                .foregroundColor(.white.opacity(0.7))
-                        )
-                }
+                    )
+                    .overlay(
+                        Image(systemName: "music.note")
+                            .font(.title)
+                            .foregroundColor(.white.opacity(0.7))
+                    )
+            }
                 .frame(width: 160, height: 160)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
@@ -56,7 +56,7 @@ struct AlbumCardView: View {
                 }
             } else {
                 // Fallback to album artwork URL
-                AsyncImage(url: album.artworkURL) { image in
+                CachedAsyncImage(url: album.artworkURL) { image in
                     image
                         .resizable()
                         .aspectRatio(1, contentMode: .fill)
@@ -131,7 +131,7 @@ struct PlaylistCardView: View {
         VStack(alignment: .leading, spacing: 0) {
             // Cover - Playlist artwork
             /*
-            AsyncImage(url: playlist.artworkURL) { image in
+            CachedAsyncImage(url: playlist.artworkURL) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fit)
@@ -199,7 +199,7 @@ struct PlaylistCardView: View {
                     
                     // Main image layer (top) - Handle both URLs and local images
                     if customImageName.hasPrefix("http") {
-                        AsyncImage(url: URL(string: customImageName)) { image in
+                        CachedAsyncImage(url: URL(string: customImageName)) { image in
                             image
                                 .resizable()
                                 .frame(maxWidth: .infinity, maxHeight: 400)
@@ -397,7 +397,7 @@ struct AppleMusicAlbumCardView: View {
             // Album artwork from Apple Music
             Group {
                 if let album = album, let artwork = album.artwork {
-                    AsyncImage(url: artwork.url(width: 300, height: 300)) { image in
+                    CachedAsyncImage(url: artwork.url(width: 300, height: 300)) { image in
                         image
                             .resizable()
                             .aspectRatio(1, contentMode: .fill)

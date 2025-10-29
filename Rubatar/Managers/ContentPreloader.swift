@@ -82,14 +82,14 @@ class ContentPreloader: ObservableObject {
         preloadedPoems = poems
         loadingProgress += 0.25
         
-        // Preload more poem artworks (first 20 instead of 5)
-        let artworkURLs = poems.prefix(20).compactMap { poem -> URL? in
+        // Preload more poem artworks (first 30 instead of 20)
+        let artworkURLs = poems.prefix(30).compactMap { poem -> URL? in
             guard let urlString = poem.artwork_url else { return nil }
             return URL(string: urlString)
         }
         
         if !artworkURLs.isEmpty {
-            ImageCacheManager.shared.preloadImages(urls: artworkURLs)
+            ImageCacheManager.shared.preloadImages(urls: artworkURLs, priority: .userInitiated)
         }
         
         print("✅ Preloaded \(poems.count) poems and \(artworkURLs.count) artworks")
@@ -128,13 +128,14 @@ class ContentPreloader: ObservableObject {
             preloadedPlaylists = Array(uniquePlaylists.prefix(25))
             loadingProgress += 0.25
             
-            // Preload ALL playlist artworks
+            // Preload ALL playlist artworks with high priority
             let artworkURLs = uniquePlaylists.compactMap { playlist -> URL? in
                 playlist.artwork?.url(width: 300, height: 300)
             }
             
             if !artworkURLs.isEmpty {
-                ImageCacheManager.shared.preloadImages(urls: artworkURLs)
+                ImageCacheManager.shared.preloadImages(urls: artworkURLs, priority: .userInitiated)
+                print("🖼️ Preloading \(artworkURLs.count) playlist artworks")
             }
             
             // Cache all playlist metadata
@@ -200,13 +201,14 @@ class ContentPreloader: ObservableObject {
             preloadedAlbums = Array(uniqueAlbums.prefix(25))
             loadingProgress += 0.25
             
-            // Preload ALL album artworks
+            // Preload ALL album artworks with high priority
             let artworkURLs = uniqueAlbums.compactMap { album -> URL? in
                 album.artwork?.url(width: 300, height: 300)
             }
             
             if !artworkURLs.isEmpty {
-                ImageCacheManager.shared.preloadImages(urls: artworkURLs)
+                ImageCacheManager.shared.preloadImages(urls: artworkURLs, priority: .userInitiated)
+                print("🖼️ Preloading \(artworkURLs.count) album artworks")
             }
             
             // Cache all album metadata
@@ -281,4 +283,6 @@ class ContentPreloader: ObservableObject {
         return preloadedAlbums
     }
 }
+
+
 
