@@ -19,7 +19,11 @@ struct PlayBackView: View {
             )
         } else {
         HStack(spacing: 12) {
-            CachedAsyncImage(url: currentArtwork) { image in
+            OptimizedAsyncImage(
+                url: currentArtwork,
+                targetSize: CGSize(width: 64, height: 64),
+                compressionQuality: 0.9
+            ) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)

@@ -477,7 +477,11 @@ struct CompactPlaylistCardView: View {
             // Cover image - same size as album cards
             Group {
                 if let coverImageUrl = coverImageUrl, !coverImageUrl.isEmpty {
-                    CachedAsyncImage(url: URL(string: coverImageUrl)) { image in
+                    OptimizedAsyncImage(
+                        url: URL(string: coverImageUrl),
+                        targetSize: CGSize(width: 200, height: 200),
+                        compressionQuality: 0.85
+                    ) { image in
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
@@ -491,8 +495,7 @@ struct CompactPlaylistCardView: View {
                                 )
                             )
                             .overlay(
-                                ProgressView()
-                                    .scaleEffect(0.8)
+                                ImageShimmerEffect()
                             )
                     }
                 } else {

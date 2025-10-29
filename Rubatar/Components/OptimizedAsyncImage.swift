@@ -98,7 +98,7 @@ struct OptimizedAsyncImage<Content: View, Placeholder: View>: View {
             
             // Only resize if significantly different
             if abs(size.width - newSize.width) > 50 || abs(size.height - newSize.height) > 50 {
-                return image.resized(to: newSize, quality: compressionQuality)
+                return await image.resized(to: newSize, quality: compressionQuality)
             }
             
             return image
@@ -135,7 +135,7 @@ extension UIImage {
 }
 
 // MARK: - Shimmer Effect for Loading
-struct ShimmerEffect: View {
+struct ImageShimmerEffect: View {
     @State private var isAnimating = false
     
     var body: some View {
