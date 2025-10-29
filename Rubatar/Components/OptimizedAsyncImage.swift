@@ -17,20 +17,12 @@ struct OptimizedAsyncImage<Content: View, Placeholder: View>: View {
     @State private var isLoading = false
     @State private var loadError = false
     
-    // Performance optimizations
-    private let targetSize: CGSize
-    private let compressionQuality: CGFloat
-    
     init(
         url: URL?,
-        targetSize: CGSize = CGSize(width: 300, height: 300),
-        compressionQuality: CGFloat = 0.8,
         @ViewBuilder content: @escaping (Image) -> Content,
         @ViewBuilder placeholder: @escaping () -> Placeholder
     ) {
         self.url = url
-        self.targetSize = targetSize
-        self.compressionQuality = compressionQuality
         self.content = content
         self.placeholder = placeholder
     }
@@ -68,41 +60,14 @@ struct OptimizedAsyncImage<Content: View, Placeholder: View>: View {
         isLoading = true
         loadError = false
         
-        // Use ImageCacheManager for optimal performance
+        // Use ImageCacheManager for optimal performance (simplified)
         if let image = await ImageCacheManager.shared.loadImage(from: url) {
-            // Optimize image for display
-            let optimizedImage = await optimizeImage(image)
-            loadedImage = optimizedImage
+            loadedImage = image
         } else {
             loadError = true
         }
         
         isLoading = false
-    }
-    
-    private func optimizeImage(_ image: UIImage) async -> UIImage {
-        return await Task.detached(priority: .userInitiated) {
-            // Resize if needed
-            let size = image.size
-            let aspectRatio = size.width / size.height
-            let targetAspectRatio = targetSize.width / targetSize.height
-            
-            var newSize = targetSize
-            
-            // Maintain aspect ratio
-            if aspectRatio > targetAspectRatio {
-                newSize.height = targetSize.width / aspectRatio
-            } else {
-                newSize.width = targetSize.height * aspectRatio
-            }
-            
-            // Only resize if significantly different
-            if abs(size.width - newSize.width) > 50 || abs(size.height - newSize.height) > 50 {
-                return await image.resized(to: newSize, quality: compressionQuality)
-            }
-            
-            return image
-        }.value
     }
 }
 
@@ -110,29 +75,16 @@ struct OptimizedAsyncImage<Content: View, Placeholder: View>: View {
 extension OptimizedAsyncImage where Placeholder == Color {
     init(
         url: URL?,
-        targetSize: CGSize = CGSize(width: 300, height: 300),
-        compressionQuality: CGFloat = 0.8,
         @ViewBuilder content: @escaping (Image) -> Content
     ) {
         self.init(
             url: url,
-            targetSize: targetSize,
-            compressionQuality: compressionQuality,
             content: content,
             placeholder: { Color.gray.opacity(0.2) }
         )
     }
 }
 
-// MARK: - UIImage Extension for Optimization
-extension UIImage {
-    func resized(to size: CGSize, quality: CGFloat = 0.8) -> UIImage {
-        let renderer = UIGraphicsImageRenderer(size: size)
-        return renderer.image { _ in
-            self.draw(in: CGRect(origin: .zero, size: size))
-        }
-    }
-}
 
 // MARK: - Shimmer Effect for Loading
 struct ImageShimmerEffect: View {

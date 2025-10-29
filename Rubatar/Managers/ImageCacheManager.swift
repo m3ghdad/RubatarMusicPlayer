@@ -17,20 +17,19 @@ class ImageCacheManager {
     // Disk cache directory
     private let diskCacheDirectory: URL
     
-    // Cache size limits - Optimized for better performance
-    private let maxMemoryCacheSize = 150 * 1024 * 1024 // 150 MB (increased for better caching)
-    private let maxDiskCacheSize = 800 * 1024 * 1024   // 800 MB (increased for more offline content)
-    private let maxCacheAge: TimeInterval = 14 * 24 * 60 * 60 // 14 days (increased for longer retention)
+    // Cache size limits - Simplified for better performance
+    private let maxMemoryCacheSize = 100 * 1024 * 1024 // 100 MB (reduced for stability)
+    private let maxDiskCacheSize = 500 * 1024 * 1024   // 500 MB (reduced for stability)
+    private let maxCacheAge: TimeInterval = 7 * 24 * 60 * 60 // 7 days (reduced for stability)
     
-    // Performance optimizations
-    private let maxConcurrentDownloads = 6 // Limit concurrent downloads
-    private let downloadSemaphore = DispatchSemaphore(value: 6)
-    private var downloadTasks: [String: Task<UIImage?, Never>] = [:]
+    // Simplified concurrency control
+    private let maxConcurrentDownloads = 3 // Reduced from 6 to 3
+    private let downloadQueue = DispatchQueue(label: "image.download", qos: .userInitiated, attributes: .concurrent)
     
     private init() {
         // Configure memory cache
         memoryCache.totalCostLimit = maxMemoryCacheSize
-        memoryCache.countLimit = 200 // Max 200 images in memory
+        memoryCache.countLimit = 100 // Reduced from 200 to 100
         
         // Setup disk cache directory
         let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
@@ -39,7 +38,7 @@ class ImageCacheManager {
         // Create directory if needed
         try? FileManager.default.createDirectory(at: diskCacheDirectory, withIntermediateDirectories: true)
         
-        // Clean old cache on init
+        // Clean old cache on init (simplified)
         Task {
             await cleanOldCache()
         }
@@ -49,19 +48,13 @@ class ImageCacheManager {
     
     func loadImage(from url: URL) async -> UIImage? {
         let cacheKey = url.absoluteString as NSString
-        let urlString = url.absoluteString
         
-        // Check memory cache first
+        // Check memory cache first (fastest)
         if let cachedImage = memoryCache.object(forKey: cacheKey) {
             return cachedImage
         }
         
-        // Check if download is already in progress
-        if let existingTask = downloadTasks[urlString] {
-            return await existingTask.value
-        }
-        
-        // Check disk cache
+        // Check disk cache (fast)
         if let diskImage = loadFromDisk(url: url) {
             // Store in memory cache for faster access
             let cost = Int(diskImage.size.width * diskImage.size.height * 4) // Rough estimate
@@ -69,53 +62,26 @@ class ImageCacheManager {
             return diskImage
         }
         
-        // Create download task with concurrency control
-        let task = Task<UIImage?, Never> {
-            await withCheckedContinuation { continuation in
-                Task {
-                    downloadSemaphore.wait()
-                    let result = await downloadImage(from: url)
-                    downloadSemaphore.signal()
-                    continuation.resume(returning: result)
-                }
-            }
-        }
-        
-        // Store task to prevent duplicate downloads
-        downloadTasks[urlString] = task
-        
-        let result = await task.value
-        
-        // Clean up completed task
-        downloadTasks.removeValue(forKey: urlString)
-        
-        return result
+        // Download image (simplified)
+        return await downloadImage(from: url)
     }
     
     func preloadImages(urls: [URL]) {
         Task {
-            // Use TaskGroup for concurrent preloading
+            // Limit concurrent downloads to prevent overwhelming the system
+            let semaphore = DispatchSemaphore(value: maxConcurrentDownloads)
+            
             await withTaskGroup(of: UIImage?.self) { group in
                 for url in urls {
                     group.addTask {
-                        await self.loadImage(from: url)
-                    }
-                }
-                
-                // Wait for all tasks to complete
-                for await _ in group {}
-            }
-        }
-    }
-    
-    // Enhanced preloading with priority
-    func preloadImages(urls: [URL], priority: TaskPriority = .userInitiated) {
-        Task(priority: priority) {
-            // Use TaskGroup for concurrent preloading
-            await withTaskGroup(of: UIImage?.self) { group in
-                for url in urls {
-                    group.addTask(priority: priority) {
-                        await self.loadImage(from: url)
+                        await withCheckedContinuation { continuation in
+                            Task {
+                                semaphore.wait()
+                                let result = await self.downloadImage(from: url)
+                                semaphore.signal()
+                                continuation.resume(returning: result)
+                            }
+                        }
                     }
                 }
                 
@@ -157,7 +123,7 @@ class ImageCacheManager {
         do {
             // Create URLRequest with timeout and caching policy
             var request = URLRequest(url: url)
-            request.timeoutInterval = 30.0
+            request.timeoutInterval = 15.0 // Reduced timeout
             request.cachePolicy = .returnCacheDataElseLoad
             
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -170,7 +136,7 @@ class ImageCacheManager {
             }
             
             // Validate data size (prevent extremely large images)
-            guard data.count < 10 * 1024 * 1024 else { // 10MB limit
+            guard data.count < 5 * 1024 * 1024 else { // 5MB limit (reduced from 10MB)
                 print("Image too large: \(data.count) bytes for \(url)")
                 return nil
             }
@@ -180,8 +146,8 @@ class ImageCacheManager {
                 return nil
             }
             
-            // Optimize image size if too large
-            let optimizedImage = optimizeImageSize(image, maxSize: CGSize(width: 600, height: 600))
+            // Simple image optimization (reduced complexity)
+            let optimizedImage = optimizeImageSize(image, maxSize: CGSize(width: 400, height: 400))
             
             // Cache in memory
             let cacheKey = url.absoluteString as NSString
@@ -200,7 +166,7 @@ class ImageCacheManager {
         }
     }
     
-    // Optimize image size for better performance
+    // Simplified image optimization
     private func optimizeImageSize(_ image: UIImage, maxSize: CGSize) -> UIImage {
         let imageSize = image.size
         
@@ -221,17 +187,15 @@ class ImageCacheManager {
             newSize.width = maxSize.height * aspectRatio
         }
         
-        // Resize image
-        UIGraphicsBeginImageContextWithOptions(newSize, false, 0.0)
-        image.draw(in: CGRect(origin: .zero, size: newSize))
-        let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        
-        return resizedImage ?? image
+        // Use UIGraphicsImageRenderer for better performance
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        return renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: newSize))
+        }
     }
     
     private func saveToDisk(image: UIImage, url: URL) {
-        guard let data = image.jpegData(compressionQuality: 0.8) else { return }
+        guard let data = image.jpegData(compressionQuality: 0.7) else { return } // Reduced quality for smaller files
         
         let fileURL = diskCacheURL(for: url)
         try? data.write(to: fileURL)
@@ -323,42 +287,10 @@ extension CachedAsyncImage where Placeholder == Color {
 // MARK: - Performance Optimization Extensions
 extension ImageCacheManager {
     
-    /// Preload images with intelligent prioritization
+    /// Preload images with intelligent prioritization (simplified)
     func preloadImagesIntelligently(urls: [URL], visibleRange: Range<Int>? = nil) {
-        Task {
-            // Prioritize visible images first
-            if let visibleRange = visibleRange {
-                let visibleUrls = Array(urls[visibleRange])
-                let remainingUrls = urls.enumerated().compactMap { index, url in
-                    visibleRange.contains(index) ? nil : url
-                }
-                
-                // Load visible images with high priority
-                await withTaskGroup(of: UIImage?.self) { group in
-                    for url in visibleUrls {
-                        group.addTask(priority: .userInitiated) {
-                            await self.loadImage(from: url)
-                        }
-                    }
-                    
-                    for await _ in group {}
-                }
-                
-                // Load remaining images with lower priority
-                await withTaskGroup(of: UIImage?.self) { group in
-                    for url in remainingUrls {
-                        group.addTask(priority: .background) {
-                            await self.loadImage(from: url)
-                        }
-                    }
-                    
-                    for await _ in group {}
-                }
-            } else {
-                // Load all images concurrently
-                await preloadImages(urls: urls)
-            }
-        }
+        // Simplified - just preload all images with limited concurrency
+        preloadImages(urls: urls)
     }
     
     /// Get cache statistics for debugging

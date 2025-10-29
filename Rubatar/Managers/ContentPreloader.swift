@@ -16,8 +16,8 @@ class ContentPreloader: ObservableObject {
     @Published var loadingProgress: Double = 0.0
     @Published var loadingMessage: String = "Loading..."
     
-    private let maxLoadingTime: TimeInterval = 4.0 // Max 4 seconds
-    private let minLoadingTime: TimeInterval = 3.0 // Min 3 seconds for smooth experience
+    private let maxLoadingTime: TimeInterval = 2.0 // Max 2 seconds (reduced)
+    private let minLoadingTime: TimeInterval = 1.5 // Min 1.5 seconds (reduced)
     
     // Preloaded data
     @Published var preloadedPoems: [PoemData] = []
@@ -82,14 +82,14 @@ class ContentPreloader: ObservableObject {
         preloadedPoems = poems
         loadingProgress += 0.25
         
-        // Preload more poem artworks (first 30 instead of 20)
-        let artworkURLs = poems.prefix(30).compactMap { poem -> URL? in
+        // Preload fewer poem artworks (first 10 instead of 30)
+        let artworkURLs = poems.prefix(10).compactMap { poem -> URL? in
             guard let urlString = poem.artwork_url else { return nil }
             return URL(string: urlString)
         }
         
         if !artworkURLs.isEmpty {
-            ImageCacheManager.shared.preloadImages(urls: artworkURLs, priority: .userInitiated)
+            ImageCacheManager.shared.preloadImages(urls: artworkURLs)
         }
         
         print("✅ Preloaded \(poems.count) poems and \(artworkURLs.count) artworks")
@@ -107,39 +107,24 @@ class ContentPreloader: ObservableObject {
         }
         
         do {
-            // Fetch multiple playlist searches in parallel for better coverage
-            async let persianClassical = fetchPlaylists(term: "persian classical", limit: 15)
-            async let iranianTraditional = fetchPlaylists(term: "iranian traditional music", limit: 10)
-            async let persianMusic = fetchPlaylists(term: "persian music", limit: 10)
+            // Fetch fewer playlists to reduce load
+            let playlists = await fetchPlaylists(term: "persian classical", limit: 10)
             
-            let allPlaylists = await [persianClassical, iranianTraditional, persianMusic].flatMap { $0 }
-            
-            // Remove duplicates by ID
-            var seenIds = Set<String>()
-            let uniquePlaylists = allPlaylists.filter { playlist in
-                let id = playlist.id.rawValue
-                if seenIds.contains(id) {
-                    return false
-                }
-                seenIds.insert(id)
-                return true
-            }
-            
-            preloadedPlaylists = Array(uniquePlaylists.prefix(25))
+            preloadedPlaylists = playlists
             loadingProgress += 0.25
             
-            // Preload ALL playlist artworks with high priority
-            let artworkURLs = uniquePlaylists.compactMap { playlist -> URL? in
+            // Preload fewer playlist artworks
+            let artworkURLs = playlists.prefix(5).compactMap { playlist -> URL? in
                 playlist.artwork?.url(width: 300, height: 300)
             }
             
             if !artworkURLs.isEmpty {
-                ImageCacheManager.shared.preloadImages(urls: artworkURLs, priority: .userInitiated)
+                ImageCacheManager.shared.preloadImages(urls: artworkURLs)
                 print("🖼️ Preloading \(artworkURLs.count) playlist artworks")
             }
             
-            // Cache all playlist metadata
-            for playlist in uniquePlaylists {
+            // Cache playlist metadata (simplified)
+            for playlist in playlists {
                 CoreDataManager.shared.cachePlaylist(
                     id: playlist.id.rawValue,
                     name: playlist.name,
@@ -148,7 +133,7 @@ class ContentPreloader: ObservableObject {
                 )
             }
             
-            print("✅ Preloaded \(uniquePlaylists.count) unique playlists with \(artworkURLs.count) artworks")
+            print("✅ Preloaded \(playlists.count) playlists with \(artworkURLs.count) artworks")
         } catch {
             loadingProgress += 0.25
             print("❌ Failed to preload playlists: \(error.localizedDescription)")
@@ -179,40 +164,24 @@ class ContentPreloader: ObservableObject {
         }
         
         do {
-            // Fetch multiple album searches in parallel for better coverage
-            async let persianTraditional = fetchAlbums(term: "persian traditional", limit: 15)
-            async let iranianMusic = fetchAlbums(term: "iranian music", limit: 10)
-            async let santoorMusic = fetchAlbums(term: "santoor", limit: 8)
-            async let tarMusic = fetchAlbums(term: "tar persian", limit: 8)
+            // Fetch fewer albums to reduce load
+            let albums = await fetchAlbums(term: "persian traditional", limit: 10)
             
-            let allAlbums = await [persianTraditional, iranianMusic, santoorMusic, tarMusic].flatMap { $0 }
-            
-            // Remove duplicates by ID
-            var seenIds = Set<String>()
-            let uniqueAlbums = allAlbums.filter { album in
-                let id = album.id.rawValue
-                if seenIds.contains(id) {
-                    return false
-                }
-                seenIds.insert(id)
-                return true
-            }
-            
-            preloadedAlbums = Array(uniqueAlbums.prefix(25))
+            preloadedAlbums = albums
             loadingProgress += 0.25
             
-            // Preload ALL album artworks with high priority
-            let artworkURLs = uniqueAlbums.compactMap { album -> URL? in
+            // Preload fewer album artworks
+            let artworkURLs = albums.prefix(5).compactMap { album -> URL? in
                 album.artwork?.url(width: 300, height: 300)
             }
             
             if !artworkURLs.isEmpty {
-                ImageCacheManager.shared.preloadImages(urls: artworkURLs, priority: .userInitiated)
+                ImageCacheManager.shared.preloadImages(urls: artworkURLs)
                 print("🖼️ Preloading \(artworkURLs.count) album artworks")
             }
             
-            // Cache all album metadata
-            for album in uniqueAlbums {
+            // Cache album metadata (simplified)
+            for album in albums {
                 CoreDataManager.shared.cacheAlbum(
                     id: album.id.rawValue,
                     name: album.title,
@@ -221,7 +190,7 @@ class ContentPreloader: ObservableObject {
                 )
             }
             
-            print("✅ Preloaded \(uniqueAlbums.count) unique albums with \(artworkURLs.count) artworks")
+            print("✅ Preloaded \(albums.count) albums with \(artworkURLs.count) artworks")
         } catch {
             loadingProgress += 0.25
             print("❌ Failed to preload albums: \(error.localizedDescription)")
@@ -251,12 +220,12 @@ class ContentPreloader: ObservableObject {
         // Clean old cached data in background
         CoreDataManager.shared.clearOldPoems(olderThan: 7)
         
-        // Preload recently played tracks for quick access
-        let recentlyPlayed = CoreDataManager.shared.fetchRecentlyPlayed(limit: 20)
+        // Preload fewer recently played tracks
+        let recentlyPlayed = CoreDataManager.shared.fetchRecentlyPlayed(limit: 10)
         print("🎵 Loaded \(recentlyPlayed.count) recently played tracks")
         
-        // Preload recently played artworks
-        let recentArtworkURLs = recentlyPlayed.compactMap { item -> URL? in
+        // Preload fewer recently played artworks
+        let recentArtworkURLs = recentlyPlayed.prefix(5).compactMap { item -> URL? in
             guard let urlString = item.artworkUrl else { return nil }
             return URL(string: urlString)
         }

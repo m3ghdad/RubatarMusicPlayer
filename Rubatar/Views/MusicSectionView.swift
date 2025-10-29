@@ -478,9 +478,7 @@ struct CompactPlaylistCardView: View {
             Group {
                 if let coverImageUrl = coverImageUrl, !coverImageUrl.isEmpty {
                     OptimizedAsyncImage(
-                        url: URL(string: coverImageUrl),
-                        targetSize: CGSize(width: 200, height: 200),
-                        compressionQuality: 0.85
+                        url: URL(string: coverImageUrl)
                     ) { image in
                         image
                             .resizable()
