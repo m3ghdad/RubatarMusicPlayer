@@ -37,6 +37,7 @@ struct ContentView: View {
     @Namespace private var animation
     @State private var showLearnMore = false
     @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
+    @Environment(\.scenePhase) private var scenePhase
     
     enum PlayerSource {
         case none
@@ -156,6 +157,24 @@ struct ContentView: View {
         .onAppear { initializeVideoPlayer() }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ShowWelcomeLearnMore"))) { _ in
             showLearnMore = true
+        }
+        .onChange(of: scenePhase) { _, phase in
+            switch phase {
+            case .background, .inactive:
+                // Background/inactive - no action needed here
+                break
+            case .active:
+                // Check and update playback state when returning to foreground
+                let player = ApplicationMusicPlayer.shared
+                let currentPlaybackState = player.state.playbackStatus
+                print("🔄 ContentView - App became active - Current playback state: \(currentPlaybackState)")
+                DispatchQueue.main.async {
+                    self.audioPlayer.isPlaying = (currentPlaybackState == .playing)
+                    print("🔄 ContentView - Updated audioPlayer.isPlaying to: \(self.audioPlayer.isPlaying)")
+                }
+            @unknown default:
+                break
+            }
         }
         .onChange(of: showEnhancedPlayer) { oldValue, newValue in
             if oldValue == true && newValue == false {

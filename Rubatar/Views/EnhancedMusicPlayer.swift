@@ -234,15 +234,6 @@ struct EnhancedMusicPlayer: View {
                 shouldRestoreOnReturn = false
                 isRestoringPlaybackPosition = true
                 
-                // Immediately check and update playback state
-                let player = ApplicationMusicPlayer.shared
-                let currentPlaybackState = player.state.playbackStatus
-                print("🔄 App became active - Current playback state: \(currentPlaybackState)")
-                DispatchQueue.main.async {
-                    self.audioPlayer.isPlaying = (currentPlaybackState == .playing)
-                    print("🔄 App became active - Updated audioPlayer.isPlaying to: \(self.audioPlayer.isPlaying)")
-                }
-                
                 // Defer slightly to allow the player to settle, then restore
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                     // Ensure we have a current entry before restoring
@@ -251,33 +242,13 @@ struct EnhancedMusicPlayer: View {
                         // Try again a bit later if not ready
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                             restorePlaybackPositionIfAvailable()
-                            // Update UI state to reflect actual playback state
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                // Check actual playback state and update UI accordingly
-                                let actualPlaybackState = player.state.playbackStatus
-                                print("🔄 Background return - Actual playback state: \(actualPlaybackState)")
-                                DispatchQueue.main.async {
-                                    self.audioPlayer.isPlaying = (actualPlaybackState == .playing)
-                                    print("🔄 Background return - Updated audioPlayer.isPlaying to: \(self.audioPlayer.isPlaying)")
-                                }
-                                isRestoringPlaybackPosition = false
-                            }
+                            isRestoringPlaybackPosition = false
                         }
                         return
                     }
 
                     restorePlaybackPositionIfAvailable()
-                    // Update UI state to reflect actual playback state
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        // Check actual playback state and update UI accordingly
-                        let actualPlaybackState = player.state.playbackStatus
-                        print("🔄 Background return - Actual playback state: \(actualPlaybackState)")
-                        DispatchQueue.main.async {
-                            self.audioPlayer.isPlaying = (actualPlaybackState == .playing)
-                            print("🔄 Background return - Updated audioPlayer.isPlaying to: \(self.audioPlayer.isPlaying)")
-                        }
-                        isRestoringPlaybackPosition = false
-                    }
+                    isRestoringPlaybackPosition = false
                 }
             @unknown default:
                 break
