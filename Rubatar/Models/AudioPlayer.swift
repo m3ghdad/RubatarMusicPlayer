@@ -360,37 +360,48 @@ class AudioPlayer: ObservableObject {
     func playSelectedTrack(track: String, artist: String, artwork: URL?) {
         print("🎵 playSelectedTrack called with: \(track) by \(artist)")
 
-        // Set loading state
-        isLoadingTrack = true
+        // Immediate UI update on main thread
+        DispatchQueue.main.async {
+            self.isLoadingTrack = true
+            self.currentTrack = track
+            self.currentArtist = artist
+            self.currentArtwork = artwork
+        }
         
-        currentTrack = track
-        currentArtist = artist
-        currentArtwork = artwork
         saveLastPlayedTrack() // Save immediately when track is selected
 
-        // Try MusicKit playback first
-        Task { @MainActor in
-            do {
-                // Check if the track string contains an album ID (format: "albumId:albumTitle")
-                if track.contains(":"), let albumId = track.split(separator: ":").first {
-                    try await playAlbumByID(albumID: String(albumId), albumTitle: artist)
-                } else {
-                try await playWithMusicKit(trackTitle: track, artist: artist)
-                }
-                usingMusicKit = true
-                isPlaying = true
-                savePlaybackState()
-                startPeriodicStateSaving()
+        // Background processing for music operations
+        DispatchQueue.global(qos: .userInitiated).async {
+            Task {
+                do {
+                    // Check if the track string contains an album ID (format: "albumId:albumTitle")
+                    if track.contains(":"), let albumId = track.split(separator: ":").first {
+                        try await self.playAlbumByID(albumID: String(albumId), albumTitle: artist)
+                    } else {
+                        try await self.playWithMusicKit(trackTitle: track, artist: artist)
+                    }
+                    
+                    // Update UI on main thread
+                    DispatchQueue.main.async {
+                        self.usingMusicKit = true
+                        self.isPlaying = true
+                        self.isLoadingTrack = false
+                        self.savePlaybackState()
+                        self.startPeriodicStateSaving()
+                    }
                 print("✅ MusicKit playback started")
             } catch {
-                print("⚠️ MusicKit playback failed (\(error)). No fallback available.")
-                usingMusicKit = false
-                isPlaying = false
-                savePlaybackState()
+                    print("⚠️ MusicKit playback failed (\(error)). No fallback available.")
+                    
+                    // Update UI on main thread
+                    DispatchQueue.main.async {
+                        self.usingMusicKit = false
+                        self.isPlaying = false
+                        self.isLoadingTrack = false
+                        self.savePlaybackState()
+                    }
+                }
             }
-            
-            // Clear loading state
-            isLoadingTrack = false
         }
     }
     
@@ -460,13 +471,15 @@ class AudioPlayer: ObservableObject {
     func playSelectedPlaylist(playlistId: String, playlistTitle: String, curatorName: String, artwork: URL?) {
         print("🎶 playSelectedPlaylist called with: \(playlistTitle) by \(curatorName), ID: \(playlistId)")
 
-        // Set loading state
-        isLoadingTrack = true
+        // Immediate UI update on main thread
+        DispatchQueue.main.async {
+            self.isLoadingTrack = true
+            self.currentTrack = playlistTitle
+            self.currentArtist = curatorName
+            self.currentArtwork = artwork
+            self.currentPlaylistId = playlistId
+        }
         
-        currentTrack = playlistTitle
-        currentArtist = curatorName
-        currentArtwork = artwork
-        currentPlaylistId = playlistId // Store the playlist ID
         saveLastPlayedTrack() // Save immediately when playlist is selected
         
         // Cache playlist metadata
@@ -482,35 +495,117 @@ class AudioPlayer: ObservableObject {
             ImageCacheManager.shared.preloadImages(urls: [artwork])
         }
 
-        // Try MusicKit playlist playback by ID
-        Task { @MainActor in
-            do {
-                try await playPlaylistByID(playlistID: playlistId, playlistTitle: playlistTitle, curatorName: curatorName)
-                usingMusicKit = true
-                isPlaying = true
-                savePlaybackState()
-                startPeriodicStateSaving()
-                
-                // Record playlist play
-                CoreDataManager.shared.recordPlaylistPlay(id: playlistId)
-                
-                print("✅ MusicKit playlist playback started")
-            } catch {
-                print("⚠️ MusicKit playlist playback failed (\(error)). No fallback - playlist playback requires MusicKit.")
-                usingMusicKit = false
-                isPlaying = false
-                
-                // Reset to default state
-                currentTrack = "Playlist playback unavailable"
-                currentArtist = "MusicKit required"
-                currentArtwork = nil
-                currentPlaylistId = nil
-                savePlaybackState()
+        // Background processing for playlist loading
+        DispatchQueue.global(qos: .userInitiated).async {
+            Task {
+                do {
+                    try await self.playPlaylistByID(playlistID: playlistId, playlistTitle: playlistTitle, curatorName: curatorName)
+                    
+                    // Update UI on main thread
+                    DispatchQueue.main.async {
+                        self.usingMusicKit = true
+                        self.isPlaying = true
+                        self.isLoadingTrack = false
+                        self.savePlaybackState()
+                        self.startPeriodicStateSaving()
+                        
+                        // Record playlist play
+                        CoreDataManager.shared.recordPlaylistPlay(id: playlistId)
+                    }
+                    print("✅ MusicKit playlist playback started")
+                } catch {
+                    print("⚠️ MusicKit playlist playback failed (\(error)). No fallback - playlist playback requires MusicKit.")
+                    
+                    // Update UI on main thread
+                    DispatchQueue.main.async {
+                        self.usingMusicKit = false
+                        self.isPlaying = false
+                        self.isLoadingTrack = false
+                        
+                        // Reset to default state
+                        self.currentTrack = "Playlist playback unavailable"
+                        self.currentArtist = "MusicKit required"
+                        self.currentArtwork = nil
+                        self.currentPlaylistId = nil
+                        self.savePlaybackState()
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Parallel Track Loading
+    private func loadPlaylistTracksParallel(tracks: [Track]) async throws -> [Song] {
+        return try await withThrowingTaskGroup(of: [Song].self) { group in
+            // Process tracks in parallel
+            for track in tracks {
+                group.addTask {
+                    var songRequest = MusicCatalogSearchRequest(term: "\(track.title) \(track.artistName)", types: [Song.self])
+                    songRequest.limit = 1
+                    let songResponse = try await songRequest.response()
+                    return Array(songResponse.songs)
+                }
             }
             
-            // Clear loading state
-            isLoadingTrack = false
+            var allSongs: [Song] = []
+            for try await songs in group {
+                allSongs.append(contentsOf: songs)
+                if let song = songs.first {
+                    print("  ✅ Loaded: \(song.title) - Duration: \(song.duration ?? 0)s")
+                }
+            }
+            return allSongs
         }
+    }
+    
+    // MARK: - Background Preloading
+    private func preloadNextTracks() {
+        DispatchQueue.global(qos: .background).async {
+            let nextTracks = Array(self.musicKitQueue.dropFirst(self.currentQueueIndex + 1).prefix(3))
+            
+            for track in nextTracks {
+                // Preload artwork
+                if let artworkURL = track.artwork?.url(width: 300, height: 300) {
+                    ImageCacheManager.shared.preloadImages(urls: [artworkURL])
+                }
+            }
+            
+            print("🔄 Preloaded artwork for \(nextTracks.count) upcoming tracks")
+        }
+    }
+    
+    // MARK: - UI Update Helpers
+    private func updateUIOnMainThread(_ updates: @escaping () -> Void) {
+        DispatchQueue.main.async {
+            updates()
+        }
+    }
+    
+    // MARK: - Track Management
+    // Record currently playing track to recently played
+    private func recordCurrentlyPlayingTrack() {
+        guard let currentSong = musicKitQueue[safe: currentQueueIndex] else { return }
+        
+        CoreDataManager.shared.addRecentlyPlayed(
+            trackId: currentSong.id.rawValue,
+            trackName: currentSong.title,
+            artistName: currentSong.artistName,
+            artworkUrl: currentSong.artwork?.url(width: 300, height: 300)?.absoluteString,
+            playlistId: currentPlaylistId
+        )
+    }
+    
+    // Prefetch next track artwork
+    private func prefetchNextTrackArtwork() async {
+        let nextIndex = (currentQueueIndex + 1) % musicKitQueue.count
+        guard let nextSong = musicKitQueue[safe: nextIndex],
+              let artworkURL = nextSong.artwork?.url(width: 300, height: 300) else {
+            return
+        }
+        
+        // Preload next track artwork
+        _ = await ImageCacheManager.shared.loadImage(from: artworkURL)
+        print("🎨 Prefetched artwork for next track: \(nextSong.title)")
     }
     
     @MainActor
@@ -558,19 +653,8 @@ class AudioPlayer: ObservableObject {
             print("  \(index + 1). \(track.title) - \(track.artistName)")
         }
         
-        // Convert tracks to songs for playback
-        var songsToQueue: [Song] = []
-        for track in tracks {
-            // Search for each track as a song
-            var songRequest = MusicCatalogSearchRequest(term: "\(track.title) \(track.artistName)", types: [Song.self])
-            songRequest.limit = 1
-            let songResponse = try await songRequest.response()
-            if let song = songResponse.songs.first {
-                // Duration should be automatically included in Song objects from search
-                songsToQueue.append(song)
-                print("  ✅ Loaded: \(song.title) - Duration: \(song.duration ?? 0)s")
-            }
-        }
+        // Convert tracks to songs for playback using parallel processing
+        let songsToQueue = try await loadPlaylistTracksParallel(tracks: Array(tracks))
         
         guard !songsToQueue.isEmpty else {
             print("❌ No songs found for playlist tracks")
@@ -600,6 +684,9 @@ class AudioPlayer: ObservableObject {
         isPlaying = true
         savePlaybackState()
         startPeriodicStateSaving()
+        
+        // Preload next tracks in background
+        preloadNextTracks()
     }
     
     @MainActor
@@ -698,69 +785,85 @@ class AudioPlayer: ObservableObject {
     }
     
     func togglePlayPause() {
-        Task { @MainActor in
+        DispatchQueue.global(qos: .userInitiated).async { [self] in
+            Task {
             let player = ApplicationMusicPlayer.shared
 
-            if player.queue.entries.count > 0 {
-                if player.state.playbackStatus == .playing {
-                    player.pause()
-                isPlaying = false
-                    stopPeriodicStateSaving()
-                    savePlaybackState()
-                return
-                } else {
-                    do {
-                        try await player.play()
-                        isPlaying = true
-                        usingMusicKit = true
+                if player.queue.entries.count > 0 {
+                    if player.state.playbackStatus == .playing {
+                        player.pause()
                         
-                        // Check if we have a pending seek time
-                        let pendingSeekTime = UserDefaults.standard.double(forKey: "ap_pendingSeekTime")
-                        if pendingSeekTime > 0 {
-                            print("🎯 Performing pending seek to time: \(pendingSeekTime)")
-                            
-                            // Wait a moment for playback to start, then seek
-                            try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 second delay
-                            player.playbackTime = pendingSeekTime
-                            
-                            // Clear the pending seek time
-                            UserDefaults.standard.removeObject(forKey: "ap_pendingSeekTime")
-                            
-                            let actualTime = player.playbackTime
-                            print("✅ Seek completed, actual time: \(actualTime)")
+                        // Update UI on main thread
+                        DispatchQueue.main.async {
+                            self.isPlaying = false
+                            self.stopPeriodicStateSaving()
+                            self.savePlaybackState()
                         }
-                        
-                        savePlaybackState()
-                        startPeriodicStateSaving()
-                        return
-                    } catch {
-                        print("⚠️ MusicKit play failed: \(error)")
-                isPlaying = false
-                        usingMusicKit = false
-                        savePlaybackState()
                 return
-            }
+                    } else {
+                        do {
+                            try await player.play()
+                            
+                            // Update UI on main thread
+                            DispatchQueue.main.async {
+                                self.isPlaying = true
+                                self.usingMusicKit = true
+                            }
+                            
+                            // Check if we have a pending seek time
+                            let pendingSeekTime = UserDefaults.standard.double(forKey: "ap_pendingSeekTime")
+                            if pendingSeekTime > 0 {
+                                print("🎯 Performing pending seek to time: \(pendingSeekTime)")
+                                
+                                // Wait a moment for playback to start, then seek
+                                try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 second delay
+                                player.playbackTime = pendingSeekTime
+                                
+                                // Clear the pending seek time
+                                UserDefaults.standard.removeObject(forKey: "ap_pendingSeekTime")
+                                
+                                let actualTime = player.playbackTime
+                                print("✅ Seek completed, actual time: \(actualTime)")
+                            }
+                            
+                            // Update UI on main thread
+                            DispatchQueue.main.async {
+                                self.savePlaybackState()
+                                self.startPeriodicStateSaving()
+                            }
+                            return
+                        } catch {
+                            print("⚠️ MusicKit play failed: \(error)")
+                            
+                            // Update UI on main thread
+                            DispatchQueue.main.async {
+                                self.isPlaying = false
+                                self.usingMusicKit = false
+                                self.savePlaybackState()
+                            }
+                return
+                        }
+                    }
                 }
-            }
             
             // If no active queue, attempt to rebuild queue from saved IDs and play
-            if !lastQueueSongIDs.isEmpty {
+            if !self.lastQueueSongIDs.isEmpty {
                 do {
                     print("🔄 Attempting to rebuild queue and resume playback...")
-                    await rebuildQueueFromSavedIDs()
+                    await self.rebuildQueueFromSavedIDs()
                     
                     // Add a small delay to ensure queue is properly set
                     try? await Task.sleep(nanoseconds: 200_000_000) // 0.2 second delay
                     
                     // Try to seek to the saved position again before playing
-                    if lastPlaybackTime > 0 {
-                        print("🎯 Final seek to saved position: \(lastPlaybackTime)")
-                        player.playbackTime = lastPlaybackTime
+                    if self.lastPlaybackTime > 0 {
+                        print("🎯 Final seek to saved position: \(self.lastPlaybackTime)")
+                        player.playbackTime = self.lastPlaybackTime
                     }
                     
                     try await player.play()
-                    isPlaying = true
-                    usingMusicKit = true
+                    self.isPlaying = true
+                    self.usingMusicKit = true
                     
                     // Check if we have a pending seek time
                     let pendingSeekTime = UserDefaults.standard.double(forKey: "ap_pendingSeekTime")
@@ -778,87 +881,76 @@ class AudioPlayer: ObservableObject {
                         print("✅ Seek completed, actual time: \(actualTime)")
                     }
                     
-                    savePlaybackState()
-                    startPeriodicStateSaving()
+                    self.savePlaybackState()
+                    self.startPeriodicStateSaving()
                     
                     // Verify the position after starting playback
                     let actualTime = player.playbackTime
                     print("✅ Playback started at time: \(actualTime)")
                 } catch {
                     print("⚠️ Failed to rebuild queue and play: \(error)")
-                    isPlaying = false
-                    usingMusicKit = false
-                    savePlaybackState()
+                    self.isPlaying = false
+                    self.usingMusicKit = false
+                    self.savePlaybackState()
                 }
                 } else {
-                print("ℹ️ No queue to play or resume.")
-                isPlaying = false
-                usingMusicKit = false
-                savePlaybackState()
+                    print("ℹ️ No queue to play or resume.")
+                    self.isPlaying = false
+                    self.usingMusicKit = false
+                    self.savePlaybackState()
+                }
             }
         }
     }
     
     func playNextTrack() {
-        Task { @MainActor in
-            if isSkipping { return }
-            isSkipping = true
-            defer { isSkipping = false }
+        DispatchQueue.global(qos: .userInitiated).async { [self] in
+            Task {
+                if self.isSkipping { return }
+                self.isSkipping = true
+                defer { self.isSkipping = false }
 
-            guard usingMusicKit else {
-                print("❌ No MusicKit playback active; cannot play next track.")
-                isPlaying = false
-                savePlaybackState()
-                return
-            }
-            
-            let player = ApplicationMusicPlayer.shared
-            do {
-                try await player.skipToNextEntry()
-                isPlaying = true
+                guard self.usingMusicKit else {
+                    print("❌ No MusicKit playback active; cannot play next track.")
+                    
+                    // Update UI on main thread
+                    DispatchQueue.main.async {
+                        self.isPlaying = false
+                        self.savePlaybackState()
+                    }
+                    return
+                }
                 
-                // Update our queue index and track info
-                currentQueueIndex = (currentQueueIndex + 1) % musicKitQueue.count
-                updateCurrentTrackInfo()
-                savePlaybackState()
+                let player = ApplicationMusicPlayer.shared
+                do {
+                    try await player.skipToNextEntry()
+                    
+                    // Update our queue index and track info
+                    self.currentQueueIndex = (self.currentQueueIndex + 1) % self.musicKitQueue.count
+                    
+                    // Update UI on main thread
+                    DispatchQueue.main.async {
+                        self.isPlaying = true
+                        self.updateCurrentTrackInfo()
+                        self.savePlaybackState()
+                    }
                 
-                // Record recently played
-                recordCurrentlyPlayingTrack()
-                
-                // Prefetch next track artwork
-                await prefetchNextTrackArtwork()
-            } catch {
-                print("❌ Failed to skip to next entry: \(error)")
-                isPlaying = false
-                savePlaybackState()
+                    // Record recently played
+                    self.recordCurrentlyPlayingTrack()
+                    
+                    // Prefetch next track artwork
+                    await self.prefetchNextTrackArtwork()
+                } catch {
+                    print("❌ Failed to skip to next entry: \(error)")
+                    
+                    // Update UI on main thread
+                    DispatchQueue.main.async {
+                        self.isPlaying = false
+                        self.savePlaybackState()
+                    }
+                }
             }
         }
-    }
-    
-    // Record currently playing track to recently played
-    private func recordCurrentlyPlayingTrack() {
-        guard let currentSong = musicKitQueue[safe: currentQueueIndex] else { return }
-        
-        CoreDataManager.shared.addRecentlyPlayed(
-            trackId: currentSong.id.rawValue,
-            trackName: currentSong.title,
-            artistName: currentSong.artistName,
-            artworkUrl: currentSong.artwork?.url(width: 300, height: 300)?.absoluteString,
-            playlistId: currentPlaylistId
-        )
-    }
-    
-    // Prefetch next track artwork
-    private func prefetchNextTrackArtwork() async {
-        let nextIndex = (currentQueueIndex + 1) % musicKitQueue.count
-        guard let nextSong = musicKitQueue[safe: nextIndex],
-              let artworkURL = nextSong.artwork?.url(width: 300, height: 300) else {
-            return
-        }
-        
-        // Preload next track artwork
-        _ = await ImageCacheManager.shared.loadImage(from: artworkURL)
-        print("🎨 Prefetched artwork for next track: \(nextSong.title)")
     }
     
     func playPreviousTrack() {
@@ -866,18 +958,18 @@ class AudioPlayer: ObservableObject {
             if isSkipping { return }
             isSkipping = true
             defer { isSkipping = false }
-            
+
             guard usingMusicKit else {
                 print("❌ No MusicKit playback active; cannot play previous track.")
                 isPlaying = false
                 savePlaybackState()
-                    return
+                return
             }
             
-            let player = ApplicationMusicPlayer.shared
-            do {
+                let player = ApplicationMusicPlayer.shared
+                do {
                 try await player.skipToPreviousEntry()
-                isPlaying = true
+                    isPlaying = true
                 
                 // Update our queue index and track info
                 currentQueueIndex = max(currentQueueIndex - 1, 0)
@@ -902,18 +994,65 @@ class AudioPlayer: ObservableObject {
         print("🔊 Volume control not implemented internally for MusicKit playback. Requested volume: \(volume)")
     }
     
+    // Throttling for seek operations
+    private var lastSeekTime: TimeInterval = 0
+    private let seekThrottleInterval: TimeInterval = 0.05 // 50ms throttle for smoother dragging
+    private var immediateSeekWorkItem: DispatchWorkItem?
+    
     func seekTo(_ time: TimeInterval) {
-        Task { @MainActor in
-            if usingMusicKit {
+        let currentTime = Date().timeIntervalSince1970
+        
+        // Throttle seek operations to prevent excessive calls during dragging
+        guard currentTime - lastSeekTime >= seekThrottleInterval else {
+                    return
+        }
+        lastSeekTime = currentTime
+        
+        // Immediate UI update for responsive feedback
+        DispatchQueue.main.async {
+            self.lastPlaybackTime = time
+        }
+        
+        // Background seek operation to avoid blocking UI
+        DispatchQueue.global(qos: .userInitiated).async { [self] in
+            if self.usingMusicKit {
                 let player = ApplicationMusicPlayer.shared
                 player.playbackTime = time
-                lastPlaybackTime = time
+                
+                // Update UI on main thread after seek
+                DispatchQueue.main.async {
+                    self.savePlaybackState()
+                }
                 print("🎯 Seeked to time: \(time)")
-                savePlaybackState()
             } else {
                 print("🎯 Seek called but no MusicKit playback active.")
             }
         }
+    }
+    
+    // Immediate seek for smooth dragging (with debouncing)
+    func seekImmediate(_ time: TimeInterval) {
+        // Immediate UI update for responsive feedback on main thread
+        DispatchQueue.main.async {
+            self.lastPlaybackTime = time
+        }
+        
+        // Cancel previous immediate seek if still pending
+        immediateSeekWorkItem?.cancel()
+        
+        // Create new work item for immediate seek
+        let workItem = DispatchWorkItem { [self] in
+            if self.usingMusicKit {
+                let player = ApplicationMusicPlayer.shared
+                player.playbackTime = time
+                print("🎯 Immediate seek to: \(time)")
+            }
+        }
+        
+        immediateSeekWorkItem = workItem
+        
+        // Execute with small delay to debounce rapid calls
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.01, execute: workItem)
     }
     
     func stop() {
@@ -929,10 +1068,11 @@ class AudioPlayer: ObservableObject {
             }
             
             do {
-                try await player.stop()
+                player.stop()
             } catch {
                 print("❌ Failed to stop player: \(error)")
             }
+            
         isPlaying = false
             usingMusicKit = false
             stopPeriodicStateSaving()

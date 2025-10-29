@@ -39,6 +39,8 @@ struct EnhancedMusicPlayer: View {
     @State private var lastKnownVolume: Float = 0.0
     @State private var isRestoringPlaybackPosition: Bool = false
     @State private var shouldRestoreOnReturn: Bool = false
+    @State private var lastSeekTime: Date = Date()
+    @State private var seekInProgress: Bool = false
     
     @State private var routePicker = AVRoutePickerView()
     
@@ -124,8 +126,10 @@ struct EnhancedMusicPlayer: View {
         let dict = (try? JSONDecoder().decode([String: Double].self, from: data)) ?? [:]
         guard let t = dict[key], t > 0 else { return }
 
-        // Update UI immediately
-        self.currentTime = t
+        // Update UI immediately on main thread
+        DispatchQueue.main.async {
+            self.currentTime = t
+        }
 
         // Seek directly on ApplicationMusicPlayer to avoid wrapper-induced resets
         let player = ApplicationMusicPlayer.shared
@@ -726,18 +730,27 @@ struct EnhancedMusicPlayer: View {
             // Progress Bar
             VStack(spacing: 8) {
                 Slider(value: $currentTime, in: 0...totalTime) { isEditing in
-                    isSeekingTime = isEditing
-                    if !isEditing {
-                        // Seek directly on MusicKit player so timer reflects immediately
-                        let player = ApplicationMusicPlayer.shared
-                        player.playbackTime = currentTime
-                        // Reinforce on next runloop to avoid quick resets
-                        DispatchQueue.main.async {
-                            ApplicationMusicPlayer.shared.playbackTime = currentTime
+                    DispatchQueue.main.async {
+                        self.isSeekingTime = isEditing
+                        self.lastSeekTime = Date()
+                        
+                        if isEditing {
+                            // User started dragging - set seek in progress
+                            self.seekInProgress = true
+                            // Use immediate seek for smooth dragging
+                            audioPlayer.seekImmediate(currentTime)
+                        } else {
+                            // User finished dragging - use throttled seek for final position
+                            self.seekInProgress = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                audioPlayer.seekTo(currentTime)
+                                saveCurrentPlaybackPosition()
+                                // Clear seek in progress after a delay
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    self.seekInProgress = false
+                                }
+                            }
                         }
-                        // Mirror to your audioPlayer for non-MusicKit sources
-                        audioPlayer.seekTo(currentTime)
-                        saveCurrentPlaybackPosition()
                     }
                 }
                 .tint(.white)
@@ -756,10 +769,16 @@ struct EnhancedMusicPlayer: View {
                 }
                 .onReceive(_timeTimer) { _ in
                 // Update slider even when paused, but don't fight user while dragging
-                guard !isSeekingTime, !isRestoringPlaybackPosition else { return }
+                guard !isSeekingTime, !isRestoringPlaybackPosition, !seekInProgress else { return }
                 
-                // Always use actual player time for timer updates
-                self.currentTime = getCurrentPlaybackPosition()
+                // Check if enough time has passed since last seek to avoid conflicts
+                let timeSinceLastSeek = Date().timeIntervalSince(lastSeekTime)
+                guard timeSinceLastSeek > 0.5 else { return }
+                
+                // Always use actual player time for timer updates on main thread
+                DispatchQueue.main.async {
+                    self.currentTime = getCurrentPlaybackPosition()
+                }
                 
                 // Try to get duration from audioPlayer first (most reliable source)
                 if audioPlayer.currentTrackDuration > 0 {
@@ -786,7 +805,9 @@ struct EnhancedMusicPlayer: View {
             }
             .onAppear {
                 let player = ApplicationMusicPlayer.shared
-                self.currentTime = getCurrentPlaybackPosition()
+                DispatchQueue.main.async {
+                    self.currentTime = getCurrentPlaybackPosition()
+                }
                 
                 // Try to get duration from audioPlayer first (most reliable)
                 if audioPlayer.currentTrackDuration > 0 {
@@ -829,7 +850,9 @@ struct EnhancedMusicPlayer: View {
                         print("⏱️ Track changed - Duration from MusicKit: \(duration) seconds")
                     }
                 }
-                self.currentTime = getCurrentPlaybackPosition()
+                DispatchQueue.main.async {
+                    self.currentTime = getCurrentPlaybackPosition()
+                }
             }
             .onChange(of: audioPlayer.isPlaying) { _, _ in
                 // Prioritize duration from audioPlayer
