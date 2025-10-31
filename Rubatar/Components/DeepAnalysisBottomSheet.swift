@@ -146,7 +146,7 @@ struct DeepAnalysisBottomSheet: View {
             .padding(24)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(colorScheme == .dark ? Color.black : Color.white)
+        .glassEffect()
     }
 }
 
