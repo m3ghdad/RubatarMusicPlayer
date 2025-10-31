@@ -143,10 +143,11 @@ struct DeepAnalysisBottomSheet: View {
                         .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                 }
             }
-            .padding(24)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 24)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .glassEffect()
+        .glassEffect(in: .rect(cornerRadius: 0))
     }
 }
 
