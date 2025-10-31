@@ -144,10 +144,10 @@ struct DeepAnalysisBottomSheet: View {
                 }
             }
             .padding(.horizontal, 24)
-            .padding(.vertical, 24)
+            .padding(.top, 16)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .glassEffect(in: .rect(cornerRadius: 0))
+        // .glassEffect(in: .rect(cornerRadius: 12))
     }
 }
 
