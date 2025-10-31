@@ -24,7 +24,9 @@ struct SupabasePoem: Codable {
     let poem_content_en: String
     let poem_content_fa: String
     let topic_id: Int?
-    let form: String?
+    let form_fa: String?
+    let form_en: String?
+    let book_id: String?
     let language_original: String?
     let source_reference: String?
     let created_at: String
@@ -84,6 +86,17 @@ struct SupabasePoemMood: Codable {
     let poem_id: String
     let mood_id: Int
     let created_at: String
+}
+
+struct SupabaseBook: Codable {
+    let id: String
+    let poet_id: String?
+    let name_fa: String
+    let name_en: String
+    let description_fa: String?
+    let description_en: String?
+    let created_at: String
+    let updated_at: String
 }
 
 // MARK: - Poetry Service
@@ -231,6 +244,20 @@ class PoetryService: ObservableObject {
         let moodsData: [SupabaseMood] = try JSONDecoder().decode([SupabaseMood].self, from: moodsResponse)
         print("📚 Found \(moodsData.count) moods")
         
+        // Get unique book IDs
+        let bookIds = Set(poemsData.compactMap { $0.book_id })
+        var booksData: [SupabaseBook] = []
+        if !bookIds.isEmpty {
+            let bookIdsString = bookIds.map { "\"\($0)\"" }.joined(separator: ",")
+            print("📚 Fetching books: \(bookIds.count) unique books")
+            
+            // Fetch books
+            let booksURL = "\(baseURL)/rest/v1/books?select=*&id=in.(\(bookIdsString))"
+            let booksResponse = try await makeRequest(url: booksURL)
+            booksData = try JSONDecoder().decode([SupabaseBook].self, from: booksResponse)
+            print("📚 Found \(booksData.count) books")
+        }
+        
         // Convert to app models
         var convertedPoems: [PoemData] = []
         
@@ -242,6 +269,7 @@ class PoetryService: ObservableObject {
             let topic = topicsData.first { $0.id == poem.topic_id }
             let poemMood = poemMoodsData.first { $0.poem_id == poem.id }
             let mood = poemMood != nil ? moodsData.first { $0.id == poemMood!.mood_id } : nil
+            let book = poem.book_id != nil ? booksData.first { $0.id == poem.book_id } : nil
             
             print("✅ Converting poem: \(poem.poem_name_fa) by \(poet.name_fa)")
             
@@ -263,7 +291,11 @@ class PoetryService: ObservableObject {
                 tafseerLineByLineFa: poem.tafseer_line_by_line_fa,
                 tafseerLineByLineEn: poem.tafseer_line_by_line_en,
                 tafseerFa: poem.tafseer_fa,
-                tafseerEn: poem.tafseer_en
+                tafseerEn: poem.tafseer_en,
+                formFa: poem.form_fa,
+                formEn: poem.form_en,
+                bookNameFa: book?.name_fa,
+                bookNameEn: book?.name_en
             )
             
             // Store Farsi poem in cache with tafseer data
@@ -289,7 +321,11 @@ class PoetryService: ObservableObject {
                     tafseerLineByLineFa: poem.tafseer_line_by_line_fa,
                     tafseerLineByLineEn: poem.tafseer_line_by_line_en,
                     tafseerFa: poem.tafseer_fa,
-                    tafseerEn: poem.tafseer_en
+                    tafseerEn: poem.tafseer_en,
+                    formFa: poem.form_fa,
+                    formEn: poem.form_en,
+                    bookNameFa: book?.name_fa,
+                    bookNameEn: book?.name_en
                 )
                 
                 // Store English version in cache

@@ -49,6 +49,12 @@ struct PoemData: Identifiable, Codable {
     let tafseerFa: String?
     let tafseerEn: String?
     
+    // Form and book metadata (from Supabase)
+    let formFa: String?
+    let formEn: String?
+    let bookNameFa: String?
+    let bookNameEn: String?
+    
     // Additional fields for music integration (optional)
     var poem_text_en: String?
     var poem_name_en: String?
@@ -71,6 +77,10 @@ struct PoemData: Identifiable, Codable {
         case tafseerLineByLineEn = "tafseer_line_by_line_en"
         case tafseerFa = "tafseer_fa"
         case tafseerEn = "tafseer_en"
+        case formFa = "form_fa"
+        case formEn = "form_en"
+        case bookNameFa
+        case bookNameEn
         case poem_text_en, poem_name_en, poet_name_en, topic_name_en
         case playlist_id, playlist_name, curator_name, artwork_url
     }
@@ -161,7 +171,11 @@ class GanjoorAPIManager: ObservableObject {
                 tafseerLineByLineFa: nil,
                 tafseerLineByLineEn: nil,
                 tafseerFa: nil,
-                tafseerEn: nil
+                tafseerEn: nil,
+                formFa: nil,
+                formEn: nil,
+                bookNameFa: nil,
+                bookNameEn: nil
             )
             
             // Add to used poems

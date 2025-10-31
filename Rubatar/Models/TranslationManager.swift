@@ -148,7 +148,11 @@ class TranslationManager {
                 tafseerLineByLineFa: nil,
                 tafseerLineByLineEn: nil,
                 tafseerFa: nil,
-                tafseerEn: nil
+                tafseerEn: nil,
+                formFa: poem.formFa,
+                formEn: poem.formEn,
+                bookNameFa: poem.bookNameFa,
+                bookNameEn: poem.bookNameEn
             )
             
             print("✓ Translated poem: '\(poem.title)' → '\(cleanedTitle)' by \(translatedPoetName)")
