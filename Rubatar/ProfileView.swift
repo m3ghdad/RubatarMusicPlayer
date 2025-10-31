@@ -843,21 +843,6 @@ struct PoemCardView: View {
                         if selectedLanguage == .farsi {
                             // Buttons first (left side in Farsi)
                             HStack(spacing: 8) {
-                                // Lightbulb icon (to the left of ellipsis) - always visible
-                                Button(action: {
-                                    // Toggle explanations with spring animation
-                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                                        showExplanations.toggle()
-                                    }
-                                }) {
-                                    Image(systemName: "lightbulb.fill")
-                                        .font(.system(size: 18, weight: .medium))
-                                        .foregroundColor(showExplanations ? .yellow : .primary)
-                                        .frame(width: 32, height: 32)
-                                        .contentShape(Circle())
-                                }
-                                .buttonStyle(CircularButtonStyle())
-                                
                                 Button(action: {
                                     activeCardIndex = cardIndex
                                     withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
@@ -872,6 +857,21 @@ struct PoemCardView: View {
                                 }
                                 .buttonStyle(CircularButtonStyle())
                                 .matchedTransitionSource(id: "MENUCONTENT\(cardIndex)", in: menuNamespace)
+                                
+                                // Lightbulb icon (to the right of ellipsis) - always visible
+                                Button(action: {
+                                    // Toggle explanations with spring animation
+                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                                        showExplanations.toggle()
+                                    }
+                                }) {
+                                    Image(systemName: "lightbulb.fill")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(showExplanations ? .yellow : .primary)
+                                        .frame(width: 32, height: 32)
+                                        .contentShape(Circle())
+                                }
+                                .buttonStyle(CircularButtonStyle())
                                 
                                 // Save/Bookmark button - commented out
                                 /*
