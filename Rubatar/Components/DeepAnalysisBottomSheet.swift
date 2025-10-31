@@ -19,51 +19,57 @@ struct DeepAnalysisBottomSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: selectedLanguage == .farsi ? .trailing : .leading, spacing: 20) {
-                // Metadata in horizontal wrapping format
-                FlowLayout(spacing: 12, alignment: selectedLanguage == .farsi ? .trailing : .leading) {
-                    // Book
-                    if let bookName = selectedLanguage == .farsi ? poem.bookNameFa : poem.bookNameEn,
-                       !bookName.isEmpty {
-                        MetadataRow(
-                            icon: "book.closed.fill",
-                            tagHeader: selectedLanguage == .farsi ? "کتاب" : "Book",
-                            tagDetail: bookName,
-                            alignment: selectedLanguage == .farsi ? .trailing : .leading
-                        )
+                // Metadata in horizontal scrollable format
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .top, spacing: 0) {
+                        // Topic
+                        if let topic = poem.topic, !topic.isEmpty {
+                            MetadataRow(
+                                icon: "tag.fill",
+                                tagHeader: selectedLanguage == .farsi ? "موضوع" : "Topic",
+                                tagDetail: topic,
+                                alignment: selectedLanguage == .farsi ? .trailing : .leading,
+                                showDivider: true
+                            )
+                        }
+                        
+                        // Mood
+                        if let mood = poem.mood, !mood.isEmpty {
+                            MetadataRow(
+                                icon: "leaf.fill",
+                                tagHeader: selectedLanguage == .farsi ? "حال" : "Mood",
+                                tagDetail: mood,
+                                alignment: selectedLanguage == .farsi ? .trailing : .leading,
+                                showDivider: true
+                            )
+                        }
+                        
+                        // Book
+                        if let bookName = selectedLanguage == .farsi ? poem.bookNameFa : poem.bookNameEn,
+                           !bookName.isEmpty {
+                            MetadataRow(
+                                icon: "book.closed.fill",
+                                tagHeader: selectedLanguage == .farsi ? "کتاب" : "Book",
+                                tagDetail: bookName,
+                                alignment: selectedLanguage == .farsi ? .trailing : .leading,
+                                showDivider: true
+                            )
+                        }
+                        
+                        // Form
+                        if let form = selectedLanguage == .farsi ? poem.formFa : poem.formEn,
+                           !form.isEmpty {
+                            MetadataRow(
+                                icon: "textformat",
+                                tagHeader: selectedLanguage == .farsi ? "قالب" : "Form",
+                                tagDetail: form,
+                                alignment: selectedLanguage == .farsi ? .trailing : .leading,
+                                showDivider: false
+                            )
+                        }
                     }
-                    
-                    // Mood
-                    if let mood = poem.mood, !mood.isEmpty {
-                        MetadataRow(
-                            icon: "leaf.fill",
-                            tagHeader: selectedLanguage == .farsi ? "حال" : "Mood",
-                            tagDetail: mood,
-                            alignment: selectedLanguage == .farsi ? .trailing : .leading
-                        )
-                    }
-                    
-                    // Topic
-                    if let topic = poem.topic, !topic.isEmpty {
-                        MetadataRow(
-                            icon: "tag.fill",
-                            tagHeader: selectedLanguage == .farsi ? "موضوع" : "Topic",
-                            tagDetail: topic,
-                            alignment: selectedLanguage == .farsi ? .trailing : .leading
-                        )
-                    }
-                    
-                    // Form
-                    if let form = selectedLanguage == .farsi ? poem.formFa : poem.formEn,
-                       !form.isEmpty {
-                        MetadataRow(
-                            icon: "textformat",
-                            tagHeader: selectedLanguage == .farsi ? "قالب" : "Form",
-                            tagDetail: form,
-                            alignment: selectedLanguage == .farsi ? .trailing : .leading
-                        )
-                    }
+                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                 }
-                .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                 
                 Divider()
                     .background(colorScheme == .dark ? Color.white.opacity(0.2) : Color.black.opacity(0.2))
@@ -104,45 +110,50 @@ struct MetadataRow: View {
     let tagHeader: String
     let tagDetail: String
     let alignment: HorizontalAlignment
+    let showDivider: Bool
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-        VStack(alignment: alignment, spacing: 8) {
-            // Tag-header
-            Text(tagHeader)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
-            
-            // Tag-detail with glass effect
-            HStack(spacing: 10) {
-                if alignment == .trailing {
-                    Text(tagDetail)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(colorScheme == .dark ? .white : .black)
-                    Image(systemName: icon)
-                        .font(.system(size: 16))
-                        .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
-                } else {
-                    Image(systemName: icon)
-                        .font(.system(size: 16))
-                        .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
-                    Text(tagDetail)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(colorScheme == .dark ? .white : .black)
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05))
-                    .background {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(.ultraThinMaterial)
+        HStack(spacing: 12) {
+            // Metadata content
+            VStack(alignment: alignment, spacing: 8) {
+                // Tag-header
+                Text(tagHeader)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
+                
+                // Tag-detail with glass effect
+                HStack(spacing: 10) {
+                    if alignment == .trailing {
+                        Text(tagDetail)
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(colorScheme == .dark ? .white : .black)
+                        Image(systemName: icon)
+                            .font(.system(size: 16))
+                            .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
+                    } else {
+                        Image(systemName: icon)
+                            .font(.system(size: 16))
+                            .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
+                        Text(tagDetail)
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(colorScheme == .dark ? .white : .black)
                     }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+            }
+            .frame(maxWidth: .infinity, alignment: alignment == .trailing ? .trailing : .leading)
+            
+            // Vertical divider
+            if showDivider {
+                Rectangle()
+                    .fill(colorScheme == .dark ? Color.white.opacity(0.2) : Color.black.opacity(0.2))
+                    .frame(width: 1)
+                    .frame(maxHeight: .infinity)
             }
         }
-        .frame(maxWidth: .infinity, alignment: alignment == .trailing ? .trailing : .leading)
     }
 }
 
