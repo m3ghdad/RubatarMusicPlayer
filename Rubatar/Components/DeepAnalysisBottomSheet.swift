@@ -19,8 +19,8 @@ struct DeepAnalysisBottomSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: selectedLanguage == .farsi ? .trailing : .leading, spacing: 20) {
-                // Metadata in vertical format
-                VStack(alignment: selectedLanguage == .farsi ? .trailing : .leading, spacing: 12) {
+                // Metadata in horizontal wrapping format
+                FlowLayout(spacing: 12, alignment: selectedLanguage == .farsi ? .trailing : .leading) {
                     // Book
                     if let bookName = selectedLanguage == .farsi ? poem.bookNameFa : poem.bookNameEn,
                        !bookName.isEmpty {
