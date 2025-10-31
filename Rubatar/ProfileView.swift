@@ -564,8 +564,7 @@ struct ProfileView: View {
                 }()
                 
                 if let poem = currentPoem {
-                    let tafseerText = selectedLanguage == .farsi ? (poem.tafseerFa ?? "") : (poem.tafseerEn ?? "")
-                    DeepAnalysisBottomSheet(tafseerText: tafseerText, selectedLanguage: selectedLanguage)
+                    DeepAnalysisBottomSheet(poem: poem, selectedLanguage: selectedLanguage)
                         .presentationDetents([.fraction(0.75), .large])
                         .presentationDragIndicator(.hidden)
                         .presentationCornerRadius(20)
