@@ -16,6 +16,10 @@ struct DeepAnalysisBottomSheet: View {
         selectedLanguage == .farsi ? (poem.tafseerFa ?? "") : (poem.tafseerEn ?? "")
     }
     
+    private var formattedTafseerText: Text {
+        formatTafseerText(tafseerText, isEnglish: selectedLanguage == .english)
+    }
+    
     var body: some View {
         ScrollView {
             VStack(alignment: selectedLanguage == .farsi ? .trailing : .leading, spacing: 20) {
@@ -129,8 +133,7 @@ struct DeepAnalysisBottomSheet: View {
                 
                 // Tafseer text
                 if !tafseerText.isEmpty {
-                    Text(tafseerText)
-                        .font(.system(size: 17))
+                    formattedTafseerText
                         .foregroundColor(colorScheme == .dark ? .white : .black)
                         .lineSpacing(8)
                         .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
@@ -285,4 +288,33 @@ struct FlowLayout: Layout {
             }
         }
     }
+}
+
+// Format tafseer text with special styling
+private func formatTafseerText(_ text: String, isEnglish: Bool) -> Text {
+    guard !text.isEmpty else { return Text(text) }
+    
+    var resultText = Text("")
+    
+    // First letter styling (32px) - English only
+    if isEnglish {
+        let firstChar = text.prefix(1)
+        let remainingText = String(text.dropFirst())
+        
+        if let firstCharUnwrapped = firstChar.first, firstCharUnwrapped.isLetter {
+            resultText = Text(String(firstCharUnwrapped))
+                .font(.custom("Palatino", size: 32))
+        } else {
+            resultText = Text(firstChar)
+        }
+        
+        // Add remaining text
+        resultText = resultText + Text(remainingText)
+            .font(.custom("Palatino", size: 17))
+    } else {
+        resultText = Text(text)
+            .font(.custom("Palatino", size: 17))
+    }
+    
+    return resultText
 }
