@@ -8,6 +8,12 @@
 import Foundation
 import Combine
 
+// MARK: - Line-by-Line Tafseer Model
+struct LineByLineTafseer: Codable {
+    let line: String
+    let explanation: String
+}
+
 // MARK: - Supabase Poetry Models
 struct SupabasePoem: Codable {
     let id: String
@@ -23,6 +29,8 @@ struct SupabasePoem: Codable {
     let source_reference: String?
     let created_at: String
     let updated_at: String
+    let tafseer_line_by_line_fa: [LineByLineTafseer]?
+    let tafseer_line_by_line_en: [LineByLineTafseer]?
 }
 
 struct SupabasePoet: Codable {
@@ -81,6 +89,7 @@ class PoetryService: ObservableObject {
     @Published var isLoading = false
     @Published var error: String?
     @Published var englishPoems: [Int: PoemData] = [:] // Cache: poem.id -> English poem
+    @Published var farsiPoems: [Int: PoemData] = [:] // Cache: poem.id -> Farsi poem with tafseer
     
     private let baseURL = "https://pspybykovwrfdxpkjpzd.supabase.co"
     private let apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzcHlieWtvdndyZmR4cGtqcHpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1NDIyMDksImV4cCI6MjA3NTExODIwOX0.NV3irlmKEDcThTGYnHOLy4LRA5qjAxUC4XhkKf4QpKA"
@@ -248,8 +257,16 @@ class PoetryService: ObservableObject {
                 verses: parsePoemContent(poem.poem_content_fa),
                 topic: topic?.topic_fa,
                 mood: mood?.mood_fa,
-                moodColor: mood?.color_hex
+                moodColor: mood?.color_hex,
+                tafseerLineByLineFa: poem.tafseer_line_by_line_fa,
+                tafseerLineByLineEn: poem.tafseer_line_by_line_en
             )
+            
+            // Store Farsi poem in cache with tafseer data
+            await MainActor.run {
+                self.farsiPoems[poemId] = farsiPoem
+            }
+            print("✅ Cached Farsi poem with tafseer for poem \(poemId)")
             
             // Create English poem and store in cache
             if !poem.poem_content_en.isEmpty {
@@ -264,7 +281,9 @@ class PoetryService: ObservableObject {
                     verses: parsePoemContent(poem.poem_content_en),
                     topic: topic?.topic_en,
                     mood: mood?.mood_en,
-                    moodColor: mood?.color_hex
+                    moodColor: mood?.color_hex,
+                    tafseerLineByLineFa: poem.tafseer_line_by_line_fa,
+                    tafseerLineByLineEn: poem.tafseer_line_by_line_en
                 )
                 
                 // Store English version in cache

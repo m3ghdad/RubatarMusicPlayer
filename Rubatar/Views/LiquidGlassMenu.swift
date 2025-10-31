@@ -13,6 +13,7 @@ struct LiquidGlassMenu: View {
     @Binding var showLanguageMenu: Bool
     let selectedDisplayMode: DisplayMode
     @Binding var showConfigureMenu: Bool
+    let showExplanations: Bool
     let onSave: () -> Void
     let onShare: () -> Void
     let onSelectText: () -> Void
@@ -24,6 +25,7 @@ struct LiquidGlassMenu: View {
     let onConfigure: () -> Void
     let onSelectDisplayMode: (DisplayMode) -> Void
     let onThemes: () -> Void
+    let onSimplyExplained: () -> Void
     
     @State private var hoveredItem: String? = nil
     @State private var dragLocation: CGPoint? = nil
@@ -126,6 +128,15 @@ struct LiquidGlassMenu: View {
                 }
                 .frame(height: 21)
                 .padding(.horizontal, 24)
+                
+                // Simply Explained
+                MenuItemView(
+                    id: "simplyexplained",
+                    icon: "lightbulb",
+                    title: "Simply Explained",
+                    isHovered: hoveredItem == "simplyexplained",
+                    isSelected: showExplanations
+                )
                 
                 // Language
                 MenuItemView(
@@ -351,20 +362,36 @@ struct LiquidGlassMenu: View {
             if menuY >= 0 && menuY < 40 {
                 setHoveredItem("refresh")
             }
-            // Separator + Language: 61-101 (adjusted after removing Select Text)
+            // Separator: 40-61
+            // Simply Explained: 61-101 (after separator)
             else if menuY >= 61 && menuY < 101 {
+                setHoveredItem("simplyexplained")
+            }
+            // Language: 101-141 (after Simply Explained)
+            else if menuY >= 101 && menuY < 141 {
                 setHoveredItem("language")
             }
-            // Configure: 101-141 (adjusted after removing Select Text)
-            else if menuY >= 101 && menuY < 141 {
+            // Language submenu items (when open)
+            else if showLanguageMenu && menuY >= 141 {
+                // Check if we're in the language submenu area
+                if menuY >= 141 && menuY < 181 { // English option
+                    setHoveredItem("english")
+                } else if menuY >= 181 && menuY < 221 { // Farsi option
+                    setHoveredItem("farsi")
+                } else {
+                    hoveredItem = nil
+                }
+            }
+            // Configure: 141-181 (after Language submenu or Language)
+            else if menuY >= 141 && menuY < 181 && !showLanguageMenu {
                 setHoveredItem("configure")
             }
             // Configure submenu items (when open)
-            else if showConfigureMenu && menuY >= 141 {
-                // Check if we're in the submenu area
-                if menuY >= 141 && menuY < 181 { // Typewriter option
+            else if showConfigureMenu && menuY >= 181 {
+                // Check if we're in the configure submenu area
+                if menuY >= 181 && menuY < 221 { // Typewriter option
                     setHoveredItem("typewriter")
-                } else if menuY >= 181 && menuY < 221 { // Static option
+                } else if menuY >= 221 && menuY < 261 { // Static option
                     setHoveredItem("static")
                 } else {
                     hoveredItem = nil
@@ -407,8 +434,14 @@ struct LiquidGlassMenu: View {
             onGoToPoet()
         case "interpretation":
             onInterpretation()
+        case "simplyexplained":
+            onSimplyExplained()
         case "language":
             onLanguage()
+        case "english":
+            onSelectLanguage(.english)
+        case "farsi":
+            onSelectLanguage(.farsi)
         case "configure":
             onConfigure()
         case "typewriter":
@@ -431,6 +464,7 @@ struct MenuItemView: View {
     var hasChevron: Bool = false
     var chevronDown: Bool = false
     var isHovered: Bool = false
+    var isSelected: Bool = false
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
@@ -438,14 +472,14 @@ struct MenuItemView: View {
             // Icon
             Image(systemName: icon)
                 .font(.system(size: 17))
-                .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                .foregroundColor(isSelected ? Color.yellow : (colorScheme == .dark ? .white : Color(hex: "333333")))
                 .frame(width: 28, alignment: .center)
             
             // Label and Subtitle
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.system(size: 17))
-                    .foregroundColor(colorScheme == .dark ? .white : Color(hex: "333333"))
+                    .foregroundColor(isSelected ? Color.yellow : (colorScheme == .dark ? .white : Color(hex: "333333")))
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
                 if let subtitle = subtitle {
@@ -570,6 +604,7 @@ extension Color {
             showLanguageMenu: .constant(false),
             selectedDisplayMode: .typewriter,
             showConfigureMenu: .constant(false),
+            showExplanations: false,
             onSave: {},
             onShare: {},
             onSelectText: {},
@@ -580,7 +615,8 @@ extension Color {
             onSelectLanguage: { _ in },
             onConfigure: {},
             onSelectDisplayMode: { _ in },
-            onThemes: {}
+            onThemes: {},
+            onSimplyExplained: {}
         )
     }
 }

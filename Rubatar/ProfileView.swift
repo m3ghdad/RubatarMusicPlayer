@@ -82,6 +82,7 @@ struct ProfileView: View {
     @State private var versePage = 0 // Track current page within a poem
     @State private var typewriterTrigger: [String: Int] = [:] // Trigger for typewriter: "poemId-pageIndex-cardIndex" -> count
     @State private var completedTypewriterPages: Set<String> = [] // Track pages that have completed typing
+    @State private var showExplanations: [Int: Bool] = [:] // Show line-by-line explanations per poem ID
     
     // Initialize with saved display mode preference
     init() {
@@ -234,15 +235,27 @@ struct ProfileView: View {
                             typewriterTrigger: $typewriterTrigger,
                             completedPages: $completedTypewriterPages,
                             menuNamespace: menuNamespace,
-                            cardIndex: index
+                            cardIndex: index,
+                            showExplanations: Binding(
+                                get: { showExplanations[index] ?? false },
+                                set: { showExplanations[index] = $0 }
+                            )
                         )
                         .id("\(selectedDisplayMode.rawValue)-\(index)")
                     }, currentPage: $currentPage)
                 } else if selectedLanguage == .farsi {
-                    // Show Farsi poems
-                    PagingScrollView(pageCount: displayedPoems.count, content: { index in
+                    // Show Farsi poems - use fresh data from farsiPoems if available (has tafseer), otherwise use displayedPoems
+                    let farsiPoemsList = displayedPoems.map { poem -> PoemData in
+                        // Use fresh Farsi poem with tafseer if available, otherwise use cached poem
+                        if let freshPoem = poetryService.farsiPoems[poem.id] {
+                            return freshPoem
+                        }
+                        return poem
+                    }
+                    
+                    PagingScrollView(pageCount: farsiPoemsList.count, content: { index in
                         PoemCardView(
-                            poem: displayedPoems[index],
+                            poem: farsiPoemsList[index],
                             isTranslated: false,
                             selectedLanguage: .farsi,
                             displayMode: selectedDisplayMode,
@@ -252,7 +265,11 @@ struct ProfileView: View {
                             typewriterTrigger: $typewriterTrigger,
                             completedPages: $completedTypewriterPages,
                             menuNamespace: menuNamespace,
-                            cardIndex: index
+                            cardIndex: index,
+                            showExplanations: Binding(
+                                get: { showExplanations[farsiPoemsList[index].id] ?? false },
+                                set: { showExplanations[farsiPoemsList[index].id] = $0 }
+                            )
                         )
                         .id("\(selectedDisplayMode.rawValue)-\(index)")
                     }, currentPage: $currentPage, onLoadMore: {
@@ -278,7 +295,11 @@ struct ProfileView: View {
                                 typewriterTrigger: $typewriterTrigger,
                                 completedPages: $completedTypewriterPages,
                                 menuNamespace: menuNamespace,
-                                cardIndex: index
+                                cardIndex: index,
+                                showExplanations: Binding(
+                                    get: { showExplanations[englishPoemsList[index].id] ?? false },
+                                    set: { showExplanations[englishPoemsList[index].id] = $0 }
+                                )
                             )
                             .id("\(selectedDisplayMode.rawValue)-\(index)")
                         }, currentPage: $currentPage, onLoadMore: {
@@ -298,8 +319,12 @@ struct ProfileView: View {
                                 typewriterTrigger: $typewriterTrigger,
                                 completedPages: $completedTypewriterPages,
                                 menuNamespace: menuNamespace,
-                                cardIndex: index
+                                cardIndex: index,
+                                showExplanations: Binding(
+                                    get: { showExplanations[displayedPoems[index].id] ?? false },
+                                    set: { showExplanations[displayedPoems[index].id] = $0 }
                             )
+                        )
                             .id("\(selectedDisplayMode.rawValue)-\(index)")
                         }, currentPage: $currentPage, onLoadMore: {
                             loadNextSet()
@@ -330,6 +355,27 @@ struct ProfileView: View {
                     showLanguageMenu: $showLanguageMenu,
                     selectedDisplayMode: selectedDisplayMode,
                     showConfigureMenu: $showConfigureMenu,
+                    showExplanations: {
+                        // Get current poem ID for active card
+                        let currentPoemId: Int
+                        if selectedLanguage == .farsi && activeCardIndex < displayedPoems.count {
+                            currentPoemId = displayedPoems[activeCardIndex].id
+                        } else if selectedLanguage == .english {
+                            let englishPoemsList = displayedPoems.compactMap { poem -> PoemData? in
+                                poetryService.englishPoems[poem.id]
+                            }
+                            if activeCardIndex < englishPoemsList.count {
+                                currentPoemId = englishPoemsList[activeCardIndex].id
+                            } else if activeCardIndex < displayedPoems.count {
+                                currentPoemId = displayedPoems[activeCardIndex].id
+                            } else {
+                                return false
+                            }
+                        } else {
+                            return false
+                        }
+                        return showExplanations[currentPoemId] ?? false
+                    }(),
                     onSave: {
                         print("Save tapped")
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
@@ -389,6 +435,8 @@ struct ProfileView: View {
                         // Update selected language and close menus
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
                             selectedLanguage = language
+                            // Reset explanations when language changes to ensure fresh state
+                            showExplanations.removeAll()
                             showLanguageMenu = false
                             showMenu = false
                             showConfigureMenu = false
@@ -426,6 +474,33 @@ struct ProfileView: View {
                     onThemes: {
                         print("Themes tapped")
                         withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showMenu = false
+                            showLanguageMenu = false
+                            showConfigureMenu = false
+                        }
+                    },
+                    onSimplyExplained: {
+                        // Toggle showExplanations for the current active card
+                        let currentPoemId: Int
+                        if selectedLanguage == .farsi && activeCardIndex < displayedPoems.count {
+                            currentPoemId = displayedPoems[activeCardIndex].id
+                        } else if selectedLanguage == .english {
+                            let englishPoemsList = displayedPoems.compactMap { poem -> PoemData? in
+                                poetryService.englishPoems[poem.id]
+                            }
+                            if activeCardIndex < englishPoemsList.count {
+                                currentPoemId = englishPoemsList[activeCardIndex].id
+                            } else if activeCardIndex < displayedPoems.count {
+                                currentPoemId = displayedPoems[activeCardIndex].id
+                            } else {
+                                return
+                            }
+                        } else {
+                            return
+                        }
+                        
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                            showExplanations[currentPoemId] = !(showExplanations[currentPoemId] ?? false)
                             showMenu = false
                             showLanguageMenu = false
                             showConfigureMenu = false
@@ -726,6 +801,7 @@ struct PoemCardView: View {
     @Binding var completedPages: Set<String> // Track completed typewriter pages
     var menuNamespace: Namespace.ID // For zoom animation
     var cardIndex: Int // Unique index for each card
+    @Binding var showExplanations: Bool // Show line-by-line explanations
     
     @State private var versePage = 0 // Current verse page within the poem
     @Environment(\.colorScheme) var colorScheme
@@ -755,12 +831,10 @@ struct PoemCardView: View {
         }
     }
     
-    private var actualPoemView: some View {
-        let poemData = poem! // Force unwrap since we checked for nil
+    private var poemHeader: some View {
+        let poemData = poem!
         
-        return VStack(spacing: 8) {
-            // Header
-            VStack(spacing: 0) {
+        return VStack(spacing: 0) {
                 VStack(spacing: 4) {
                     HStack(alignment: .top) {
                         // In Farsi mode: buttons on left, title/poet on right
@@ -769,6 +843,21 @@ struct PoemCardView: View {
                         if selectedLanguage == .farsi {
                             // Buttons first (left side in Farsi)
                             HStack(spacing: 8) {
+                                // Lightbulb icon (to the left of ellipsis) - always visible
+                                Button(action: {
+                                    // Toggle explanations with spring animation
+                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                                        showExplanations.toggle()
+                                    }
+                                }) {
+                                    Image(systemName: "lightbulb.fill")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(showExplanations ? .yellow : .primary)
+                                        .frame(width: 32, height: 32)
+                                        .contentShape(Circle())
+                                }
+                                .buttonStyle(CircularButtonStyle())
+                                
                                 Button(action: {
                                     activeCardIndex = cardIndex
                                     withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
@@ -847,6 +936,21 @@ struct PoemCardView: View {
                                 .buttonStyle(CircularButtonStyle())
                                 */
                                 
+                                // Lightbulb icon (to the left of ellipsis) - always visible
+                                Button(action: {
+                                    // Toggle explanations with spring animation
+                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                                        showExplanations.toggle()
+                                    }
+                                }) {
+                                    Image(systemName: "lightbulb.fill")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(showExplanations ? .yellow : .primary)
+                                        .frame(width: 32, height: 32)
+                                        .contentShape(Circle())
+                                }
+                                .buttonStyle(CircularButtonStyle())
+                                
                                 Button(action: {
                                     activeCardIndex = cardIndex
                                     withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
@@ -877,115 +981,176 @@ struct PoemCardView: View {
                             .frame(height: 1)
                     }
                 )
-            }
+        }
+    }
+    
+    @ViewBuilder
+    private func buildPageContent(poemData: PoemData, pageIndex: Int, beytsPerPage: Int) -> some View {
+        VStack(alignment: .center, spacing: 0) {
+            let startBeytIndex = pageIndex * beytsPerPage
+            let endBeytIndex = min(startBeytIndex + beytsPerPage, poemData.verses.count)
+            let triggerKey = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
             
-            // Pages section with page curl
-            if !poemData.verses.isEmpty {
-                let beytsPerPage = 2
-                let totalPages = (poemData.verses.count + beytsPerPage - 1) / beytsPerPage
-                
-                PageCurlView(currentPage: $versePage, pageCount: totalPages, isRTL: selectedLanguage == .farsi) { pageIndex in
-                    VStack(alignment: .center, spacing: 0) {
-                        let startBeytIndex = pageIndex * beytsPerPage
-                        let endBeytIndex = min(startBeytIndex + beytsPerPage, poemData.verses.count)
-                        let triggerKey = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
-                        
-                        ForEach(startBeytIndex..<endBeytIndex, id: \.self) { beytIndex in
-                            if beytIndex < poemData.verses.count {
-                                let beyt = poemData.verses[beytIndex]
-                                let beytOffset = beytIndex - startBeytIndex
+            ForEach(Array(startBeytIndex..<endBeytIndex), id: \.self) { beytIndex in
+                if beytIndex < poemData.verses.count {
+                    let beyt = poemData.verses[beytIndex]
+                    let beytOffset = beytIndex - startBeytIndex
+                    
+                    // Calculate delays: Line 1 of Beyt 1 = 0, Line 2 of Beyt 1 = text1.length * 0.05 + 0.2
+                    // Line 1 of Beyt 2 = (text1.length + text2.length) * 0.05 + 0.4, etc.
+                    let lineIndex = beytOffset * 2
+                    
+                    VStack(alignment: .center, spacing: 10) {
+                        // First line of beyt
+                        if beyt.count > 0 {
+                            if displayMode == .typewriter {
+                                let pageKey = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
+                                let isPageCompleted = completedPages.contains(pageKey)
+                                let isLastLine = beytIndex == endBeytIndex - 1 && beyt.count == 1
                                 
-                                // Calculate delays: Line 1 of Beyt 1 = 0, Line 2 of Beyt 1 = text1.length * 0.05 + 0.2
-                                // Line 1 of Beyt 2 = (text1.length + text2.length) * 0.05 + 0.4, etc.
-                                let lineIndex = beytOffset * 2
-                                
-                                VStack(alignment: .center, spacing: 10) {
-                                    // First line of beyt
-                                    if beyt.count > 0 {
-                                        if displayMode == .typewriter {
-                                            let pageKey = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
-                                            let isPageCompleted = completedPages.contains(pageKey)
-                                            let isLastLine = beytIndex == endBeytIndex - 1 && beyt.count == 1
-                                            
-                                            TypewriterText(
-                                                text: beyt[0],
-                                                font: isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14),
-                                                color: colorScheme == .dark ? .white : .black,
-                                                lineSpacing: isTranslated ? 4 : 14 * 2.66,
-                                                kerning: 1,
-                                                alignment: .center,
-                                                delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 0),
-                                                isCompleted: isPageCompleted,
-                                                onComplete: {
-                                                    if isLastLine {
-                                                        completedPages.insert(pageKey)
-                                                    }
-                                                }
-                                            )
-                                            .id("\(triggerKey)-\(beytIndex)-0-\(typewriterTrigger[triggerKey] ?? 0)")
-                                        } else {
-                                            Text(beyt[0])
-                                                .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
-                                                .foregroundColor(colorScheme == .dark ? .white : .black)
-                                                .lineSpacing(isTranslated ? 4 : 14 * 2.66)
-                                                .kerning(1)
-                                                .lineLimit(nil)
-                                                .fixedSize(horizontal: false, vertical: true)
-                                                .multilineTextAlignment(.center)
+                                TypewriterText(
+                                    text: beyt[0],
+                                    font: isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14),
+                                    color: colorScheme == .dark ? .white : .black,
+                                    lineSpacing: isTranslated ? 4 : 14 * 2.66,
+                                    kerning: 1,
+                                    alignment: .center,
+                                    delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 0),
+                                    isCompleted: isPageCompleted,
+                                    onComplete: {
+                                        if isLastLine {
+                                            completedPages.insert(pageKey)
                                         }
                                     }
-                                    
-                                    // Second line of beyt
-                                    if beyt.count > 1 {
-                                        if displayMode == .typewriter {
-                                            let pageKey = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
-                                            let isPageCompleted = completedPages.contains(pageKey)
-                                            let isLastLine = beytIndex == endBeytIndex - 1
-                                            
-                                            TypewriterText(
-                                                text: beyt[1],
-                                                font: isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14),
-                                                color: colorScheme == .dark ? .white : .black,
-                                                lineSpacing: isTranslated ? 4 : 14 * 2.66,
-                                                kerning: 1,
-                                                alignment: .center,
-                                                delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 1),
-                                                isCompleted: isPageCompleted,
-                                                onComplete: {
-                                                    if isLastLine {
-                                                        completedPages.insert(pageKey)
-                                                    }
-                                                }
-                                            )
-                                            .id("\(triggerKey)-\(beytIndex)-1-\(typewriterTrigger[triggerKey] ?? 0)")
-                                        } else {
-                                            Text(beyt[1])
-                                                .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
-                                                .foregroundColor(colorScheme == .dark ? .white : .black)
-                                                .lineSpacing(isTranslated ? 4 : 14 * 2.66)
-                                                .kerning(1)
-                                                .lineLimit(nil)
-                                                .fixedSize(horizontal: false, vertical: true)
-                                                .multilineTextAlignment(.center)
+                                )
+                                .id("\(triggerKey)-\(beytIndex)-0-\(typewriterTrigger[triggerKey] ?? 0)")
+                            } else {
+                                Text(beyt[0])
+                                    .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
+                                    .foregroundColor(colorScheme == .dark ? .white : .black)
+                                    .lineSpacing(isTranslated ? 4 : 14 * 2.66)
+                                    .kerning(1)
+                                    .lineLimit(nil)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .multilineTextAlignment(.center)
+                            }
+                            
+                            // Show explanation for line 1 if enabled
+                            Group {
+                                if showExplanations {
+                                    let tafseer = selectedLanguage == .farsi ? poemData.tafseerLineByLineFa : poemData.tafseerLineByLineEn
+                                    if let tafseer = tafseer {
+                                        if beytIndex * 2 < tafseer.count {
+                                            let explanation = tafseer[beytIndex * 2].explanation
+                                            if !explanation.isEmpty {
+                                                Text(explanation)
+                                                    .font(.system(size: 13))
+                                                    .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
+                                                    .multilineTextAlignment(.center)
+                                                    .padding(.horizontal, 16)
+                                                    .padding(.top, 8)
+                                                    .transition(.asymmetric(
+                                                        insertion: .move(edge: .top).combined(with: .opacity),
+                                                        removal: .move(edge: .top).combined(with: .opacity)
+                                                    ))
+                                                    .id("exp-line1-\(beytIndex)")
+                                            }
                                         }
                                     }
                                 }
-                                .padding(.bottom, beytIndex < endBeytIndex - 1 ? 24 : 0)
+                            }
+                        }
+                        
+                        // Second line of beyt
+                        if beyt.count > 1 {
+                            if displayMode == .typewriter {
+                                let pageKey = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
+                                let isPageCompleted = completedPages.contains(pageKey)
+                                let isLastLine = beytIndex == endBeytIndex - 1
+                                
+                                TypewriterText(
+                                    text: beyt[1],
+                                    font: isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14),
+                                    color: colorScheme == .dark ? .white : .black,
+                                    lineSpacing: isTranslated ? 4 : 14 * 2.66,
+                                    kerning: 1,
+                                    alignment: .center,
+                                    delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 1),
+                                    isCompleted: isPageCompleted,
+                                    onComplete: {
+                                        if isLastLine {
+                                            completedPages.insert(pageKey)
+                                        }
+                                    }
+                                )
+                                .id("\(triggerKey)-\(beytIndex)-1-\(typewriterTrigger[triggerKey] ?? 0)")
+                            } else {
+                                Text(beyt[1])
+                                    .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
+                                    .foregroundColor(colorScheme == .dark ? .white : .black)
+                                    .lineSpacing(isTranslated ? 4 : 14 * 2.66)
+                                    .kerning(1)
+                                    .lineLimit(nil)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .multilineTextAlignment(.center)
+                            }
+                            
+                            // Show explanation for line 2 if enabled
+                            Group {
+                                if showExplanations {
+                                    let tafseer = selectedLanguage == .farsi ? poemData.tafseerLineByLineFa : poemData.tafseerLineByLineEn
+                                    if let tafseer = tafseer {
+                                        if beytIndex * 2 + 1 < tafseer.count {
+                                            let explanation = tafseer[beytIndex * 2 + 1].explanation
+                                            if !explanation.isEmpty {
+                                                Text(explanation)
+                                                    .font(.system(size: 13))
+                                                    .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
+                                                    .multilineTextAlignment(.center)
+                                                    .padding(.horizontal, 16)
+                                                    .padding(.top, 8)
+                                                    .transition(.asymmetric(
+                                                        insertion: .move(edge: .top).combined(with: .opacity),
+                                                        removal: .move(edge: .top).combined(with: .opacity)
+                                                    ))
+                                                    .id("exp-line2-\(beytIndex)")
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 16)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    .background(colorScheme == .dark ? Color(red: 13/255, green: 13/255, blue: 13/255) : Color.white)
-                    .cornerRadius(totalPages > 1 ? 0 : 12, corners: [.bottomLeft, .bottomRight])
-                    .onAppear {
-                        // Trigger typewriter animation when page appears
-                        let key = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
-                        typewriterTrigger[key] = (typewriterTrigger[key] ?? 0) + 1
-                    }
+                    .animation(.spring(response: 0.35, dampingFraction: 0.85), value: showExplanations)
+                    .padding(.bottom, beytIndex < endBeytIndex - 1 ? 24 : 0)
                 }
-                .id("\(poemData.id)-\(colorScheme)")
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        .background(colorScheme == .dark ? Color(red: 13/255, green: 13/255, blue: 13/255) : Color.white)
+        .cornerRadius((poemData.verses.count + beytsPerPage - 1) / beytsPerPage > 1 ? 0 : 12, corners: [.bottomLeft, .bottomRight])
+        .onAppear {
+            // Trigger typewriter animation when page appears
+            let key = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
+            typewriterTrigger[key] = (typewriterTrigger[key] ?? 0) + 1
+        }
+    }
+    
+    private var poemContent: some View {
+        let poemData = poem!
+        let beytsPerPage = 2
+        let totalPages = (poemData.verses.count + beytsPerPage - 1) / beytsPerPage
+        // Include language in contentVersion so view rebuilds when language changes
+        let contentVersion = (showExplanations ? 1 : 0) + (selectedLanguage == .farsi ? 10 : 20)
+        
+        return Group {
+            if !poemData.verses.isEmpty {
+                PageCurlView(currentPage: $versePage, pageCount: totalPages, isRTL: selectedLanguage == .farsi, content: { pageIndex in
+                    buildPageContent(poemData: poemData, pageIndex: pageIndex, beytsPerPage: beytsPerPage)
+                }, contentVersion: contentVersion)
+                .id("\(poemData.id)-\(colorScheme)-\(showExplanations)-\(selectedLanguage)")
                 .onChange(of: versePage) { _, newPage in
                     // Trigger typewriter animation when page changes
                     let key = "\(poemData.id)-\(newPage)-\(cardIndex)"
@@ -1023,6 +1188,13 @@ struct PoemCardView: View {
                 .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
             }
         }
+    }
+    
+    private var actualPoemView: some View {
+        VStack(spacing: 8) {
+            poemHeader
+            poemContent
+        }
         .background(colorScheme == .dark ? Color.black : Color(red: 244/255, green: 244/255, blue: 244/255))
         .clipShape(RoundedRectangle(cornerRadius: 24))
     }
@@ -1034,6 +1206,7 @@ struct MenuPopoverHelper: View {
     @Binding var showLanguageMenu: Bool
     let selectedDisplayMode: DisplayMode
     @Binding var showConfigureMenu: Bool
+    let showExplanations: Bool
     let onSave: () -> Void
     let onShare: () -> Void
     let onSelectText: () -> Void
@@ -1045,6 +1218,7 @@ struct MenuPopoverHelper: View {
     let onConfigure: () -> Void
     let onSelectDisplayMode: (DisplayMode) -> Void
     let onThemes: () -> Void
+    let onSimplyExplained: () -> Void
     
     @State private var isVisible: Bool = false
     @Environment(\.colorScheme) var colorScheme
@@ -1056,6 +1230,7 @@ struct MenuPopoverHelper: View {
             showLanguageMenu: $showLanguageMenu,
             selectedDisplayMode: selectedDisplayMode,
             showConfigureMenu: $showConfigureMenu,
+            showExplanations: showExplanations,
             onSave: onSave,
             onShare: onShare,
             onSelectText: onSelectText,
@@ -1066,7 +1241,8 @@ struct MenuPopoverHelper: View {
             onSelectLanguage: onSelectLanguage,
             onConfigure: onConfigure,
             onSelectDisplayMode: onSelectDisplayMode,
-            onThemes: onThemes
+            onThemes: onThemes,
+            onSimplyExplained: onSimplyExplained
         )
         .opacity(isVisible ? 1 : 0)
         .task {

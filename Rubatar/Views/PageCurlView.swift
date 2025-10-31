@@ -13,6 +13,7 @@ struct PageCurlView<Content: View>: View {
     let pageCount: Int
     let isRTL: Bool // Add RTL support
     let content: (Int) -> Content
+    let contentVersion: Int // Version number that changes when content should update
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
@@ -21,7 +22,8 @@ struct PageCurlView<Content: View>: View {
             pageCount: pageCount,
             isRTL: isRTL,
             colorScheme: colorScheme,
-            content: content
+            content: content,
+            contentVersion: contentVersion
         )
     }
 }
@@ -32,6 +34,7 @@ struct PageCurlViewControllerWrapper<Content: View>: UIViewControllerRepresentab
     let isRTL: Bool
     let colorScheme: ColorScheme
     let content: (Int) -> Content
+    let contentVersion: Int // Version number that changes when content should update
     
     func makeUIViewController(context: Context) -> PageCurlHostController<Content> {
         let controller = PageCurlHostController(
@@ -61,6 +64,11 @@ struct PageCurlViewControllerWrapper<Content: View>: UIViewControllerRepresentab
         
         // Update RTL mode if it changed
         uiViewController.updateRTL(isRTL)
+        
+        // Rebuild view controllers when content version changes
+        if uiViewController.contentVersion != contentVersion {
+            uiViewController.rebuildViewControllers(contentBuilder: content, contentVersion: contentVersion)
+        }
     }
     
     func makeCoordinator() -> Coordinator {
@@ -83,6 +91,7 @@ class PageCurlHostController<Content: View>: UIViewController, UIPageViewControl
     var currentPage: Int
     var onPageChange: ((Int) -> Void)?
     private let contentBuilder: (Int) -> Content
+    var contentVersion: Int = 0
     
     init(pageCount: Int, currentPage: Int, isRTL: Bool, colorScheme: ColorScheme, contentBuilder: @escaping (Int) -> Content) {
         self.pageCount = pageCount
@@ -101,6 +110,7 @@ class PageCurlHostController<Content: View>: UIViewController, UIPageViewControl
     }
     
     private func setupViewControllers() {
+        viewControllers.removeAll()
         for index in 0..<pageCount {
             let hostingController = UIHostingController(rootView: contentBuilder(index))
             // Set background color based on color scheme - this is the "back" of the page during curl
@@ -110,6 +120,25 @@ class PageCurlHostController<Content: View>: UIViewController, UIPageViewControl
             hostingController.view.layer.backgroundColor = backgroundColor.cgColor
             hostingController.view.isOpaque = true
             viewControllers.append(hostingController)
+        }
+    }
+    
+    func rebuildViewControllers(contentBuilder: @escaping (Int) -> Content, contentVersion: Int) {
+        self.contentVersion = contentVersion
+        let savedCurrentPage = currentPage
+        
+        // Rebuild all view controllers with new content
+        setupViewControllers()
+        
+        // Restore current page
+        if savedCurrentPage < viewControllers.count {
+            pageViewController.setViewControllers(
+                [viewControllers[savedCurrentPage]],
+                direction: .forward,
+                animated: false,
+                completion: nil
+            )
+            currentPage = savedCurrentPage
         }
     }
     

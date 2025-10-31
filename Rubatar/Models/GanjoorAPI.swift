@@ -35,6 +35,10 @@ struct PoemData: Identifiable, Codable {
     let mood: String?
     let moodColor: String?
     
+    // Line-by-line tafseer
+    let tafseerLineByLineFa: [LineByLineTafseer]?
+    let tafseerLineByLineEn: [LineByLineTafseer]?
+    
     // Additional fields for music integration (optional)
     var poem_text_en: String?
     var poem_name_en: String?
@@ -50,6 +54,14 @@ struct PoemData: Identifiable, Codable {
     var poem_name_fa: String { title }
     var poet_name_fa: String { poet.fullName }
     var topic_name_fa: String? { topic }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, title, poet, verses, topic, mood, moodColor
+        case tafseerLineByLineFa = "tafseer_line_by_line_fa"
+        case tafseerLineByLineEn = "tafseer_line_by_line_en"
+        case poem_text_en, poem_name_en, poet_name_en, topic_name_en
+        case playlist_id, playlist_name, curator_name, artwork_url
+    }
 }
 
 struct PoetInfo: Codable {
@@ -131,7 +143,9 @@ class GanjoorAPIManager: ObservableObject {
                 verses: verses,
                 topic: nil,
                 mood: nil,
-                moodColor: nil
+                moodColor: nil,
+                tafseerLineByLineFa: nil,
+                tafseerLineByLineEn: nil
             )
             
             // Add to used poems
