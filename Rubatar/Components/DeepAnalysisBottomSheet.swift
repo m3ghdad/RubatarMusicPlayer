@@ -19,28 +19,48 @@ struct DeepAnalysisBottomSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: selectedLanguage == .farsi ? .trailing : .leading, spacing: 20) {
-                // Metadata Tags (Book, Mood, Topic, Form) - above interpretation
-                FlowLayout(spacing: 8, alignment: selectedLanguage == .farsi ? .trailing : .leading) {
+                // Metadata in vertical format
+                VStack(alignment: selectedLanguage == .farsi ? .trailing : .leading, spacing: 16) {
                     // Book
                     if let bookName = selectedLanguage == .farsi ? poem.bookNameFa : poem.bookNameEn,
                        !bookName.isEmpty {
-                        MetadataTag(label: selectedLanguage == .farsi ? "کتاب" : "Book", value: bookName)
+                        MetadataRow(
+                            icon: "book.closed.fill",
+                            label: selectedLanguage == .farsi ? "کتاب" : "Book",
+                            value: bookName,
+                            alignment: selectedLanguage == .farsi ? .trailing : .leading
+                        )
                     }
                     
                     // Mood
                     if let mood = poem.mood, !mood.isEmpty {
-                        MetadataTag(label: selectedLanguage == .farsi ? "حال" : "Mood", value: mood)
+                        MetadataRow(
+                            icon: "leaf.fill",
+                            label: selectedLanguage == .farsi ? "حال" : "Mood",
+                            value: mood,
+                            alignment: selectedLanguage == .farsi ? .trailing : .leading
+                        )
                     }
                     
                     // Topic
                     if let topic = poem.topic, !topic.isEmpty {
-                        MetadataTag(label: selectedLanguage == .farsi ? "موضوع" : "Topic", value: topic)
+                        MetadataRow(
+                            icon: "tag.fill",
+                            label: selectedLanguage == .farsi ? "موضوع" : "Topic",
+                            value: topic,
+                            alignment: selectedLanguage == .farsi ? .trailing : .leading
+                        )
                     }
                     
                     // Form
                     if let form = selectedLanguage == .farsi ? poem.formFa : poem.formEn,
                        !form.isEmpty {
-                        MetadataTag(label: selectedLanguage == .farsi ? "قالب" : "Form", value: form)
+                        MetadataRow(
+                            icon: "textformat",
+                            label: selectedLanguage == .farsi ? "قالب" : "Form",
+                            value: form,
+                            alignment: selectedLanguage == .farsi ? .trailing : .leading
+                        )
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
@@ -78,29 +98,44 @@ struct DeepAnalysisBottomSheet: View {
     }
 }
 
-// Metadata Tag Component
-struct MetadataTag: View {
+// Metadata Row Component (vertical format)
+struct MetadataRow: View {
+    let icon: String
     let label: String
     let value: String
+    let alignment: HorizontalAlignment
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(label)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.6))
-            Text(value)
-                .font(.system(size: 15, weight: .regular))
-                .foregroundColor(colorScheme == .dark ? .white : .black)
+        HStack(spacing: 12) {
+            if alignment == .trailing {
+                Text(value)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(colorScheme == .dark ? .white : .black)
+                Image(systemName: icon)
+                    .font(.system(size: 16))
+                    .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.6))
+                Text(label)
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.6))
+                Spacer()
+            } else {
+                Spacer()
+                Image(systemName: icon)
+                    .font(.system(size: 16))
+                    .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.6))
+                Text(label)
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.6))
+                Text(value)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(colorScheme == .dark ? .white : .black)
+            }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05))
-        .cornerRadius(8)
     }
 }
 
-// FlowLayout for wrapping tags
+// FlowLayout for wrapping tags (kept for potential future use)
 struct FlowLayout: Layout {
     var spacing: CGFloat = 8
     var alignment: HorizontalAlignment = .leading
