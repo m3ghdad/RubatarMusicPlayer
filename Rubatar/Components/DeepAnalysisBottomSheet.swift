@@ -20,14 +20,14 @@ struct DeepAnalysisBottomSheet: View {
         ScrollView {
             VStack(alignment: selectedLanguage == .farsi ? .trailing : .leading, spacing: 20) {
                 // Metadata in vertical format
-                VStack(alignment: selectedLanguage == .farsi ? .trailing : .leading, spacing: 16) {
+                VStack(alignment: selectedLanguage == .farsi ? .trailing : .leading, spacing: 12) {
                     // Book
                     if let bookName = selectedLanguage == .farsi ? poem.bookNameFa : poem.bookNameEn,
                        !bookName.isEmpty {
                         MetadataRow(
                             icon: "book.closed.fill",
-                            label: selectedLanguage == .farsi ? "کتاب" : "Book",
-                            value: bookName,
+                            tagHeader: selectedLanguage == .farsi ? "کتاب" : "Book",
+                            tagDetail: bookName,
                             alignment: selectedLanguage == .farsi ? .trailing : .leading
                         )
                     }
@@ -36,8 +36,8 @@ struct DeepAnalysisBottomSheet: View {
                     if let mood = poem.mood, !mood.isEmpty {
                         MetadataRow(
                             icon: "leaf.fill",
-                            label: selectedLanguage == .farsi ? "حال" : "Mood",
-                            value: mood,
+                            tagHeader: selectedLanguage == .farsi ? "حال" : "Mood",
+                            tagDetail: mood,
                             alignment: selectedLanguage == .farsi ? .trailing : .leading
                         )
                     }
@@ -46,8 +46,8 @@ struct DeepAnalysisBottomSheet: View {
                     if let topic = poem.topic, !topic.isEmpty {
                         MetadataRow(
                             icon: "tag.fill",
-                            label: selectedLanguage == .farsi ? "موضوع" : "Topic",
-                            value: topic,
+                            tagHeader: selectedLanguage == .farsi ? "موضوع" : "Topic",
+                            tagDetail: topic,
                             alignment: selectedLanguage == .farsi ? .trailing : .leading
                         )
                     }
@@ -57,8 +57,8 @@ struct DeepAnalysisBottomSheet: View {
                        !form.isEmpty {
                         MetadataRow(
                             icon: "textformat",
-                            label: selectedLanguage == .farsi ? "قالب" : "Form",
-                            value: form,
+                            tagHeader: selectedLanguage == .farsi ? "قالب" : "Form",
+                            tagDetail: form,
                             alignment: selectedLanguage == .farsi ? .trailing : .leading
                         )
                     }
@@ -101,37 +101,48 @@ struct DeepAnalysisBottomSheet: View {
 // Metadata Row Component (vertical format)
 struct MetadataRow: View {
     let icon: String
-    let label: String
-    let value: String
+    let tagHeader: String
+    let tagDetail: String
     let alignment: HorizontalAlignment
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-        HStack(spacing: 12) {
-            if alignment == .trailing {
-                Text(value)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(colorScheme == .dark ? .white : .black)
-                Image(systemName: icon)
-                    .font(.system(size: 16))
-                    .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.6))
-                Text(label)
-                    .font(.system(size: 14, weight: .regular))
-                    .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.6))
-                Spacer()
-            } else {
-                Spacer()
-                Image(systemName: icon)
-                    .font(.system(size: 16))
-                    .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.6))
-                Text(label)
-                    .font(.system(size: 14, weight: .regular))
-                    .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.6))
-                Text(value)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(colorScheme == .dark ? .white : .black)
+        VStack(alignment: alignment, spacing: 8) {
+            // Tag-header
+            Text(tagHeader)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
+            
+            // Tag-detail with glass effect
+            HStack(spacing: 10) {
+                if alignment == .trailing {
+                    Text(tagDetail)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(colorScheme == .dark ? .white : .black)
+                    Image(systemName: icon)
+                        .font(.system(size: 16))
+                        .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
+                } else {
+                    Image(systemName: icon)
+                        .font(.system(size: 16))
+                        .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
+                    Text(tagDetail)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(colorScheme == .dark ? .white : .black)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05))
+                    .background {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(.ultraThinMaterial)
+                    }
             }
         }
+        .frame(maxWidth: .infinity, alignment: alignment == .trailing ? .trailing : .leading)
     }
 }
 
