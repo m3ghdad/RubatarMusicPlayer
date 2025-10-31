@@ -4,11 +4,16 @@
 //
 //  Created by Meghdad Abbaszadegan on 10/17/25.
 //
+//  NOTE: Ganjoor API is no longer used - all data now comes from Supabase
+//  The GanjoorAPIManager and related API response models are commented out below.
+//
 
 import Foundation
 import Combine
 
 // MARK: - API Response Models
+// NOTE: Ganjoor API is no longer used - all data now comes from Supabase
+/*
 struct GanjoorPoemResponse: Codable {
     let id: Int
     let title: String?
@@ -24,6 +29,7 @@ struct GanjoorPoet: Codable {
     let name: String?
     let fullName: String?
 }
+*/
 
 // MARK: - Internal App Models
 struct PoemData: Identifiable, Codable {
@@ -38,6 +44,10 @@ struct PoemData: Identifiable, Codable {
     // Line-by-line tafseer
     let tafseerLineByLineFa: [LineByLineTafseer]?
     let tafseerLineByLineEn: [LineByLineTafseer]?
+    
+    // Full tafseer text
+    let tafseerFa: String?
+    let tafseerEn: String?
     
     // Additional fields for music integration (optional)
     var poem_text_en: String?
@@ -59,6 +69,8 @@ struct PoemData: Identifiable, Codable {
         case id, title, poet, verses, topic, mood, moodColor
         case tafseerLineByLineFa = "tafseer_line_by_line_fa"
         case tafseerLineByLineEn = "tafseer_line_by_line_en"
+        case tafseerFa = "tafseer_fa"
+        case tafseerEn = "tafseer_en"
         case poem_text_en, poem_name_en, poet_name_en, topic_name_en
         case playlist_id, playlist_name, curator_name, artwork_url
     }
@@ -71,6 +83,8 @@ struct PoetInfo: Codable {
 }
 
 // MARK: - Ganjoor API Manager
+// NOTE: Ganjoor API is no longer used - all data now comes from Supabase
+/*
 class GanjoorAPIManager: ObservableObject {
     @Published var isLoading = false
     @Published var currentPoem: PoemData?
@@ -145,7 +159,9 @@ class GanjoorAPIManager: ObservableObject {
                 mood: nil,
                 moodColor: nil,
                 tafseerLineByLineFa: nil,
-                tafseerLineByLineEn: nil
+                tafseerLineByLineEn: nil,
+                tafseerFa: nil,
+                tafseerEn: nil
             )
             
             // Add to used poems
@@ -240,4 +256,5 @@ class GanjoorAPIManager: ObservableObject {
         usedPoemIds.removeAll()
     }
 }
+*/
 

@@ -26,6 +26,7 @@ struct LiquidGlassMenu: View {
     let onSelectDisplayMode: (DisplayMode) -> Void
     let onThemes: () -> Void
     let onSimplyExplained: () -> Void
+    let onDeepAnalysis: () -> Void
     
     @State private var hoveredItem: String? = nil
     @State private var dragLocation: CGPoint? = nil
@@ -136,6 +137,14 @@ struct LiquidGlassMenu: View {
                     title: "Simply Explained",
                     isHovered: hoveredItem == "simplyexplained",
                     isSelected: showExplanations
+                )
+                
+                // Deep Analysis
+                MenuItemView(
+                    id: "deepanalysis",
+                    icon: "book.pages",
+                    title: "Deep Analysis",
+                    isHovered: hoveredItem == "deepanalysis"
                 )
                 
                 // Language
@@ -367,23 +376,27 @@ struct LiquidGlassMenu: View {
             else if menuY >= 61 && menuY < 101 {
                 setHoveredItem("simplyexplained")
             }
-            // Language: 101-141 (after Simply Explained)
+            // Deep Analysis: 101-141 (after Simply Explained)
             else if menuY >= 101 && menuY < 141 {
+                setHoveredItem("deepanalysis")
+            }
+            // Language: 141-181 (after Deep Analysis)
+            else if menuY >= 141 && menuY < 181 {
                 setHoveredItem("language")
             }
             // Language submenu items (when open)
-            else if showLanguageMenu && menuY >= 141 {
+            else if showLanguageMenu && menuY >= 181 {
                 // Check if we're in the language submenu area
-                if menuY >= 141 && menuY < 181 { // English option
+                if menuY >= 181 && menuY < 221 { // English option
                     setHoveredItem("english")
-                } else if menuY >= 181 && menuY < 221 { // Farsi option
+                } else if menuY >= 221 && menuY < 261 { // Farsi option
                     setHoveredItem("farsi")
                 } else {
                     hoveredItem = nil
                 }
             }
-            // Configure: 141-181 (after Language submenu or Language)
-            else if menuY >= 141 && menuY < 181 && !showLanguageMenu {
+            // Configure: 181-221 (after Language submenu or Language)
+            else if menuY >= 181 && menuY < 221 && !showLanguageMenu {
                 setHoveredItem("configure")
             }
             // Configure submenu items (when open)
@@ -436,6 +449,8 @@ struct LiquidGlassMenu: View {
             onInterpretation()
         case "simplyexplained":
             onSimplyExplained()
+        case "deepanalysis":
+            onDeepAnalysis()
         case "language":
             onLanguage()
         case "english":
@@ -616,7 +631,8 @@ extension Color {
             onConfigure: {},
             onSelectDisplayMode: { _ in },
             onThemes: {},
-            onSimplyExplained: {}
+            onSimplyExplained: {},
+            onDeepAnalysis: {}
         )
     }
 }

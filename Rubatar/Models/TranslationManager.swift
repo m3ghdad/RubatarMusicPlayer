@@ -146,7 +146,9 @@ class TranslationManager {
                 mood: poem.mood,
                 moodColor: poem.moodColor,
                 tafseerLineByLineFa: nil,
-                tafseerLineByLineEn: nil
+                tafseerLineByLineEn: nil,
+                tafseerFa: nil,
+                tafseerEn: nil
             )
             
             print("✓ Translated poem: '\(poem.title)' → '\(cleanedTitle)' by \(translatedPoetName)")

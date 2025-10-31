@@ -31,6 +31,8 @@ struct SupabasePoem: Codable {
     let updated_at: String
     let tafseer_line_by_line_fa: [LineByLineTafseer]?
     let tafseer_line_by_line_en: [LineByLineTafseer]?
+    let tafseer_fa: String?
+    let tafseer_en: String?
 }
 
 struct SupabasePoet: Codable {
@@ -259,7 +261,9 @@ class PoetryService: ObservableObject {
                 mood: mood?.mood_fa,
                 moodColor: mood?.color_hex,
                 tafseerLineByLineFa: poem.tafseer_line_by_line_fa,
-                tafseerLineByLineEn: poem.tafseer_line_by_line_en
+                tafseerLineByLineEn: poem.tafseer_line_by_line_en,
+                tafseerFa: poem.tafseer_fa,
+                tafseerEn: poem.tafseer_en
             )
             
             // Store Farsi poem in cache with tafseer data
@@ -283,7 +287,9 @@ class PoetryService: ObservableObject {
                     mood: mood?.mood_en,
                     moodColor: mood?.color_hex,
                     tafseerLineByLineFa: poem.tafseer_line_by_line_fa,
-                    tafseerLineByLineEn: poem.tafseer_line_by_line_en
+                    tafseerLineByLineEn: poem.tafseer_line_by_line_en,
+                    tafseerFa: poem.tafseer_fa,
+                    tafseerEn: poem.tafseer_en
                 )
                 
                 // Store English version in cache

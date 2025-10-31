@@ -123,6 +123,8 @@ class CoreDataManager {
                     moodColor: nil,
                     tafseerLineByLineFa: nil,
                     tafseerLineByLineEn: nil,
+                    tafseerFa: nil,
+                    tafseerEn: nil,
                     poem_text_en: cachedPoem.poemTextEn,
                     poem_name_en: cachedPoem.poemNameEn,
                     poet_name_en: cachedPoem.poetNameEn,

@@ -83,6 +83,7 @@ struct ProfileView: View {
     @State private var typewriterTrigger: [String: Int] = [:] // Trigger for typewriter: "poemId-pageIndex-cardIndex" -> count
     @State private var completedTypewriterPages: Set<String> = [] // Track pages that have completed typing
     @State private var showExplanations: [Int: Bool] = [:] // Show line-by-line explanations per poem ID
+    @State private var showDeepAnalysisSheet = false // Control Deep Analysis bottom sheet
     
     // Initialize with saved display mode preference
     init() {
@@ -505,6 +506,14 @@ struct ProfileView: View {
                             showLanguageMenu = false
                             showConfigureMenu = false
                         }
+                    },
+                    onDeepAnalysis: {
+                        withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                            showDeepAnalysisSheet = true
+                            showMenu = false
+                            showLanguageMenu = false
+                            showConfigureMenu = false
+                        }
                     }
                 )
                 .padding(selectedLanguage == .farsi ? .leading : .trailing, 32)
@@ -517,6 +526,61 @@ struct ProfileView: View {
             }
         }
         .toast(isShowing: $showToast, message: toastMessage)
+        .sheet(isPresented: $showDeepAnalysisSheet) {
+            Group {
+                // Get current poem for tafseer
+                let currentPoem: PoemData? = {
+                    if selectedLanguage == .farsi {
+                        // Build Farsi poems list (with fresh tafseer data if available)
+                        let farsiPoemsList = displayedPoems.map { poem -> PoemData in
+                            if let freshPoem = poetryService.farsiPoems[poem.id] {
+                                return freshPoem
+                            }
+                            return poem
+                        }
+                        
+                        // Use currentPage to get the currently displayed poem
+                        if currentPage < farsiPoemsList.count {
+                            return farsiPoemsList[currentPage]
+                        }
+                        return nil
+                    } else if selectedLanguage == .english {
+                        let englishPoemsList = displayedPoems.compactMap { poem -> PoemData? in
+                            poetryService.englishPoems[poem.id]
+                        }
+                        
+                        // Use currentPage to get the currently displayed poem
+                        if currentPage < englishPoemsList.count {
+                            return englishPoemsList[currentPage]
+                        }
+                        // Fallback: if English poems aren't ready, use Farsi
+                        if currentPage < displayedPoems.count {
+                            return displayedPoems[currentPage]
+                        }
+                        return nil
+                    } else {
+                        return nil
+                    }
+                }()
+                
+                if let poem = currentPoem {
+                    let tafseerText = selectedLanguage == .farsi ? (poem.tafseerFa ?? "") : (poem.tafseerEn ?? "")
+                    DeepAnalysisBottomSheet(tafseerText: tafseerText, selectedLanguage: selectedLanguage)
+                        .presentationDetents([.fraction(0.75), .large])
+                        .presentationDragIndicator(.hidden)
+                        .presentationCornerRadius(20)
+                } else {
+                    Text("No poem data available")
+                        .font(.system(size: 17))
+                        .foregroundColor(colorScheme == .dark ? .white : .black)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(colorScheme == .dark ? Color.black : Color.white)
+                        .presentationDetents([.fraction(0.75), .large])
+                        .presentationDragIndicator(.hidden)
+                        .presentationCornerRadius(20)
+                }
+            }
+        }
         .navigationBarHidden(true)
         .animation(.snappy(duration: 0.3, extraBounce: 0), value: showMenu)
         .onAppear {
@@ -1219,6 +1283,7 @@ struct MenuPopoverHelper: View {
     let onSelectDisplayMode: (DisplayMode) -> Void
     let onThemes: () -> Void
     let onSimplyExplained: () -> Void
+    let onDeepAnalysis: () -> Void
     
     @State private var isVisible: Bool = false
     @Environment(\.colorScheme) var colorScheme
@@ -1242,7 +1307,8 @@ struct MenuPopoverHelper: View {
             onConfigure: onConfigure,
             onSelectDisplayMode: onSelectDisplayMode,
             onThemes: onThemes,
-            onSimplyExplained: onSimplyExplained
+            onSimplyExplained: onSimplyExplained,
+            onDeepAnalysis: onDeepAnalysis
         )
         .opacity(isVisible ? 1 : 0)
         .task {
