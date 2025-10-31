@@ -21,7 +21,7 @@ struct DeepAnalysisBottomSheet: View {
             VStack(alignment: selectedLanguage == .farsi ? .trailing : .leading, spacing: 20) {
                 // Metadata in horizontal scrollable format
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(alignment: .top, spacing: 4) {
+                    HStack(alignment: .top, spacing: 8) {
                         if selectedLanguage == .farsi {
                             // Farsi order (RTL): Form | Book | Mood | Topic
                             // Form
@@ -64,7 +64,7 @@ struct DeepAnalysisBottomSheet: View {
                                     tagHeader: "موضوع",
                                     tagDetail: topic,
                                     alignment: .trailing,
-                                    showDivider: false
+                                    showDivider: true
                                 )
                             }
                         } else {
@@ -109,7 +109,7 @@ struct DeepAnalysisBottomSheet: View {
                                     tagHeader: "Form",
                                     tagDetail: form,
                                     alignment: .leading,
-                                    showDivider: false
+                                    showDivider: true
                                 )
                             }
                         }
@@ -160,45 +160,36 @@ struct MetadataRow: View {
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-        HStack(spacing: 12) {
-            // Metadata content
-            VStack(alignment: alignment, spacing: 8) {
-                // Tag-header
-                Text(tagHeader)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
-                
-                // Tag-detail with glass effect
-                HStack(spacing: 10) {
-                    if alignment == .trailing {
-                        Text(tagDetail)
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(colorScheme == .dark ? .white : .black)
-                        Image(systemName: icon)
-                            .font(.system(size: 16))
-                            .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
-                    } else {
-                        Image(systemName: icon)
-                            .font(.system(size: 16))
-                            .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
-                        Text(tagDetail)
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(colorScheme == .dark ? .white : .black)
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .glassEffect(in: RoundedRectangle(cornerRadius: 12))
-            }
-            .frame(maxWidth: .infinity, alignment: alignment == .trailing ? .trailing : .leading)
+        // Metadata content
+        VStack(alignment: alignment, spacing: 8) {
+            // Tag-header (commented out)
+            /*
+            Text(tagHeader)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
+            */
             
-            // Vertical divider
-            if showDivider {
-                Rectangle()
-                    .fill(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.1))
-                    .frame(width: 1)
-                    .frame(maxHeight: .infinity)
+            // Tag-detail with glass effect
+            HStack(spacing: 10) {
+                if alignment == .trailing {
+                    Text(tagDetail)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(colorScheme == .dark ? .white : .black)
+                    Image(systemName: icon)
+                        .font(.system(size: 16))
+                        .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
+                } else {
+                    Image(systemName: icon)
+                        .font(.system(size: 16))
+                        .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
+                    Text(tagDetail)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(colorScheme == .dark ? .white : .black)
+                }
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .glassEffect(in: RoundedRectangle(cornerRadius: 12))
         }
     }
 }
