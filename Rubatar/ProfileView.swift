@@ -1107,7 +1107,7 @@ struct PoemCardView: View {
                                             let explanation = tafseer[beytIndex * 2].explanation
                                             if !explanation.isEmpty {
                                                 Text(explanation)
-                                                    .font(.system(size: 13))
+                                                    .font(.custom("Palatino", size: 13))
                                                     .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                                                     .multilineTextAlignment(.center)
                                                     .padding(.horizontal, 16)
@@ -1167,7 +1167,7 @@ struct PoemCardView: View {
                                             let explanation = tafseer[beytIndex * 2 + 1].explanation
                                             if !explanation.isEmpty {
                                                 Text(explanation)
-                                                    .font(.system(size: 13))
+                                                    .font(.custom("Palatino", size: 13))
                                                     .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                                                     .multilineTextAlignment(.center)
                                                     .padding(.horizontal, 16)
