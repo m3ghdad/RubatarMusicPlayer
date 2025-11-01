@@ -92,7 +92,7 @@ struct DeepAnalysisBottomSheet: View {
                                 }
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                        .environment(\.layoutDirection, selectedLanguage == .farsi ? .rightToLeft : .leftToRight)
                         if selectedLanguage == .english {
                             Spacer()
                         }
@@ -170,7 +170,7 @@ struct DeepAnalysisBottomSheet: View {
                                 }
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                        .environment(\.layoutDirection, selectedLanguage == .farsi ? .rightToLeft : .leftToRight)
                         if selectedLanguage == .english {
                             Spacer()
                         }
@@ -262,7 +262,7 @@ struct DeepAnalysisBottomSheet: View {
                                 }
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                        .environment(\.layoutDirection, selectedLanguage == .farsi ? .rightToLeft : .leftToRight)
                         if selectedLanguage == .english {
                             Spacer()
                         }
