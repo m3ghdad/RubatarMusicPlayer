@@ -147,9 +147,12 @@ struct DeepAnalysisBottomSheet: View {
                         .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                 }
                 
-                // About the Poet section
-                if let biography = selectedLanguage == .farsi ? poem.poet.biographyFa : poem.poet.biographyEn,
-                   !biography.isEmpty {
+                // About the Poet section (show if era OR biography is available)
+                let biography = selectedLanguage == .farsi ? poem.poet.biographyFa : poem.poet.biographyEn
+                let hasBiography = biography != nil && !biography!.isEmpty
+                let hasEra = poem.poet.era != nil && !poem.poet.era!.isEmpty
+                
+                if hasEra || hasBiography {
                     Divider()
                         .background(colorScheme == .dark ? Color.white.opacity(0.2) : Color.black.opacity(0.2))
                         .padding(.top, 20)
@@ -163,13 +166,13 @@ struct DeepAnalysisBottomSheet: View {
                         .padding(.bottom, 8)
                     
                     // Era tag if available
-                    if let era = poem.poet.era, !era.isEmpty {
+                    if hasEra {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(alignment: .top, spacing: 8) {
                                 MetadataRow(
                                     icon: "clock.fill",
                                     tagHeader: selectedLanguage == .farsi ? "دوره" : "Era",
-                                    tagDetail: era,
+                                    tagDetail: poem.poet.era!,
                                     alignment: selectedLanguage == .farsi ? .trailing : .leading,
                                     showDivider: false
                                 )
@@ -179,13 +182,15 @@ struct DeepAnalysisBottomSheet: View {
                         .padding(.bottom, 12)
                     }
                     
-                    // Biography text
-                    Text(biography)
-                        .font(.custom("Palatino", size: 17))
-                        .foregroundColor(colorScheme == .dark ? .white : .black)
-                        .lineSpacing(8)
-                        .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
-                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                    // Biography text if available
+                    if hasBiography {
+                        Text(biography!)
+                            .font(.custom("Palatino", size: 17))
+                            .foregroundColor(colorScheme == .dark ? .white : .black)
+                            .lineSpacing(8)
+                            .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
+                            .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                    }
                 }
             }
             .padding(.horizontal, 24)

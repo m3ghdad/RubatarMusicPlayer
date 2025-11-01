@@ -49,7 +49,8 @@ struct SupabasePoet: Codable {
     let passingdate: String?
     let birthplace_en: String?
     let birthplace_fa: String?
-    let era: String?
+    let era_fa: String?
+    let era_en: String?
     let image_url: String?
     let geographic_origin_en: String?
     let geographic_origin_fa: String?
@@ -272,6 +273,18 @@ class PoetryService: ObservableObject {
             let book = poem.book_id != nil ? booksData.first { $0.id == poem.book_id } : nil
             
             print("✅ Converting poem: \(poem.poem_name_fa) by \(poet.name_fa)")
+            if let eraFa = poet.era_fa, !eraFa.isEmpty {
+                print("  📅 Poet era (Fa): \(eraFa)")
+            }
+            if let eraEn = poet.era_en, !eraEn.isEmpty {
+                print("  📅 Poet era (En): \(eraEn)")
+            }
+            if let bioFa = poet.biography_fa, !bioFa.isEmpty {
+                print("  📖 Poet biography (Fa) available: \(bioFa.prefix(50))...")
+            }
+            if let bioEn = poet.biography_en, !bioEn.isEmpty {
+                print("  📖 Poet biography (En) available: \(bioEn.prefix(50))...")
+            }
             
             let poemId = Int(poem.id.suffix(8), radix: 16) ?? 0
             
@@ -283,7 +296,7 @@ class PoetryService: ObservableObject {
                     id: Int(poet.id.suffix(8), radix: 16) ?? 0,
                     name: poet.nickname_fa ?? poet.name_fa,
                     fullName: poet.name_fa,
-                    era: poet.era,
+                    era: poet.era_fa,
                     biographyEn: poet.biography_en,
                     biographyFa: poet.biography_fa
                 ),
@@ -316,7 +329,7 @@ class PoetryService: ObservableObject {
                         id: Int(poet.id.suffix(8), radix: 16) ?? 0,
                         name: poet.nickname_en ?? poet.name_en,
                         fullName: poet.name_en,
-                        era: poet.era,
+                        era: poet.era_en,
                         biographyEn: poet.biography_en,
                         biographyFa: poet.biography_fa
                     ),
