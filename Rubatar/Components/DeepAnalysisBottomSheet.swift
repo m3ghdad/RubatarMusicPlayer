@@ -214,7 +214,7 @@ struct DeepAnalysisBottomSheet: View {
                                 
                                 // Poet name
                                 MetadataRow(
-                                    icon: "pencil.and.list.clipboard",
+                                    icon: "graduationcap.fill",
                                     tagHeader: selectedLanguage == .farsi ? "شاعر" : "Poet",
                                     tagDetail: poem.poet.fullName,
                                     alignment: .trailing,
@@ -224,7 +224,7 @@ struct DeepAnalysisBottomSheet: View {
                                 // English order (LTR): Poet name | Era
                                 // Poet name
                                 MetadataRow(
-                                    icon: "pencil.and.list.clipboard",
+                                    icon: "graduationcap.fill",
                                     tagHeader: selectedLanguage == .farsi ? "شاعر" : "Poet",
                                     tagDetail: poem.poet.fullName,
                                     alignment: .leading,
