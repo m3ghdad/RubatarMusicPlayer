@@ -1138,133 +1138,231 @@ struct PoemCardView: View {
                     // Line 1 of Beyt 2 = (text1.length + text2.length) * 0.05 + 0.4, etc.
                     let lineIndex = beytOffset * 2
                     
-                    VStack(alignment: vStackAlignment, spacing: 10) {
-                        // First line of beyt
-                        if beyt.count > 0 {
-                            if displayMode == .typewriter {
-                                let pageKey = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
-                                let isPageCompleted = completedPages.contains(pageKey)
-                                let isLastLine = beytIndex == endBeytIndex - 1 && beyt.count == 1
-                                
-                                TypewriterText(
-                                    text: beyt[0],
-                                    font: isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Palatino", size: 16),
-                                    color: colorScheme == .dark ? .white : .black,
-                                    lineSpacing: isTranslated ? 4 : 14 * 2.66,
-                                    kerning: 1,
-                                    alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center,
-                                    delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 0),
-                                    isCompleted: isPageCompleted,
-                                    onComplete: {
-                                        if isLastLine {
-                                            completedPages.insert(pageKey)
-                                        }
-                                    }
-                                )
-                                .frame(maxWidth: .infinity, alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
-                                .id("\(triggerKey)-\(beytIndex)-0-\(typewriterTrigger[triggerKey] ?? 0)")
-                            } else {
-                                Text(beyt[0])
-                                    .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Palatino", size: 16))
-                                    .foregroundColor(colorScheme == .dark ? .white : .black)
-                                    .lineSpacing(isTranslated ? 4 : 14 * 2.66)
-                                    .kerning(1)
-                                    .lineLimit(nil)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                    .multilineTextAlignment(showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
-                                    .frame(maxWidth: .infinity, alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
+                    // Wrap in HStack with vertical line when explanations are shown
+                    if showExplanations {
+                        HStack(alignment: .top, spacing: 12) {
+                            // Vertical line on left for English
+                            if selectedLanguage == .english {
+                                Rectangle()
+                                    .fill(colorScheme == .dark ? Color.white.opacity(0.2) : Color.black.opacity(0.2))
+                                    .frame(width: 1)
                             }
                             
-                            // Show explanation for line 1 if enabled
-                            Group {
-                                if showExplanations {
-                                    let tafseer = selectedLanguage == .farsi ? poemData.tafseerLineByLineFa : poemData.tafseerLineByLineEn
-                                    if let tafseer = tafseer {
-                                        if beytIndex * 2 < tafseer.count {
-                                            let explanation = tafseer[beytIndex * 2].explanation
-                                            if !explanation.isEmpty {
-                                                Text(explanation)
-                                                    .font(.custom("Palatino", size: selectedLanguage == .farsi ? 14 : 13))
-                                                    .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
-                                                    .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
-                                                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
-                                                    .padding(.top, 8)
-                                                    .transition(.asymmetric(
-                                                        insertion: .move(edge: .top).combined(with: .opacity),
-                                                        removal: .move(edge: .top).combined(with: .opacity)
-                                                    ))
-                                                    .id("exp-line1-\(beytIndex)")
+                            VStack(alignment: vStackAlignment, spacing: 10) {
+                                // First line of beyt
+                                if beyt.count > 0 {
+                                    if displayMode == .typewriter {
+                                        let pageKey = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
+                                        let isPageCompleted = completedPages.contains(pageKey)
+                                        let isLastLine = beytIndex == endBeytIndex - 1 && beyt.count == 1
+                                        
+                                        TypewriterText(
+                                            text: beyt[0],
+                                            font: isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Palatino", size: 16),
+                                            color: colorScheme == .dark ? .white : .black,
+                                            lineSpacing: isTranslated ? 4 : 14 * 2.66,
+                                            kerning: 1,
+                                            alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center,
+                                            delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 0),
+                                            isCompleted: isPageCompleted,
+                                            onComplete: {
+                                                if isLastLine {
+                                                    completedPages.insert(pageKey)
+                                                }
+                                            }
+                                        )
+                                        .frame(maxWidth: .infinity, alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
+                                        .id("\(triggerKey)-\(beytIndex)-0-\(typewriterTrigger[triggerKey] ?? 0)")
+                                    } else {
+                                        Text(beyt[0])
+                                            .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Palatino", size: 16))
+                                            .foregroundColor(colorScheme == .dark ? .white : .black)
+                                            .lineSpacing(isTranslated ? 4 : 14 * 2.66)
+                                            .kerning(1)
+                                            .lineLimit(nil)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                            .multilineTextAlignment(showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
+                                            .frame(maxWidth: .infinity, alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
+                                    }
+                                    
+                                    // Show explanation for line 1 if enabled
+                                    Group {
+                                        if showExplanations {
+                                            let tafseer = selectedLanguage == .farsi ? poemData.tafseerLineByLineFa : poemData.tafseerLineByLineEn
+                                            if let tafseer = tafseer {
+                                                if beytIndex * 2 < tafseer.count {
+                                                    let explanation = tafseer[beytIndex * 2].explanation
+                                                    if !explanation.isEmpty {
+                                                        Text(explanation)
+                                                            .font(.custom("Palatino", size: selectedLanguage == .farsi ? 14 : 13))
+                                                            .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
+                                                            .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
+                                                            .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                                                            .padding(.top, 8)
+                                                            .transition(.asymmetric(
+                                                                insertion: .move(edge: .top).combined(with: .opacity),
+                                                                removal: .move(edge: .top).combined(with: .opacity)
+                                                            ))
+                                                            .id("exp-line1-\(beytIndex)")
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                // Second line of beyt
+                                if beyt.count > 1 {
+                                    if displayMode == .typewriter {
+                                        let pageKey = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
+                                        let isPageCompleted = completedPages.contains(pageKey)
+                                        let isLastLine = beytIndex == endBeytIndex - 1
+                                        
+                                        TypewriterText(
+                                            text: beyt[1],
+                                            font: isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Palatino", size: 16),
+                                            color: colorScheme == .dark ? .white : .black,
+                                            lineSpacing: isTranslated ? 4 : 14 * 2.66,
+                                            kerning: 1,
+                                            alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center,
+                                            delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 1),
+                                            isCompleted: isPageCompleted,
+                                            onComplete: {
+                                                if isLastLine {
+                                                    completedPages.insert(pageKey)
+                                                }
+                                            }
+                                        )
+                                        .frame(maxWidth: .infinity, alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
+                                        .id("\(triggerKey)-\(beytIndex)-1-\(typewriterTrigger[triggerKey] ?? 0)")
+                                    } else {
+                                        Text(beyt[1])
+                                            .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Palatino", size: 16))
+                                            .foregroundColor(colorScheme == .dark ? .white : .black)
+                                            .lineSpacing(isTranslated ? 4 : 14 * 2.66)
+                                            .kerning(1)
+                                            .lineLimit(nil)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                            .multilineTextAlignment(showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
+                                            .frame(maxWidth: .infinity, alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
+                                    }
+                                    
+                                    // Show explanation for line 2 if enabled
+                                    Group {
+                                        if showExplanations {
+                                            let tafseer = selectedLanguage == .farsi ? poemData.tafseerLineByLineFa : poemData.tafseerLineByLineEn
+                                            if let tafseer = tafseer {
+                                                if beytIndex * 2 + 1 < tafseer.count {
+                                                    let explanation = tafseer[beytIndex * 2 + 1].explanation
+                                                    if !explanation.isEmpty {
+                                                        Text(explanation)
+                                                            .font(.custom("Palatino", size: selectedLanguage == .farsi ? 14 : 13))
+                                                            .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
+                                                            .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
+                                                            .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                                                            .padding(.top, 8)
+                                                            .transition(.asymmetric(
+                                                                insertion: .move(edge: .top).combined(with: .opacity),
+                                                                removal: .move(edge: .top).combined(with: .opacity)
+                                                            ))
+                                                            .id("exp-line2-\(beytIndex)")
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
-                        
-                        // Second line of beyt
-                        if beyt.count > 1 {
-                            if displayMode == .typewriter {
-                                let pageKey = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
-                                let isPageCompleted = completedPages.contains(pageKey)
-                                let isLastLine = beytIndex == endBeytIndex - 1
-                                
-                                TypewriterText(
-                                    text: beyt[1],
-                                    font: isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Palatino", size: 16),
-                                    color: colorScheme == .dark ? .white : .black,
-                                    lineSpacing: isTranslated ? 4 : 14 * 2.66,
-                                    kerning: 1,
-                                    alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center,
-                                    delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 1),
-                                    isCompleted: isPageCompleted,
-                                    onComplete: {
-                                        if isLastLine {
-                                            completedPages.insert(pageKey)
-                                        }
-                                    }
-                                )
-                                .frame(maxWidth: .infinity, alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
-                                .id("\(triggerKey)-\(beytIndex)-1-\(typewriterTrigger[triggerKey] ?? 0)")
-                            } else {
-                                Text(beyt[1])
-                                    .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Palatino", size: 16))
-                                    .foregroundColor(colorScheme == .dark ? .white : .black)
-                                    .lineSpacing(isTranslated ? 4 : 14 * 2.66)
-                                    .kerning(1)
-                                    .lineLimit(nil)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                    .multilineTextAlignment(showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
-                                    .frame(maxWidth: .infinity, alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
-                            }
                             
-                            // Show explanation for line 2 if enabled
-                            Group {
-                                if showExplanations {
-                                    let tafseer = selectedLanguage == .farsi ? poemData.tafseerLineByLineFa : poemData.tafseerLineByLineEn
-                                    if let tafseer = tafseer {
-                                        if beytIndex * 2 + 1 < tafseer.count {
-                                            let explanation = tafseer[beytIndex * 2 + 1].explanation
-                                            if !explanation.isEmpty {
-                                                Text(explanation)
-                                                    .font(.custom("Palatino", size: selectedLanguage == .farsi ? 14 : 13))
-                                                    .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
-                                                    .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
-                                                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
-                                                    .padding(.top, 8)
-                                                    .transition(.asymmetric(
-                                                        insertion: .move(edge: .top).combined(with: .opacity),
-                                                        removal: .move(edge: .top).combined(with: .opacity)
-                                                    ))
-                                                    .id("exp-line2-\(beytIndex)")
+                            // Vertical line on right for Farsi
+                            if selectedLanguage == .farsi {
+                                Rectangle()
+                                    .fill(colorScheme == .dark ? Color.white.opacity(0.2) : Color.black.opacity(0.2))
+                                    .frame(width: 1)
+                            }
+                        }
+                        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: showExplanations)
+                        .padding(.bottom, beytIndex < endBeytIndex - 1 ? 24 : 0)
+                    } else {
+                        // No vertical line when explanations are off
+                        VStack(alignment: vStackAlignment, spacing: 10) {
+                            // First line of beyt
+                            if beyt.count > 0 {
+                                if displayMode == .typewriter {
+                                    let pageKey = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
+                                    let isPageCompleted = completedPages.contains(pageKey)
+                                    let isLastLine = beytIndex == endBeytIndex - 1 && beyt.count == 1
+                                    
+                                    TypewriterText(
+                                        text: beyt[0],
+                                        font: isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Palatino", size: 16),
+                                        color: colorScheme == .dark ? .white : .black,
+                                        lineSpacing: isTranslated ? 4 : 14 * 2.66,
+                                        kerning: 1,
+                                        alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center,
+                                        delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 0),
+                                        isCompleted: isPageCompleted,
+                                        onComplete: {
+                                            if isLastLine {
+                                                completedPages.insert(pageKey)
                                             }
                                         }
-                                    }
+                                    )
+                                    .frame(maxWidth: .infinity, alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
+                                    .id("\(triggerKey)-\(beytIndex)-0-\(typewriterTrigger[triggerKey] ?? 0)")
+                                } else {
+                                    Text(beyt[0])
+                                        .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Palatino", size: 16))
+                                        .foregroundColor(colorScheme == .dark ? .white : .black)
+                                        .lineSpacing(isTranslated ? 4 : 14 * 2.66)
+                                        .kerning(1)
+                                        .lineLimit(nil)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .multilineTextAlignment(showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
+                                        .frame(maxWidth: .infinity, alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
+                                }
+                            }
+                            
+                            // Second line of beyt
+                            if beyt.count > 1 {
+                                if displayMode == .typewriter {
+                                    let pageKey = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
+                                    let isPageCompleted = completedPages.contains(pageKey)
+                                    let isLastLine = beytIndex == endBeytIndex - 1
+                                    
+                                    TypewriterText(
+                                        text: beyt[1],
+                                        font: isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Palatino", size: 16),
+                                        color: colorScheme == .dark ? .white : .black,
+                                        lineSpacing: isTranslated ? 4 : 14 * 2.66,
+                                        kerning: 1,
+                                        alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center,
+                                        delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 1),
+                                        isCompleted: isPageCompleted,
+                                        onComplete: {
+                                            if isLastLine {
+                                                completedPages.insert(pageKey)
+                                            }
+                                        }
+                                    )
+                                    .frame(maxWidth: .infinity, alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
+                                    .id("\(triggerKey)-\(beytIndex)-1-\(typewriterTrigger[triggerKey] ?? 0)")
+                                } else {
+                                    Text(beyt[1])
+                                        .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Palatino", size: 16))
+                                        .foregroundColor(colorScheme == .dark ? .white : .black)
+                                        .lineSpacing(isTranslated ? 4 : 14 * 2.66)
+                                        .kerning(1)
+                                        .lineLimit(nil)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .multilineTextAlignment(showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
+                                        .frame(maxWidth: .infinity, alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
                                 }
                             }
                         }
+                        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: showExplanations)
+                        .padding(.bottom, beytIndex < endBeytIndex - 1 ? 24 : 0)
                     }
-                    .animation(.spring(response: 0.35, dampingFraction: 0.85), value: showExplanations)
-                    .padding(.bottom, beytIndex < endBeytIndex - 1 ? 24 : 0)
                 }
             }
         }
