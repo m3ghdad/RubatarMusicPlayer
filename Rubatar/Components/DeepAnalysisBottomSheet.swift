@@ -135,7 +135,7 @@ struct DeepAnalysisBottomSheet: View {
                 // Tafseer text
                 if !tafseerText.isEmpty {
                     formattedTafseerText
-                        .foregroundColor(colorScheme == .dark ? .white : .black)
+                        .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                         .lineSpacing(8)
                         .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
                         .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
