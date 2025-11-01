@@ -294,24 +294,29 @@ struct FlowLayout: Layout {
 private func formatTafseerText(_ text: String, isEnglish: Bool) -> Text {
     guard !text.isEmpty else { return Text(text) }
     
-    var resultText = Text("")
+    // Use NSMutableAttributedString for better control over attributes
+    let mutableString = NSMutableAttributedString(string: text)
     
-    // First letter styling (32px) for both English and Farsi
-    let firstChar = text.prefix(1)
-    let remainingText = String(text.dropFirst())
+    // Set base font to Palatino
+    let baseFont = UIFont(name: "Palatino", size: 17) ?? UIFont.systemFont(ofSize: 17)
+    mutableString.addAttribute(.font, value: baseFont, range: NSRange(location: 0, length: text.count))
     
-    // Check if first character is a letter (English) or any non-space character (Farsi)
-    if let firstCharUnwrapped = firstChar.first, (isEnglish ? firstCharUnwrapped.isLetter : !firstCharUnwrapped.isWhitespace) {
-        resultText = Text(String(firstCharUnwrapped))
-            .font(.custom("Palatino", size: 32))
-        
-        // Add remaining text
-        resultText = resultText + Text(remainingText)
-            .font(.custom("Palatino", size: 17))
-    } else {
-        resultText = Text(text)
-            .font(.custom("Palatino", size: 17))
+    // Find the first meaningful character (letter for English, non-space for Farsi)
+    for (index, char) in text.enumerated() {
+        let isValidFirstChar = isEnglish ? char.isLetter : !char.isWhitespace
+        if isValidFirstChar {
+            // Style first character to 32px
+            let largeFont = UIFont(name: "Palatino", size: 32) ?? UIFont.systemFont(ofSize: 32)
+            mutableString.addAttribute(.font, value: largeFont, range: NSRange(location: index, length: 1))
+            break
+        }
     }
     
-    return resultText
+    // Convert to AttributedString for SwiftUI
+    if let attributedString = try? AttributedString(mutableString, including: AttributeScopes.UIKitAttributes.self) {
+        return Text(attributedString)
+    } else {
+        return Text(text)
+            .font(.custom("Palatino", size: 17))
+    }
 }
