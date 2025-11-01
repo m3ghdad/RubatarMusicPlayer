@@ -1058,6 +1058,20 @@ struct PoemCardView: View {
                                 .buttonStyle(CircularButtonStyle())
                                 */
                                 
+                                // Uncover Meaning icon - opens deep analysis bottom sheet (to the left of lightbulb)
+                                Button(action: {
+                                    withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                        showDeepAnalysisSheet = true
+                                    }
+                                }) {
+                                    Image(systemName: "book.pages")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(.primary)
+                                        .frame(width: 32, height: 32)
+                                        .contentShape(Circle())
+                                }
+                                .buttonStyle(CircularButtonStyle())
+                                
                                 // Lightbulb icon (to the left of ellipsis) - always visible
                                 Button(action: {
                                     // Toggle explanations with spring animation
@@ -1068,20 +1082,6 @@ struct PoemCardView: View {
                                     Image(systemName: "lightbulb.fill")
                                         .font(.system(size: 18, weight: .medium))
                                         .foregroundColor(showExplanations ? .yellow : .primary)
-                                        .frame(width: 32, height: 32)
-                                        .contentShape(Circle())
-                                }
-                                .buttonStyle(CircularButtonStyle())
-                                
-                                // Uncover Meaning icon - opens deep analysis bottom sheet
-                                Button(action: {
-                                    withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
-                                        showDeepAnalysisSheet = true
-                                    }
-                                }) {
-                                    Image(systemName: "book.pages")
-                                        .font(.system(size: 18, weight: .medium))
-                                        .foregroundColor(.primary)
                                         .frame(width: 32, height: 32)
                                         .contentShape(Circle())
                                 }
