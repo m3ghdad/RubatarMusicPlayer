@@ -1138,7 +1138,7 @@ struct PoemCardView: View {
                     // Line 1 of Beyt 2 = (text1.length + text2.length) * 0.05 + 0.4, etc.
                     let lineIndex = beytOffset * 2
                     
-                    VStack(alignment: vStackAlignment, spacing: 10) {
+                    VStack(alignment: vStackAlignment, spacing: 16) {
                         // First line of beyt with its own vertical line
                         if beyt.count > 0 {
                             if showExplanations {
