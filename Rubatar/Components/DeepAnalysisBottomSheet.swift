@@ -264,17 +264,17 @@ struct MetadataRow: View {
             HStack(spacing: 10) {
                 if alignment == .trailing {
                     Text(tagDetail)
-                        .font(.custom("Palatino", size: 16))
+                        .font(.custom("Palatino", size: 12))
                         .foregroundColor(colorScheme == .dark ? .white : .black)
                     Image(systemName: icon)
-                        .font(.system(size: 16))
+                        .font(.system(size: 12))
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
                 } else {
                     Image(systemName: icon)
-                        .font(.system(size: 16))
+                        .font(.system(size: 12))
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
                     Text(tagDetail)
-                        .font(.custom("Palatino", size: 16))
+                        .font(.custom("Palatino", size: 12))
                         .foregroundColor(colorScheme == .dark ? .white : .black)
                 }
             }
