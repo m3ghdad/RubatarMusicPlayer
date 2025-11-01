@@ -37,14 +37,14 @@ struct DeepAnalysisBottomSheet: View {
                         .padding(.bottom, 0)
                     
                     // Form and Book metadata in horizontal scrollable format
-                    GeometryReader { geometry in
+                    HStack(alignment: .top, spacing: 0) {
+                        if selectedLanguage == .farsi {
+                            Spacer()
+                        }
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(alignment: .top, spacing: 8) {
                                 if selectedLanguage == .farsi {
-                                    // Farsi: Add leading spacer to push content to trailing edge
-                                    Spacer()
-                                        .frame(minWidth: geometry.size.width > 0 ? max(0, geometry.size.width - 200) : 0)
-                                    
+                                    // Farsi: Content order Form | Book (reversed for RTL)
                                     // Form
                                     if hasForm {
                                         MetadataRow(
@@ -91,11 +91,12 @@ struct DeepAnalysisBottomSheet: View {
                                     }
                                 }
                             }
-                            .frame(minWidth: geometry.size.width)
                         }
-                        .environment(\.layoutDirection, selectedLanguage == .farsi ? .rightToLeft : .leftToRight)
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                        if selectedLanguage == .english {
+                            Spacer()
+                        }
                     }
-                    .frame(height: 50)
                     .padding(.bottom, 12)
                 }
                 
@@ -115,14 +116,13 @@ struct DeepAnalysisBottomSheet: View {
                 let hasMood = poem.mood != nil && !poem.mood!.isEmpty
                 
                 if hasTopic || hasMood {
-                    GeometryReader { geometry in
+                    HStack(alignment: .top, spacing: 0) {
+                        if selectedLanguage == .farsi {
+                            Spacer()
+                        }
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(alignment: .top, spacing: 8) {
                                 if selectedLanguage == .farsi {
-                                    // Farsi: Add leading spacer to push content to trailing edge
-                                    Spacer()
-                                        .frame(minWidth: geometry.size.width > 0 ? max(0, geometry.size.width - 200) : 0)
-                                    
                                     // Topic
                                     if hasTopic {
                                         MetadataRow(
@@ -169,11 +169,12 @@ struct DeepAnalysisBottomSheet: View {
                                     }
                                 }
                             }
-                            .frame(minWidth: geometry.size.width)
                         }
-                        .environment(\.layoutDirection, selectedLanguage == .farsi ? .rightToLeft : .leftToRight)
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                        if selectedLanguage == .english {
+                            Spacer()
+                        }
                     }
-                    .frame(height: 50)
                     .padding(.bottom, 12)
                 }
                 
@@ -211,14 +212,13 @@ struct DeepAnalysisBottomSheet: View {
                         .padding(.bottom, 0)
                     
                     // Poet name and era tags
-                    GeometryReader { geometry in
+                    HStack(alignment: .top, spacing: 0) {
+                        if selectedLanguage == .farsi {
+                            Spacer()
+                        }
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(alignment: .top, spacing: 8) {
                                 if selectedLanguage == .farsi {
-                                    // Farsi: Add leading spacer to push content to trailing edge
-                                    Spacer()
-                                        .frame(minWidth: geometry.size.width > 0 ? max(0, geometry.size.width - 200) : 0)
-                                    
                                     // Poet name
                                     MetadataRow(
                                         icon: "graduationcap.fill",
@@ -261,11 +261,12 @@ struct DeepAnalysisBottomSheet: View {
                                     }
                                 }
                             }
-                            .frame(minWidth: geometry.size.width)
                         }
-                        .environment(\.layoutDirection, selectedLanguage == .farsi ? .rightToLeft : .leftToRight)
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                        if selectedLanguage == .english {
+                            Spacer()
+                        }
                     }
-                    .frame(height: 50)
                     .padding(.bottom, 12)
                     
                     // Biography text if available
