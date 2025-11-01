@@ -294,8 +294,7 @@ struct MetadataRow: View {
             // Tag-detail with glass effect
             HStack(spacing: 10) {
                 if alignment == .trailing {
-                    // Farsi: Icon on right, text on left
-                    Spacer()
+                    // Farsi: Text on left, icon on right
                     Text(tagDetail)
                         .font(.custom("Palatino", size: 14))
                         .foregroundColor(colorScheme == .dark ? .white : .black)
