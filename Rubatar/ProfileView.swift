@@ -985,7 +985,7 @@ struct PoemCardView: View {
                                 }) {
                                     Image(systemName: "lightbulb.fill")
                                         .font(.system(size: 18, weight: .medium))
-                                        .foregroundColor(showExplanations ? (colorScheme == .dark ? .yellow : Color(hex: "E3B887")) : .primary)
+                                        .foregroundColor(showExplanations ? (colorScheme == .dark ? .yellow : Color(hex: "D78F0C")) : .primary)
                                         .frame(width: 32, height: 32)
                                         .contentShape(Circle())
                                 }
@@ -1091,7 +1091,7 @@ struct PoemCardView: View {
                                 }) {
                                     Image(systemName: "lightbulb.fill")
                                         .font(.system(size: 18, weight: .medium))
-                                        .foregroundColor(showExplanations ? (colorScheme == .dark ? .yellow : Color(hex: "E3B887")) : .primary)
+                                        .foregroundColor(showExplanations ? (colorScheme == .dark ? .yellow : Color(hex: "D78F0C")) : .primary)
                                         .frame(width: 32, height: 32)
                                         .contentShape(Circle())
                                 }
