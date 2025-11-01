@@ -92,20 +92,22 @@ struct DeepAnalysisBottomSheet: View {
                     .padding(.bottom, 12)
                 }
                 
-                // Themes section (Topic and Mood)
+                Divider()
+                    .background(colorScheme == .dark ? Color.white.opacity(0.2) : Color.black.opacity(0.2))
+                
+                // Title
+                Text(selectedLanguage == .farsi ? "معنای کلی" : "Overall Meaning")
+                    .font(.custom("Palatino", size: 12))
+                    .fontWeight(.semibold)
+                    .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
+                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                    .padding(.bottom, 8)
+                
+                // Topic and Mood tags
                 let hasTopic = poem.topic != nil && !poem.topic!.isEmpty
                 let hasMood = poem.mood != nil && !poem.mood!.isEmpty
                 
                 if hasTopic || hasMood {
-                    // Section title
-                    Text(selectedLanguage == .farsi ? "درون‌مایه‌ها" : "Themes")
-                        .font(.custom("Palatino", size: 12))
-                        .fontWeight(.semibold)
-                        .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
-                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
-                        .padding(.bottom, 8)
-                    
-                    // Topic and Mood tags
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(alignment: .top, spacing: 8) {
                             if selectedLanguage == .farsi {
@@ -161,17 +163,6 @@ struct DeepAnalysisBottomSheet: View {
                     .padding(.bottom, 12)
                 }
                 
-                Divider()
-                    .background(colorScheme == .dark ? Color.white.opacity(0.2) : Color.black.opacity(0.2))
-                
-                // Title
-                Text(selectedLanguage == .farsi ? "معنای کلی" : "Overall Meaning")
-                    .font(.custom("Palatino", size: 12))
-                    .fontWeight(.semibold)
-                    .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
-                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
-                    .padding(.bottom, 8)
-                
                 // Tafseer text
                 if !tafseerText.isEmpty {
                     Text(formattedTafseerText)
@@ -198,29 +189,63 @@ struct DeepAnalysisBottomSheet: View {
                         .padding(.top, 20)
                     
                     // Section title
-                    Text(selectedLanguage == .farsi ? "درباره \(poem.poet.fullName)" : "About \(poem.poet.fullName)")
+                    Text(selectedLanguage == .farsi ? "درباره شاعر" : "About the Poet")
                         .font(.custom("Palatino", size: 12))
                         .fontWeight(.semibold)
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                         .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                         .padding(.bottom, 8)
                     
-                    // Era tag if available
-                    if hasEra {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(alignment: .top, spacing: 8) {
+                    // Poet name and era tags
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(alignment: .top, spacing: 8) {
+                            if selectedLanguage == .farsi {
+                                // Farsi order (RTL): Era | Poet name
+                                // Era
+                                if hasEra {
+                                    MetadataRow(
+                                        icon: "clock.fill",
+                                        tagHeader: selectedLanguage == .farsi ? "دوره" : "Era",
+                                        tagDetail: poem.poet.era!,
+                                        alignment: .trailing,
+                                        showDivider: true
+                                    )
+                                }
+                                
+                                // Poet name
                                 MetadataRow(
-                                    icon: "clock.fill",
-                                    tagHeader: selectedLanguage == .farsi ? "دوره" : "Era",
-                                    tagDetail: poem.poet.era!,
-                                    alignment: selectedLanguage == .farsi ? .trailing : .leading,
+                                    icon: "pencil.and.list.clipboard",
+                                    tagHeader: selectedLanguage == .farsi ? "شاعر" : "Poet",
+                                    tagDetail: poem.poet.fullName,
+                                    alignment: .trailing,
                                     showDivider: false
                                 )
+                            } else {
+                                // English order (LTR): Poet name | Era
+                                // Poet name
+                                MetadataRow(
+                                    icon: "pencil.and.list.clipboard",
+                                    tagHeader: selectedLanguage == .farsi ? "شاعر" : "Poet",
+                                    tagDetail: poem.poet.fullName,
+                                    alignment: .leading,
+                                    showDivider: true
+                                )
+                                
+                                // Era
+                                if hasEra {
+                                    MetadataRow(
+                                        icon: "clock.fill",
+                                        tagHeader: selectedLanguage == .farsi ? "دوره" : "Era",
+                                        tagDetail: poem.poet.era!,
+                                        alignment: .leading,
+                                        showDivider: false
+                                    )
+                                }
                             }
-                            .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                         }
-                        .padding(.bottom, 12)
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     }
+                    .padding(.bottom, 12)
                     
                     // Biography text if available
                     if hasBiography {
