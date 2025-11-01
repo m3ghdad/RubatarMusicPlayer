@@ -607,11 +607,24 @@ private func processBoldMarkers(in mutableString: NSMutableAttributedString, tex
                 let adjustedClosingRange = NSRange(location: closingRange.location - offset, length: 2)
                 let adjustedOpeningRange = NSRange(location: openingRange.location - offset, length: 2)
                 
+                // Validate ranges before using
+                guard adjustedClosingRange.location + adjustedClosingRange.length <= mutableString.length,
+                      adjustedOpeningRange.location + adjustedOpeningRange.length <= mutableString.length else {
+                    break
+                }
+                
                 mutableString.deleteCharacters(in: adjustedClosingRange)
                 mutableString.deleteCharacters(in: adjustedOpeningRange)
                 
                 // Apply bold to the content
                 let adjustedBoldRange = NSRange(location: boldContentRange.location - offset - 2, length: boldContentRange.length)
+                
+                // Validate the bold range
+                guard adjustedBoldRange.location >= 0,
+                      adjustedBoldRange.location + adjustedBoldRange.length <= mutableString.length else {
+                    break
+                }
+                
                 let boldFont = UIFont(name: "Palatino-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
                 mutableString.addAttribute(.font, value: boldFont, range: adjustedBoldRange)
                 
@@ -723,10 +736,23 @@ private func processLineByLineBoldMarkers(in mutableString: NSMutableAttributedS
                 let adjustedClosingRange = NSRange(location: closingRange.location - offset, length: 2)
                 let adjustedOpeningRange = NSRange(location: openingRange.location - offset, length: 2)
                 
+                // Validate ranges before using
+                guard adjustedClosingRange.location + adjustedClosingRange.length <= mutableString.length,
+                      adjustedOpeningRange.location + adjustedOpeningRange.length <= mutableString.length else {
+                    break
+                }
+                
                 mutableString.deleteCharacters(in: adjustedClosingRange)
                 mutableString.deleteCharacters(in: adjustedOpeningRange)
                 
                 let adjustedBoldRange = NSRange(location: boldContentRange.location - offset - 2, length: boldContentRange.length)
+                
+                // Validate the bold range
+                guard adjustedBoldRange.location >= 0,
+                      adjustedBoldRange.location + adjustedBoldRange.length <= mutableString.length else {
+                    break
+                }
+                
                 let boldFont = UIFont(name: "Palatino-Bold", size: fontSize) ?? UIFont.boldSystemFont(ofSize: fontSize)
                 mutableString.addAttribute(.font, value: boldFont, range: adjustedBoldRange)
                 
