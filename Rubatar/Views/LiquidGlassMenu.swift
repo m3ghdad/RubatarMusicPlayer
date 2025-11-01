@@ -487,14 +487,14 @@ struct MenuItemView: View {
             // Icon
             Image(systemName: icon)
                 .font(.system(size: 17))
-                .foregroundColor(isSelected ? Color.yellow : (colorScheme == .dark ? .white : Color(hex: "333333")))
+                .foregroundColor(isSelected ? (colorScheme == .dark ? Color.yellow : Color(hex: "E3B887")) : (colorScheme == .dark ? .white : Color(hex: "333333")))
                 .frame(width: 28, alignment: .center)
             
             // Label and Subtitle
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.system(size: 17))
-                    .foregroundColor(isSelected ? Color.yellow : (colorScheme == .dark ? .white : Color(hex: "333333")))
+                    .foregroundColor(isSelected ? (colorScheme == .dark ? Color.yellow : Color(hex: "E3B887")) : (colorScheme == .dark ? .white : Color(hex: "333333")))
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
                 if let subtitle = subtitle {
