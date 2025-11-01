@@ -1251,7 +1251,6 @@ struct PoemCardView: View {
                                                     .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                                                     .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
                                                     .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
-                                                    .padding(.horizontal, 16)
                                                     .padding(.top, 8)
                                                     .transition(.asymmetric(
                                                         insertion: .move(edge: .top).combined(with: .opacity),
