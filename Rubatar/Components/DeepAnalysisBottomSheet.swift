@@ -23,58 +23,73 @@ struct DeepAnalysisBottomSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: selectedLanguage == .farsi ? .trailing : .leading, spacing: 20) {
-                // Form and Book metadata in horizontal scrollable format
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(alignment: .top, spacing: 8) {
-                        if selectedLanguage == .farsi {
-                            // Farsi order (RTL): Form | Book
-                            // Form
-                            if let form = poem.formFa, !form.isEmpty {
-                                MetadataRow(
-                                    icon: "textformat",
-                                    tagHeader: "قالب",
-                                    tagDetail: form,
-                                    alignment: .trailing,
-                                    showDivider: true
-                                )
-                            }
-                            
-                            // Book
-                            if let bookName = poem.bookNameFa, !bookName.isEmpty {
-                                MetadataRow(
-                                    icon: "book.closed.fill",
-                                    tagHeader: "کتاب",
-                                    tagDetail: bookName,
-                                    alignment: .trailing,
-                                    showDivider: true
-                                )
-                            }
-                        } else {
-                            // English order (LTR): Book | Form
-                            // Book
-                            if let bookName = poem.bookNameEn, !bookName.isEmpty {
-                                MetadataRow(
-                                    icon: "book.closed.fill",
-                                    tagHeader: "Book",
-                                    tagDetail: bookName,
-                                    alignment: .leading,
-                                    showDivider: true
-                                )
-                            }
-                            
-                            // Form
-                            if let form = poem.formEn, !form.isEmpty {
-                                MetadataRow(
-                                    icon: "textformat",
-                                    tagHeader: "Form",
-                                    tagDetail: form,
-                                    alignment: .leading,
-                                    showDivider: true
-                                )
+                // Classification section (Form and Book metadata)
+                let hasForm = (selectedLanguage == .farsi ? (poem.formFa != nil && !poem.formFa!.isEmpty) : (poem.formEn != nil && !poem.formEn!.isEmpty))
+                let hasBook = (selectedLanguage == .farsi ? (poem.bookNameFa != nil && !poem.bookNameFa!.isEmpty) : (poem.bookNameEn != nil && !poem.bookNameEn!.isEmpty))
+                
+                if hasForm || hasBook {
+                    // Section title
+                    Text(selectedLanguage == .farsi ? "طبقه‌بندی" : "Classification")
+                        .font(.custom("Palatino", size: 12))
+                        .fontWeight(.semibold)
+                        .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                        .padding(.bottom, 8)
+                    
+                    // Form and Book metadata in horizontal scrollable format
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(alignment: .top, spacing: 8) {
+                            if selectedLanguage == .farsi {
+                                // Farsi order (RTL): Form | Book
+                                // Form
+                                if hasForm {
+                                    MetadataRow(
+                                        icon: "textformat",
+                                        tagHeader: "قالب",
+                                        tagDetail: poem.formFa!,
+                                        alignment: .trailing,
+                                        showDivider: true
+                                    )
+                                }
+                                
+                                // Book
+                                if hasBook {
+                                    MetadataRow(
+                                        icon: "book.closed.fill",
+                                        tagHeader: "کتاب",
+                                        tagDetail: poem.bookNameFa!,
+                                        alignment: .trailing,
+                                        showDivider: true
+                                    )
+                                }
+                            } else {
+                                // English order (LTR): Book | Form
+                                // Book
+                                if hasBook {
+                                    MetadataRow(
+                                        icon: "book.closed.fill",
+                                        tagHeader: "Book",
+                                        tagDetail: poem.bookNameEn!,
+                                        alignment: .leading,
+                                        showDivider: true
+                                    )
+                                }
+                                
+                                // Form
+                                if hasForm {
+                                    MetadataRow(
+                                        icon: "textformat",
+                                        tagHeader: "Form",
+                                        tagDetail: poem.formEn!,
+                                        alignment: .leading,
+                                        showDivider: true
+                                    )
+                                }
                             }
                         }
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     }
-                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                    .padding(.bottom, 12)
                 }
                 
                 // Themes section (Topic and Mood)
@@ -84,7 +99,7 @@ struct DeepAnalysisBottomSheet: View {
                 if hasTopic || hasMood {
                     // Section title
                     Text(selectedLanguage == .farsi ? "درون‌مایه‌ها" : "Themes")
-                        .font(.custom("Palatino", size: 24))
+                        .font(.custom("Palatino", size: 12))
                         .fontWeight(.semibold)
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                         .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
@@ -151,7 +166,7 @@ struct DeepAnalysisBottomSheet: View {
                 
                 // Title
                 Text(selectedLanguage == .farsi ? "معنای کلی" : "Overall Meaning")
-                    .font(.custom("Palatino", size: 24))
+                    .font(.custom("Palatino", size: 12))
                     .fontWeight(.semibold)
                     .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                     .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
@@ -184,7 +199,7 @@ struct DeepAnalysisBottomSheet: View {
                     
                     // Section title
                     Text(selectedLanguage == .farsi ? "درباره \(poem.poet.fullName)" : "About \(poem.poet.fullName)")
-                        .font(.custom("Palatino", size: 24))
+                        .font(.custom("Palatino", size: 12))
                         .fontWeight(.semibold)
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                         .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
@@ -210,7 +225,7 @@ struct DeepAnalysisBottomSheet: View {
                     // Biography text if available
                     if hasBiography {
                         Text(biography!)
-                            .font(.custom("Palatino", size: 17))
+                            .font(.custom("Palatino", size: 16))
                             .foregroundColor(colorScheme == .dark ? .white : .black)
                             .lineSpacing(8)
                             .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
@@ -373,7 +388,7 @@ private func formatTafseerText(_ text: String, isEnglish: Bool) -> AttributedStr
     let mutableString = NSMutableAttributedString(string: text)
     
     // Set base font to Palatino
-    let baseFont = UIFont(name: "Palatino", size: 17) ?? UIFont.systemFont(ofSize: 17)
+    let baseFont = UIFont(name: "Palatino", size: 16) ?? UIFont.systemFont(ofSize: 16)
     mutableString.addAttribute(.font, value: baseFont, range: NSRange(location: 0, length: text.count))
     
     // Process bold markers (**text**)
@@ -417,7 +432,7 @@ private func processBoldMarkers(in mutableString: NSMutableAttributedString, tex
                 
                 // Apply bold to the content
                 let adjustedBoldRange = NSRange(location: boldContentRange.location - offset - 2, length: boldContentRange.length)
-                let boldFont = UIFont(name: "Palatino-Bold", size: 17) ?? UIFont.boldSystemFont(ofSize: 17)
+                let boldFont = UIFont(name: "Palatino-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
                 mutableString.addAttribute(.font, value: boldFont, range: adjustedBoldRange)
                 
                 // Update offset and search range
