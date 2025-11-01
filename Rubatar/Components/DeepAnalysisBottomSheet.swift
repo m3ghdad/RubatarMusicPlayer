@@ -89,7 +89,6 @@ struct DeepAnalysisBottomSheet: View {
                         }
                         .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                     }
-                    .environment(\.layoutDirection, selectedLanguage.layoutDirection)
                     .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                     .padding(.bottom, 12)
                 }
@@ -162,7 +161,6 @@ struct DeepAnalysisBottomSheet: View {
                         }
                         .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                     }
-                    .environment(\.layoutDirection, selectedLanguage.layoutDirection)
                     .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                     .padding(.bottom, 12)
                 }
@@ -249,7 +247,6 @@ struct DeepAnalysisBottomSheet: View {
                         }
                         .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                     }
-                    .environment(\.layoutDirection, selectedLanguage.layoutDirection)
                     .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                     .padding(.bottom, 12)
                     
@@ -294,15 +291,16 @@ struct MetadataRow: View {
             // Tag-detail with glass effect
             HStack(spacing: 10) {
                 if alignment == .trailing {
-                    // Farsi: Text first, icon second (will be reversed by RTL)
+                    // Farsi: Text on left, icon on right
                     Text(tagDetail)
                         .font(.custom("Palatino", size: 14))
                         .foregroundColor(colorScheme == .dark ? .white : .black)
+                    Spacer(minLength: 0)
                     Image(systemName: icon)
                         .font(.system(size: 14))
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
                 } else {
-                    // English: Icon first, text second
+                    // English: Icon on left, text on right
                     Image(systemName: icon)
                         .font(.system(size: 14))
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
@@ -311,6 +309,7 @@ struct MetadataRow: View {
                         .foregroundColor(colorScheme == .dark ? .white : .black)
                 }
             }
+            .frame(minWidth: 0, maxWidth: .infinity)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background {

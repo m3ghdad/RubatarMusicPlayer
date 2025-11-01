@@ -376,7 +376,6 @@ struct ProfileView: View {
             .padding(.top, 24)
             .padding(.bottom, 24)
         }
-        .environment(\.layoutDirection, selectedLanguage.layoutDirection)
         .overlay {
             if showMenu {
                 Color.black.opacity(0.3)
