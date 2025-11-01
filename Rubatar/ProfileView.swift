@@ -1150,7 +1150,7 @@ struct PoemCardView: View {
                                     color: colorScheme == .dark ? .white : .black,
                                     lineSpacing: isTranslated ? 4 : 14 * 2.66,
                                     kerning: 1,
-                                    alignment: .center,
+                                    alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center,
                                     delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 0),
                                     isCompleted: isPageCompleted,
                                     onComplete: {
@@ -1168,7 +1168,7 @@ struct PoemCardView: View {
                                     .kerning(1)
                                     .lineLimit(nil)
                                     .fixedSize(horizontal: false, vertical: true)
-                                    .multilineTextAlignment(.center)
+                                    .multilineTextAlignment(showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
                             }
                             
                             // Show explanation for line 1 if enabled
@@ -1210,7 +1210,7 @@ struct PoemCardView: View {
                                     color: colorScheme == .dark ? .white : .black,
                                     lineSpacing: isTranslated ? 4 : 14 * 2.66,
                                     kerning: 1,
-                                    alignment: .center,
+                                    alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center,
                                     delay: calculateLineDelay(poemData: poemData, startBeytIndex: startBeytIndex, targetBeytIndex: beytIndex, lineIndex: 1),
                                     isCompleted: isPageCompleted,
                                     onComplete: {
@@ -1228,7 +1228,7 @@ struct PoemCardView: View {
                                     .kerning(1)
                                     .lineLimit(nil)
                                     .fixedSize(horizontal: false, vertical: true)
-                                    .multilineTextAlignment(.center)
+                                    .multilineTextAlignment(showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
                             }
                             
                             // Show explanation for line 2 if enabled
@@ -1242,7 +1242,7 @@ struct PoemCardView: View {
                                                 Text(explanation)
                                                     .font(.custom("Palatino", size: selectedLanguage == .farsi ? 14 : 13))
                                                     .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
-                                                    .multilineTextAlignment(.center)
+                                                    .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
                                                     .padding(.horizontal, 16)
                                                     .padding(.top, 8)
                                                     .transition(.asymmetric(
