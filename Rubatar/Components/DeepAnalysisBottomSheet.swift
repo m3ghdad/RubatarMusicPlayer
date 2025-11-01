@@ -588,55 +588,45 @@ private func formatTafseerText(_ text: String, isEnglish: Bool) -> AttributedStr
 
 // Process bold markers (**text**)
 private func processBoldMarkers(in mutableString: NSMutableAttributedString, text: String) {
-    let text = mutableString.string // Use the actual string from mutableString
-    var searchRange = NSRange(location: 0, length: text.count)
-    var offset = 0 // Track cumulative offset from deletions
-    
-    while searchRange.location < text.count {
-        // Find opening **
-        let openingRange = (text as NSString).range(of: "**", range: searchRange)
-        if openingRange.location != NSNotFound {
-            // Find closing **
-            let afterOpening = NSRange(location: openingRange.location + openingRange.length, length: text.count - (openingRange.location + openingRange.length))
-            let closingRange = (text as NSString).range(of: "**", range: afterOpening)
-            if closingRange.location != NSNotFound {
-                // Found a bold section
-                let boldContentRange = NSRange(location: openingRange.location + openingRange.length, length: closingRange.location - (openingRange.location + openingRange.length))
-                
-                // Remove ** markers (need to adjust for previous deletions)
-                let adjustedClosingRange = NSRange(location: closingRange.location - offset, length: 2)
-                let adjustedOpeningRange = NSRange(location: openingRange.location - offset, length: 2)
-                
-                // Validate ranges before using
-                guard adjustedClosingRange.location + adjustedClosingRange.length <= mutableString.length,
-                      adjustedOpeningRange.location + adjustedOpeningRange.length <= mutableString.length else {
-                    break
-                }
-                
-                mutableString.deleteCharacters(in: adjustedClosingRange)
-                mutableString.deleteCharacters(in: adjustedOpeningRange)
-                
-                // Apply bold to the content
-                let adjustedBoldRange = NSRange(location: boldContentRange.location - offset - 2, length: boldContentRange.length)
-                
-                // Validate the bold range
-                guard adjustedBoldRange.location >= 0,
-                      adjustedBoldRange.location + adjustedBoldRange.length <= mutableString.length else {
-                    break
-                }
-                
-                let boldFont = UIFont(name: "Palatino-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
-                mutableString.addAttribute(.font, value: boldFont, range: adjustedBoldRange)
-                
-                // Update offset and search range
-                offset += 4 // Removed 2 markers of 2 chars each
-                searchRange = NSRange(location: closingRange.location + closingRange.length, length: text.count - (closingRange.location + closingRange.length))
-            } else {
-                break
-            }
-        } else {
+    // Keep searching until no more ** markers found
+    while true {
+        let currentText = mutableString.string
+        let openingRange = (currentText as NSString).range(of: "**")
+        
+        guard openingRange.location != NSNotFound else {
+            break // No more opening markers
+        }
+        
+        // Find the corresponding closing marker after this opening one
+        let afterOpening = NSRange(location: openingRange.location + openingRange.length, length: currentText.count - (openingRange.location + openingRange.length))
+        let closingRange = (currentText as NSString).range(of: "**", range: afterOpening)
+        
+        guard closingRange.location != NSNotFound else {
+            break // No matching closing marker
+        }
+        
+        // Calculate the bold content range (text between the two ** markers)
+        let boldContentLocation = openingRange.location + openingRange.length
+        let boldContentLength = closingRange.location - boldContentLocation
+        let boldContentRange = NSRange(location: boldContentLocation, length: boldContentLength)
+        
+        // Remove the closing marker first (so we don't affect the opening marker's position)
+        mutableString.deleteCharacters(in: closingRange)
+        
+        // Remove the opening marker (now at the same location since we deleted closing marker first)
+        mutableString.deleteCharacters(in: openingRange)
+        
+        // Apply bold to the content (range adjusted since we deleted both markers)
+        let adjustedBoldRange = NSRange(location: boldContentLocation, length: boldContentLength)
+        
+        // Validate the bold range
+        guard adjustedBoldRange.location >= 0,
+              adjustedBoldRange.location + adjustedBoldRange.length <= mutableString.length else {
             break
         }
+        
+        let boldFont = UIFont(name: "Palatino-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+        mutableString.addAttribute(.font, value: boldFont, range: adjustedBoldRange)
     }
 }
 
@@ -721,48 +711,44 @@ func formatLineByLineExplanation(_ text: String, fontSize: CGFloat) -> Attribute
 
 // Process bold markers with custom font size for line-by-line explanations
 private func processLineByLineBoldMarkers(in mutableString: NSMutableAttributedString, text: String, fontSize: CGFloat) {
-    let text = mutableString.string
-    var searchRange = NSRange(location: 0, length: text.count)
-    var offset = 0
-    
-    while searchRange.location < text.count {
-        let openingRange = (text as NSString).range(of: "**", range: searchRange)
-        if openingRange.location != NSNotFound {
-            let afterOpening = NSRange(location: openingRange.location + openingRange.length, length: text.count - (openingRange.location + openingRange.length))
-            let closingRange = (text as NSString).range(of: "**", range: afterOpening)
-            if closingRange.location != NSNotFound {
-                let boldContentRange = NSRange(location: openingRange.location + openingRange.length, length: closingRange.location - (openingRange.location + openingRange.length))
-                
-                let adjustedClosingRange = NSRange(location: closingRange.location - offset, length: 2)
-                let adjustedOpeningRange = NSRange(location: openingRange.location - offset, length: 2)
-                
-                // Validate ranges before using
-                guard adjustedClosingRange.location + adjustedClosingRange.length <= mutableString.length,
-                      adjustedOpeningRange.location + adjustedOpeningRange.length <= mutableString.length else {
-                    break
-                }
-                
-                mutableString.deleteCharacters(in: adjustedClosingRange)
-                mutableString.deleteCharacters(in: adjustedOpeningRange)
-                
-                let adjustedBoldRange = NSRange(location: boldContentRange.location - offset - 2, length: boldContentRange.length)
-                
-                // Validate the bold range
-                guard adjustedBoldRange.location >= 0,
-                      adjustedBoldRange.location + adjustedBoldRange.length <= mutableString.length else {
-                    break
-                }
-                
-                let boldFont = UIFont(name: "Palatino-Bold", size: fontSize) ?? UIFont.boldSystemFont(ofSize: fontSize)
-                mutableString.addAttribute(.font, value: boldFont, range: adjustedBoldRange)
-                
-                offset += 4
-                searchRange = NSRange(location: closingRange.location + closingRange.length, length: text.count - (closingRange.location + closingRange.length))
-            } else {
-                break
-            }
-        } else {
+    // Keep searching until no more ** markers found
+    while true {
+        let currentText = mutableString.string
+        let openingRange = (currentText as NSString).range(of: "**")
+        
+        guard openingRange.location != NSNotFound else {
+            break // No more opening markers
+        }
+        
+        // Find the corresponding closing marker after this opening one
+        let afterOpening = NSRange(location: openingRange.location + openingRange.length, length: currentText.count - (openingRange.location + openingRange.length))
+        let closingRange = (currentText as NSString).range(of: "**", range: afterOpening)
+        
+        guard closingRange.location != NSNotFound else {
+            break // No matching closing marker
+        }
+        
+        // Calculate the bold content range (text between the two ** markers)
+        let boldContentLocation = openingRange.location + openingRange.length
+        let boldContentLength = closingRange.location - boldContentLocation
+        let boldContentRange = NSRange(location: boldContentLocation, length: boldContentLength)
+        
+        // Remove the closing marker first (so we don't affect the opening marker's position)
+        mutableString.deleteCharacters(in: closingRange)
+        
+        // Remove the opening marker (now at the same location since we deleted closing marker first)
+        mutableString.deleteCharacters(in: openingRange)
+        
+        // Apply bold to the content (range adjusted since we deleted both markers)
+        let adjustedBoldRange = NSRange(location: boldContentLocation, length: boldContentLength)
+        
+        // Validate the bold range
+        guard adjustedBoldRange.location >= 0,
+              adjustedBoldRange.location + adjustedBoldRange.length <= mutableString.length else {
             break
         }
+        
+        let boldFont = UIFont(name: "Palatino-Bold", size: fontSize) ?? UIFont.boldSystemFont(ofSize: fontSize)
+        mutableString.addAttribute(.font, value: boldFont, range: adjustedBoldRange)
     }
 }
