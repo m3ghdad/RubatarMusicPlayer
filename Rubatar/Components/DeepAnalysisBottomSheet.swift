@@ -315,14 +315,14 @@ struct MetadataRow: View {
                     Image(systemName: icon)
                         .font(.system(size: 14))
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
-                    Spacer(minLength: 0)
+                    // Spacer(minLength: 0)
                     Text(tagDetail)
                         .font(.custom("Palatino", size: 14))
                         .foregroundColor(colorScheme == .dark ? .white : .black)
                     // Add duplicate icon after text to ensure it appears on right
-                    Image(systemName: icon)
-                        .font(.system(size: 14))
-                        .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
+                    // Image(systemName: icon)
+                    //     .font(.system(size: 14))
+                    //     .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
                 } else {
                     // English: Icon on left, text on right
                     Image(systemName: icon)
