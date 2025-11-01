@@ -12,7 +12,6 @@ struct DeepAnalysisBottomSheet: View {
     let selectedLanguage: AppLanguage
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) var dismiss
-    @Namespace private var glassNamespace
     
     private var tafseerText: String {
         selectedLanguage == .farsi ? (poem.tafseerFa ?? "") : (poem.tafseerEn ?? "")
@@ -61,24 +60,34 @@ struct DeepAnalysisBottomSheet: View {
                         
                         // Exit button on right
                         Button(action: { dismiss() }) {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(colorScheme == .dark ? .white : .black)
-                                .frame(width: 32, height: 32)
-                                .glassEffect()
-                                .glassEffectID("close", in: glassNamespace)
+                            ZStack {
+                                Circle()
+                                    .fill(.clear)
+                                    .frame(width: 48, height: 48)
+                                    .glassEffect(in: Circle())
+                                
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.primary)
+                            }
                         }
+                        .buttonStyle(.plain)
                     } else {
                         // Farsi: Exit button on left, content on right
                         // Exit button on left
                         Button(action: { dismiss() }) {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(colorScheme == .dark ? .white : .black)
-                                .frame(width: 32, height: 32)
-                                .glassEffect()
-                                .glassEffectID("close", in: glassNamespace)
+                            ZStack {
+                                Circle()
+                                    .fill(.clear)
+                                    .frame(width: 48, height: 48)
+                                    .glassEffect(in: Circle())
+                                
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.primary)
+                            }
                         }
+                        .buttonStyle(.plain)
                         
                         Spacer()
                         
