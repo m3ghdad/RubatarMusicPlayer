@@ -327,6 +327,7 @@ struct MetadataRow: View {
                         .foregroundColor(colorScheme == .dark ? .white : .black)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: alignment == .trailing ? .trailing : .leading)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background {
