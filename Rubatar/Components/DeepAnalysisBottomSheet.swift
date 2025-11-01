@@ -40,24 +40,26 @@ struct DeepAnalysisBottomSheet: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(alignment: .top, spacing: 8) {
                             if selectedLanguage == .farsi {
-                                // Farsi order (RTL): Form | Book
-                                // Form
-                                if hasForm {
-                                    MetadataRow(
-                                        icon: "textformat",
-                                        tagHeader: "قالب",
-                                        tagDetail: poem.formFa!,
-                                        alignment: .trailing,
-                                        showDivider: true
-                                    )
-                                }
+                                Spacer(minLength: 0)
                                 
+                                // Farsi order (RTL): Book | Form
                                 // Book
                                 if hasBook {
                                     MetadataRow(
                                         icon: "book.closed.fill",
                                         tagHeader: "کتاب",
                                         tagDetail: poem.bookNameFa!,
+                                        alignment: .trailing,
+                                        showDivider: true
+                                    )
+                                }
+                                
+                                // Form
+                                if hasForm {
+                                    MetadataRow(
+                                        icon: "textformat",
+                                        tagHeader: "قالب",
+                                        tagDetail: poem.formFa!,
                                         alignment: .trailing,
                                         showDivider: true
                                     )
@@ -87,9 +89,7 @@ struct DeepAnalysisBottomSheet: View {
                                 }
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     }
-                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     .padding(.bottom, 12)
                 }
                 
@@ -112,6 +112,8 @@ struct DeepAnalysisBottomSheet: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(alignment: .top, spacing: 8) {
                             if selectedLanguage == .farsi {
+                                Spacer(minLength: 0)
+                                
                                 // Farsi order (RTL): Mood | Topic
                                 // Mood
                                 if hasMood {
@@ -159,9 +161,7 @@ struct DeepAnalysisBottomSheet: View {
                                 }
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     }
-                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     .padding(.bottom, 12)
                 }
                 
@@ -202,6 +202,8 @@ struct DeepAnalysisBottomSheet: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(alignment: .top, spacing: 8) {
                             if selectedLanguage == .farsi {
+                                Spacer(minLength: 0)
+                                
                                 // Farsi order (RTL): Era | Poet name
                                 // Era
                                 if hasEra {
@@ -245,9 +247,7 @@ struct DeepAnalysisBottomSheet: View {
                                 }
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     }
-                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     .padding(.bottom, 12)
                     
                     // Biography text if available
