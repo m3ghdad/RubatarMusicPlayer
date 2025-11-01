@@ -37,65 +37,60 @@ struct DeepAnalysisBottomSheet: View {
                         .padding(.bottom, 0)
                     
                     // Form and Book metadata in horizontal scrollable format
-                    HStack {
-                        if selectedLanguage == .farsi {
-                            Spacer()
-                        }
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(alignment: .top, spacing: 8) {
-                                if selectedLanguage == .farsi {
-                                    // Farsi order (RTL): Book | Form
-                                    // Book
-                                    if hasBook {
-                                        MetadataRow(
-                                            icon: "book.closed.fill",
-                                            tagHeader: "کتاب",
-                                            tagDetail: poem.bookNameFa!,
-                                            alignment: .trailing,
-                                            showDivider: true
-                                        )
-                                    }
-                                    
-                                    // Form
-                                    if hasForm {
-                                        MetadataRow(
-                                            icon: "textformat",
-                                            tagHeader: "قالب",
-                                            tagDetail: poem.formFa!,
-                                            alignment: .trailing,
-                                            showDivider: true
-                                        )
-                                    }
-                                } else {
-                                    // English order (LTR): Book | Form
-                                    // Book
-                                    if hasBook {
-                                        MetadataRow(
-                                            icon: "book.closed.fill",
-                                            tagHeader: "Book",
-                                            tagDetail: poem.bookNameEn!,
-                                            alignment: .leading,
-                                            showDivider: true
-                                        )
-                                    }
-                                    
-                                    // Form
-                                    if hasForm {
-                                        MetadataRow(
-                                            icon: "textformat",
-                                            tagHeader: "Form",
-                                            tagDetail: poem.formEn!,
-                                            alignment: .leading,
-                                            showDivider: true
-                                        )
-                                    }
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(alignment: .top, spacing: 8) {
+                            if selectedLanguage == .farsi {
+                                // Farsi order (RTL): Book | Form
+                                // Book
+                                if hasBook {
+                                    MetadataRow(
+                                        icon: "book.closed.fill",
+                                        tagHeader: "کتاب",
+                                        tagDetail: poem.bookNameFa!,
+                                        alignment: .trailing,
+                                        showDivider: true
+                                    )
+                                }
+                                
+                                // Form
+                                if hasForm {
+                                    MetadataRow(
+                                        icon: "textformat",
+                                        tagHeader: "قالب",
+                                        tagDetail: poem.formFa!,
+                                        alignment: .trailing,
+                                        showDivider: true
+                                    )
+                                }
+                            } else {
+                                // English order (LTR): Book | Form
+                                // Book
+                                if hasBook {
+                                    MetadataRow(
+                                        icon: "book.closed.fill",
+                                        tagHeader: "Book",
+                                        tagDetail: poem.bookNameEn!,
+                                        alignment: .leading,
+                                        showDivider: true
+                                    )
+                                }
+                                
+                                // Form
+                                if hasForm {
+                                    MetadataRow(
+                                        icon: "textformat",
+                                        tagHeader: "Form",
+                                        tagDetail: poem.formEn!,
+                                        alignment: .leading,
+                                        showDivider: true
+                                    )
                                 }
                             }
-                            .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                         }
-                        .environment(\.layoutDirection, selectedLanguage == .farsi ? .rightToLeft : .leftToRight)
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     }
+                    .environment(\.layoutDirection, selectedLanguage == .farsi ? .rightToLeft : .leftToRight)
+                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     .padding(.bottom, 12)
                 }
                 
@@ -115,65 +110,60 @@ struct DeepAnalysisBottomSheet: View {
                 let hasMood = poem.mood != nil && !poem.mood!.isEmpty
                 
                 if hasTopic || hasMood {
-                    HStack {
-                        if selectedLanguage == .farsi {
-                            Spacer()
-                        }
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(alignment: .top, spacing: 8) {
-                                if selectedLanguage == .farsi {
-                                    // Farsi order (RTL): Mood | Topic
-                                    // Mood
-                                    if hasMood {
-                                        MetadataRow(
-                                            icon: "leaf.fill",
-                                            tagHeader: "حال",
-                                            tagDetail: poem.mood!,
-                                            alignment: .trailing,
-                                            showDivider: true
-                                        )
-                                    }
-                                    
-                                    // Topic
-                                    if hasTopic {
-                                        MetadataRow(
-                                            icon: "tag.fill",
-                                            tagHeader: "موضوع",
-                                            tagDetail: poem.topic!,
-                                            alignment: .trailing,
-                                            showDivider: true
-                                        )
-                                    }
-                                } else {
-                                    // English order (LTR): Topic | Mood
-                                    // Topic
-                                    if hasTopic {
-                                        MetadataRow(
-                                            icon: "tag.fill",
-                                            tagHeader: "Topic",
-                                            tagDetail: poem.topic!,
-                                            alignment: .leading,
-                                            showDivider: true
-                                        )
-                                    }
-                                    
-                                    // Mood
-                                    if hasMood {
-                                        MetadataRow(
-                                            icon: "leaf.fill",
-                                            tagHeader: "Mood",
-                                            tagDetail: poem.mood!,
-                                            alignment: .leading,
-                                            showDivider: true
-                                        )
-                                    }
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(alignment: .top, spacing: 8) {
+                            if selectedLanguage == .farsi {
+                                // Farsi order (RTL): Mood | Topic
+                                // Mood
+                                if hasMood {
+                                    MetadataRow(
+                                        icon: "leaf.fill",
+                                        tagHeader: "حال",
+                                        tagDetail: poem.mood!,
+                                        alignment: .trailing,
+                                        showDivider: true
+                                    )
+                                }
+                                
+                                // Topic
+                                if hasTopic {
+                                    MetadataRow(
+                                        icon: "tag.fill",
+                                        tagHeader: "موضوع",
+                                        tagDetail: poem.topic!,
+                                        alignment: .trailing,
+                                        showDivider: true
+                                    )
+                                }
+                            } else {
+                                // English order (LTR): Topic | Mood
+                                // Topic
+                                if hasTopic {
+                                    MetadataRow(
+                                        icon: "tag.fill",
+                                        tagHeader: "Topic",
+                                        tagDetail: poem.topic!,
+                                        alignment: .leading,
+                                        showDivider: true
+                                    )
+                                }
+                                
+                                // Mood
+                                if hasMood {
+                                    MetadataRow(
+                                        icon: "leaf.fill",
+                                        tagHeader: "Mood",
+                                        tagDetail: poem.mood!,
+                                        alignment: .leading,
+                                        showDivider: true
+                                    )
                                 }
                             }
-                            .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                         }
-                        .environment(\.layoutDirection, selectedLanguage == .farsi ? .rightToLeft : .leftToRight)
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     }
+                    .environment(\.layoutDirection, selectedLanguage == .farsi ? .rightToLeft : .leftToRight)
+                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     .padding(.bottom, 12)
                 }
                 
@@ -211,61 +201,56 @@ struct DeepAnalysisBottomSheet: View {
                         .padding(.bottom, 0)
                     
                     // Poet name and era tags
-                    HStack {
-                        if selectedLanguage == .farsi {
-                            Spacer()
-                        }
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(alignment: .top, spacing: 8) {
-                                if selectedLanguage == .farsi {
-                                    // Farsi order (RTL): Era | Poet name
-                                    // Era
-                                    if hasEra {
-                                        MetadataRow(
-                                            icon: "clock.fill",
-                                            tagHeader: selectedLanguage == .farsi ? "دوره" : "Era",
-                                            tagDetail: poem.poet.era!,
-                                            alignment: .trailing,
-                                            showDivider: true
-                                        )
-                                    }
-                                    
-                                    // Poet name
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(alignment: .top, spacing: 8) {
+                            if selectedLanguage == .farsi {
+                                // Farsi order (RTL): Era | Poet name
+                                // Era
+                                if hasEra {
                                     MetadataRow(
-                                        icon: "graduationcap.fill",
-                                        tagHeader: selectedLanguage == .farsi ? "شاعر" : "Poet",
-                                        tagDetail: poem.poet.fullName,
+                                        icon: "clock.fill",
+                                        tagHeader: selectedLanguage == .farsi ? "دوره" : "Era",
+                                        tagDetail: poem.poet.era!,
                                         alignment: .trailing,
-                                        showDivider: false
-                                    )
-                                } else {
-                                    // English order (LTR): Poet name | Era
-                                    // Poet name
-                                    MetadataRow(
-                                        icon: "graduationcap.fill",
-                                        tagHeader: selectedLanguage == .farsi ? "شاعر" : "Poet",
-                                        tagDetail: poem.poet.fullName,
-                                        alignment: .leading,
                                         showDivider: true
                                     )
-                                    
-                                    // Era
-                                    if hasEra {
-                                        MetadataRow(
-                                            icon: "clock.fill",
-                                            tagHeader: selectedLanguage == .farsi ? "دوره" : "Era",
-                                            tagDetail: poem.poet.era!,
-                                            alignment: .leading,
-                                            showDivider: false
-                                        )
-                                    }
+                                }
+                                
+                                // Poet name
+                                MetadataRow(
+                                    icon: "graduationcap.fill",
+                                    tagHeader: selectedLanguage == .farsi ? "شاعر" : "Poet",
+                                    tagDetail: poem.poet.fullName,
+                                    alignment: .trailing,
+                                    showDivider: false
+                                )
+                            } else {
+                                // English order (LTR): Poet name | Era
+                                // Poet name
+                                MetadataRow(
+                                    icon: "graduationcap.fill",
+                                    tagHeader: selectedLanguage == .farsi ? "شاعر" : "Poet",
+                                    tagDetail: poem.poet.fullName,
+                                    alignment: .leading,
+                                    showDivider: true
+                                )
+                                
+                                // Era
+                                if hasEra {
+                                    MetadataRow(
+                                        icon: "clock.fill",
+                                        tagHeader: selectedLanguage == .farsi ? "دوره" : "Era",
+                                        tagDetail: poem.poet.era!,
+                                        alignment: .leading,
+                                        showDivider: false
+                                    )
                                 }
                             }
-                            .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                         }
-                        .environment(\.layoutDirection, selectedLanguage == .farsi ? .rightToLeft : .leftToRight)
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     }
+                    .environment(\.layoutDirection, selectedLanguage == .farsi ? .rightToLeft : .leftToRight)
+                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     .padding(.bottom, 12)
                     
                     // Biography text if available
