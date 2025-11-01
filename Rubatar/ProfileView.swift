@@ -1073,7 +1073,7 @@ struct PoemCardView: View {
                                 
                                 TypewriterText(
                                     text: beyt[0],
-                                    font: isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14),
+                                    font: isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Nastaliq", size: 14),
                                     color: colorScheme == .dark ? .white : .black,
                                     lineSpacing: isTranslated ? 4 : 14 * 2.66,
                                     kerning: 1,
@@ -1089,7 +1089,7 @@ struct PoemCardView: View {
                                 .id("\(triggerKey)-\(beytIndex)-0-\(typewriterTrigger[triggerKey] ?? 0)")
                             } else {
                                 Text(beyt[0])
-                                    .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
+                                    .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Nastaliq", size: 14))
                                     .foregroundColor(colorScheme == .dark ? .white : .black)
                                     .lineSpacing(isTranslated ? 4 : 14 * 2.66)
                                     .kerning(1)
@@ -1133,7 +1133,7 @@ struct PoemCardView: View {
                                 
                                 TypewriterText(
                                     text: beyt[1],
-                                    font: isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14),
+                                    font: isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Nastaliq", size: 14),
                                     color: colorScheme == .dark ? .white : .black,
                                     lineSpacing: isTranslated ? 4 : 14 * 2.66,
                                     kerning: 1,
@@ -1149,7 +1149,7 @@ struct PoemCardView: View {
                                 .id("\(triggerKey)-\(beytIndex)-1-\(typewriterTrigger[triggerKey] ?? 0)")
                             } else {
                                 Text(beyt[1])
-                                    .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .system(size: 14))
+                                    .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Nastaliq", size: 14))
                                     .foregroundColor(colorScheme == .dark ? .white : .black)
                                     .lineSpacing(isTranslated ? 4 : 14 * 2.66)
                                     .kerning(1)
