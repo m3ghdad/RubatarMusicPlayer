@@ -90,6 +90,18 @@ struct PoetInfo: Codable {
     let id: Int
     let name: String
     let fullName: String
+    let era: String?
+    let biographyEn: String?
+    let biographyFa: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case fullName
+        case era
+        case biographyEn
+        case biographyFa
+    }
 }
 
 // MARK: - Ganjoor API Manager

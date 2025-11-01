@@ -139,7 +139,10 @@ class TranslationManager {
                 poet: PoetInfo(
                     id: poem.poet.id,
                     name: translatedPoetName,
-                    fullName: translatedPoetName
+                    fullName: translatedPoetName,
+                    era: poem.poet.era,
+                    biographyEn: poem.poet.biographyEn,
+                    biographyFa: poem.poet.biographyFa
                 ),
                 verses: translatedVerses,
                 topic: poem.topic,

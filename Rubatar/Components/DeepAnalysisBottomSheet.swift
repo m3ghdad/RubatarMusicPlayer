@@ -146,6 +146,47 @@ struct DeepAnalysisBottomSheet: View {
                         .italic()
                         .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                 }
+                
+                // About the Poet section
+                if let biography = selectedLanguage == .farsi ? poem.poet.biographyFa : poem.poet.biographyEn,
+                   !biography.isEmpty {
+                    Divider()
+                        .background(colorScheme == .dark ? Color.white.opacity(0.2) : Color.black.opacity(0.2))
+                        .padding(.top, 20)
+                    
+                    // Section title
+                    Text(selectedLanguage == .farsi ? "درباره \(poem.poet.fullName)" : "About \(poem.poet.fullName)")
+                        .font(.custom("Palatino", size: 24))
+                        .fontWeight(.semibold)
+                        .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                        .padding(.bottom, 8)
+                    
+                    // Era tag if available
+                    if let era = poem.poet.era, !era.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(alignment: .top, spacing: 8) {
+                                MetadataRow(
+                                    icon: "clock.fill",
+                                    tagHeader: selectedLanguage == .farsi ? "دوره" : "Era",
+                                    tagDetail: era,
+                                    alignment: selectedLanguage == .farsi ? .trailing : .leading,
+                                    showDivider: false
+                                )
+                            }
+                            .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                        }
+                        .padding(.bottom, 12)
+                    }
+                    
+                    // Biography text
+                    Text(biography)
+                        .font(.custom("Palatino", size: 17))
+                        .foregroundColor(colorScheme == .dark ? .white : .black)
+                        .lineSpacing(8)
+                        .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                }
             }
             .padding(.horizontal, 24)
             .padding(.top, 16)

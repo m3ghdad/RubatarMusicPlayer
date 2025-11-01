@@ -110,7 +110,10 @@ class CoreDataManager {
                 let poet = PoetInfo(
                     id: Int(cachedPoem.id),
                     name: poetName,
-                    fullName: poetName
+                    fullName: poetName,
+                    era: nil,
+                    biographyEn: nil,
+                    biographyFa: nil
                 )
                 
                 return PoemData(

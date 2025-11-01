@@ -282,7 +282,10 @@ class PoetryService: ObservableObject {
                 poet: PoetInfo(
                     id: Int(poet.id.suffix(8), radix: 16) ?? 0,
                     name: poet.nickname_fa ?? poet.name_fa,
-                    fullName: poet.name_fa
+                    fullName: poet.name_fa,
+                    era: poet.era,
+                    biographyEn: poet.biography_en,
+                    biographyFa: poet.biography_fa
                 ),
                 verses: parsePoemContent(poem.poem_content_fa),
                 topic: topic?.topic_fa,
@@ -312,7 +315,10 @@ class PoetryService: ObservableObject {
                     poet: PoetInfo(
                         id: Int(poet.id.suffix(8), radix: 16) ?? 0,
                         name: poet.nickname_en ?? poet.name_en,
-                        fullName: poet.name_en
+                        fullName: poet.name_en,
+                        era: poet.era,
+                        biographyEn: poet.biography_en,
+                        biographyFa: poet.biography_fa
                     ),
                     verses: parsePoemContent(poem.poem_content_en),
                     topic: topic?.topic_en,
