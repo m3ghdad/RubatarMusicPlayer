@@ -51,6 +51,16 @@ enum AppLanguage: String {
             return .leading
         }
     }
+    
+    /// Returns the "Deep Analysis" menu title for this language
+    var deepAnalysisTitle: String {
+        switch self {
+        case .farsi:
+            return "معنای زیرین" // Underlying Meaning in Farsi
+        case .english:
+            return "Underlying Meaning"
+        }
+    }
 }
 
 // Display mode enum for poem text

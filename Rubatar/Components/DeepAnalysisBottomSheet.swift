@@ -20,9 +20,35 @@ struct DeepAnalysisBottomSheet: View {
         formatTafseerText(tafseerText, isEnglish: selectedLanguage == .english)
     }
     
+    private var poemName: String {
+        selectedLanguage == .farsi ? poem.title : (poem.poem_name_en ?? poem.title)
+    }
+    
     var body: some View {
         ScrollView {
             VStack(alignment: selectedLanguage.horizontalAlignment, spacing: 20) {
+                // Title and Subtitle section
+                VStack(alignment: selectedLanguage.horizontalAlignment, spacing: 8) {
+                    // Title: "Underlying Meaning"
+                    Text(selectedLanguage.deepAnalysisTitle)
+                        .font(.custom("Palatino", size: 16))
+                        .fontWeight(.semibold)
+                        .foregroundColor(colorScheme == .dark ? .white : .black)
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
+                    
+                    // Subtitle: Poem name
+                    Text(poemName)
+                        .font(.custom("Palatino", size: 16))
+                        .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.6))
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
+                }
+                .padding(.bottom, 8)
+                
+                // Divider
+                Divider()
+                    .background(colorScheme == .dark ? Color.white.opacity(0.2) : Color.black.opacity(0.2))
+                    .padding(.bottom, 12)
+                
                 // Classification section (Form and Book metadata)
                 let hasForm = (selectedLanguage == .farsi ? (poem.formFa != nil && !poem.formFa!.isEmpty) : (poem.formEn != nil && !poem.formEn!.isEmpty))
                 let hasBook = (selectedLanguage == .farsi ? (poem.bookNameFa != nil && !poem.bookNameFa!.isEmpty) : (poem.bookNameEn != nil && !poem.bookNameEn!.isEmpty))
