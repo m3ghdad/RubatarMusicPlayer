@@ -310,12 +310,16 @@ struct MetadataRow: View {
             // Tag-detail with glass effect
             HStack(spacing: 10) {
                 if alignment == .trailing {
-                    // Farsi: Text on left, icon on right (original icon hidden, new identical one shown)
+                    // Farsi: Due to RTL layout, put icon first, then spacer, then text
+                    // This displays as: Text | Spacer | Icon (right to left)
+                    Image(systemName: icon)
+                        .font(.system(size: 14))
+                        .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
+                    Spacer(minLength: 0)
                     Text(tagDetail)
                         .font(.custom("Palatino", size: 14))
                         .foregroundColor(colorScheme == .dark ? .white : .black)
-                    Spacer(minLength: 0)
-                    // Identical icon on right (visible)
+                    // Add duplicate icon after text to ensure it appears on right
                     Image(systemName: icon)
                         .font(.system(size: 14))
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
