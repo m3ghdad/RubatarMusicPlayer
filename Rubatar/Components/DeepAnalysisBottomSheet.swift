@@ -309,13 +309,16 @@ struct MetadataRow: View {
             // Tag-detail with glass effect
             HStack(spacing: 10) {
                 if alignment == .trailing {
+                    // Farsi: Text on left, icon on right
                     Text(tagDetail)
                         .font(.custom("Palatino", size: 14))
                         .foregroundColor(colorScheme == .dark ? .white : .black)
+                    Spacer()
                     Image(systemName: icon)
                         .font(.system(size: 14))
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
                 } else {
+                    // English: Icon on left, text on right
                     Image(systemName: icon)
                         .font(.system(size: 14))
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
