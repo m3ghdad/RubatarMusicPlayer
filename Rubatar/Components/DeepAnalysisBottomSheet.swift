@@ -28,11 +28,18 @@ struct DeepAnalysisBottomSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: selectedLanguage.horizontalAlignment, spacing: 20) {
-                // Title and Subtitle section with glass effect container
+                // Title and Subtitle section with standalone glass effect square
                 HStack(spacing: 0) {
                     // English: Exit button on right, content on left
                     if selectedLanguage == .english {
-                        // Content (centered)
+                        // Glass effect square on left
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.clear)
+                            .frame(width: 40, height: 40)
+                            .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+                            .padding(.trailing, 12)
+                        
+                        // Content (title + subtitle)
                         VStack(alignment: selectedLanguage.horizontalAlignment, spacing: 8) {
                             // Title: "Underlying Meaning"
                             Text(selectedLanguage.deepAnalysisTitle)
@@ -70,7 +77,7 @@ struct DeepAnalysisBottomSheet: View {
                         
                         Spacer()
                         
-                        // Content (centered)
+                        // Content (title + subtitle)
                         VStack(alignment: selectedLanguage.horizontalAlignment, spacing: 8) {
                             // Title: "Underlying Meaning"
                             Text(selectedLanguage.deepAnalysisTitle)
@@ -86,15 +93,17 @@ struct DeepAnalysisBottomSheet: View {
                                 .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                         }
                         .frame(maxWidth: .infinity)
+                        
+                        // Glass effect square on right (for Farsi)
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.clear)
+                            .frame(width: 40, height: 40)
+                            .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+                            .padding(.leading, 12)
                     }
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .background {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.clear)
-                        .glassEffect(in: RoundedRectangle(cornerRadius: 12))
-                }
                 .padding(.bottom, 8)
                 
                 // Divider
