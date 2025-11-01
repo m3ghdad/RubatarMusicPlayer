@@ -11,6 +11,46 @@ import SwiftUI
 enum AppLanguage: String {
     case english = "English"
     case farsi = "Farsi"
+    
+    /// Returns the SwiftUI layout direction for this language
+    var layoutDirection: LayoutDirection {
+        switch self {
+        case .farsi:
+            return .rightToLeft
+        case .english:
+            return .leftToRight
+        }
+    }
+    
+    /// Returns the horizontal alignment for this language
+    var horizontalAlignment: HorizontalAlignment {
+        switch self {
+        case .farsi:
+            return .trailing
+        case .english:
+            return .leading
+        }
+    }
+    
+    /// Returns the text alignment for this language
+    var textAlignment: TextAlignment {
+        switch self {
+        case .farsi:
+            return .trailing
+        case .english:
+            return .leading
+        }
+    }
+    
+    /// Returns the frame alignment for this language (used in .frame(alignment:))
+    var frameAlignment: Alignment {
+        switch self {
+        case .farsi:
+            return .trailing
+        case .english:
+            return .leading
+        }
+    }
 }
 
 // Display mode enum for poem text
@@ -336,6 +376,7 @@ struct ProfileView: View {
             .padding(.top, 24)
             .padding(.bottom, 24)
         }
+        .environment(\.layoutDirection, selectedLanguage.layoutDirection)
         .overlay {
             if showMenu {
                 Color.black.opacity(0.3)

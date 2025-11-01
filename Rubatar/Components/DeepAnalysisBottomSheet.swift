@@ -22,7 +22,7 @@ struct DeepAnalysisBottomSheet: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: selectedLanguage == .farsi ? .trailing : .leading, spacing: 20) {
+            VStack(alignment: selectedLanguage.horizontalAlignment, spacing: 20) {
                 // Classification section (Form and Book metadata)
                 let hasForm = (selectedLanguage == .farsi ? (poem.formFa != nil && !poem.formFa!.isEmpty) : (poem.formEn != nil && !poem.formEn!.isEmpty))
                 let hasBook = (selectedLanguage == .farsi ? (poem.bookNameFa != nil && !poem.bookNameFa!.isEmpty) : (poem.bookNameEn != nil && !poem.bookNameEn!.isEmpty))
@@ -33,7 +33,7 @@ struct DeepAnalysisBottomSheet: View {
                         .font(.custom("Palatino", size: 14))
                         .fontWeight(.semibold)
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
-                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                         .padding(.bottom, 0)
                     
                     // Form and Book metadata in horizontal scrollable format
@@ -87,10 +87,10 @@ struct DeepAnalysisBottomSheet: View {
                                 }
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                     }
-                    .environment(\.layoutDirection, selectedLanguage == .farsi ? .rightToLeft : .leftToRight)
-                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                    .environment(\.layoutDirection, selectedLanguage.layoutDirection)
+                    .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                     .padding(.bottom, 12)
                 }
                 
@@ -160,10 +160,10 @@ struct DeepAnalysisBottomSheet: View {
                                 }
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                     }
-                    .environment(\.layoutDirection, selectedLanguage == .farsi ? .rightToLeft : .leftToRight)
-                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                    .environment(\.layoutDirection, selectedLanguage.layoutDirection)
+                    .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                     .padding(.bottom, 12)
                 }
                 
@@ -172,14 +172,14 @@ struct DeepAnalysisBottomSheet: View {
                     Text(formattedTafseerText)
                         .foregroundColor(colorScheme == .dark ? .white : .black)
                         .lineSpacing(8)
-                        .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
-                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                        .multilineTextAlignment(selectedLanguage.textAlignment)
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                 } else {
                     Text(selectedLanguage == .farsi ? "معنی در دسترس نیست" : "No meaning available")
                         .font(.custom("Palatino", size: 15))
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                         .italic()
-                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                 }
                 
                 // About the Poet section (show if era OR biography is available)
@@ -197,7 +197,7 @@ struct DeepAnalysisBottomSheet: View {
                         .font(.custom("Palatino", size: 14))
                         .fontWeight(.semibold)
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
-                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                         .padding(.bottom, 0)
                     
                     // Poet name and era tags
@@ -247,10 +247,10 @@ struct DeepAnalysisBottomSheet: View {
                                 }
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                     }
-                    .environment(\.layoutDirection, selectedLanguage == .farsi ? .rightToLeft : .leftToRight)
-                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                    .environment(\.layoutDirection, selectedLanguage.layoutDirection)
+                    .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                     .padding(.bottom, 12)
                     
                     // Biography text if available
@@ -259,8 +259,8 @@ struct DeepAnalysisBottomSheet: View {
                             .font(.custom("Palatino", size: 16))
                             .foregroundColor(colorScheme == .dark ? .white : .black)
                             .lineSpacing(8)
-                            .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
-                            .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                            .multilineTextAlignment(selectedLanguage.textAlignment)
+                            .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
                     }
                 }
             }
