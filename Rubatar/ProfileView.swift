@@ -1113,7 +1113,7 @@ struct PoemCardView: View {
                                 
                                 TypewriterText(
                                     text: beyt[0],
-                                    font: isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Nastaliq", size: 14),
+                                    font: isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Palatino", size: 16),
                                     color: colorScheme == .dark ? .white : .black,
                                     lineSpacing: isTranslated ? 4 : 14 * 2.66,
                                     kerning: 1,
@@ -1129,7 +1129,7 @@ struct PoemCardView: View {
                                 .id("\(triggerKey)-\(beytIndex)-0-\(typewriterTrigger[triggerKey] ?? 0)")
                             } else {
                                 Text(beyt[0])
-                                    .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Nastaliq", size: 14))
+                                    .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Palatino", size: 16))
                                     .foregroundColor(colorScheme == .dark ? .white : .black)
                                     .lineSpacing(isTranslated ? 4 : 14 * 2.66)
                                     .kerning(1)
@@ -1147,7 +1147,7 @@ struct PoemCardView: View {
                                             let explanation = tafseer[beytIndex * 2].explanation
                                             if !explanation.isEmpty {
                                                 Text(explanation)
-                                                    .font(.custom("Palatino", size: 13))
+                                                    .font(.custom("Palatino", size: selectedLanguage == .farsi ? 14 : 13))
                                                     .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                                                     .multilineTextAlignment(.center)
                                                     .padding(.horizontal, 16)
@@ -1173,7 +1173,7 @@ struct PoemCardView: View {
                                 
                                 TypewriterText(
                                     text: beyt[1],
-                                    font: isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Nastaliq", size: 14),
+                                    font: isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Palatino", size: 16),
                                     color: colorScheme == .dark ? .white : .black,
                                     lineSpacing: isTranslated ? 4 : 14 * 2.66,
                                     kerning: 1,
@@ -1189,7 +1189,7 @@ struct PoemCardView: View {
                                 .id("\(triggerKey)-\(beytIndex)-1-\(typewriterTrigger[triggerKey] ?? 0)")
                             } else {
                                 Text(beyt[1])
-                                    .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Nastaliq", size: 14))
+                                    .font(isTranslated ? .custom("Palatino-Roman", size: 16) : .custom("Palatino", size: 16))
                                     .foregroundColor(colorScheme == .dark ? .white : .black)
                                     .lineSpacing(isTranslated ? 4 : 14 * 2.66)
                                     .kerning(1)
@@ -1207,7 +1207,7 @@ struct PoemCardView: View {
                                             let explanation = tafseer[beytIndex * 2 + 1].explanation
                                             if !explanation.isEmpty {
                                                 Text(explanation)
-                                                    .font(.custom("Palatino", size: 13))
+                                                    .font(.custom("Palatino", size: selectedLanguage == .farsi ? 14 : 13))
                                                     .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                                                     .multilineTextAlignment(.center)
                                                     .padding(.horizontal, 16)
