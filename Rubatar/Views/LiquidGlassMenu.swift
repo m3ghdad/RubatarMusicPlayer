@@ -139,11 +139,11 @@ struct LiquidGlassMenu: View {
                     isSelected: showExplanations
                 )
                 
-                // Deep Analysis
+                // Uncover Meaning
                 MenuItemView(
                     id: "deepanalysis",
                     icon: "book.pages",
-                    title: "Deep Analysis",
+                    title: "Uncover Meaning",
                     isHovered: hoveredItem == "deepanalysis"
                 )
                 
