@@ -128,14 +128,14 @@ struct DeepAnalysisBottomSheet: View {
                 Text(selectedLanguage == .farsi ? "معنای کلی" : "Overall Meaning")
                     .font(.custom("Palatino", size: 24))
                     .fontWeight(.semibold)
-                    .foregroundColor(colorScheme == .dark ? .white : .black)
+                    .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                     .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     .padding(.bottom, 8)
                 
                 // Tafseer text
                 if !tafseerText.isEmpty {
                     formattedTafseerText
-                        .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
+                        .foregroundColor(colorScheme == .dark ? .white : .black)
                         .lineSpacing(8)
                         .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
                         .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
