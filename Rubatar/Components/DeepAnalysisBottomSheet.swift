@@ -89,6 +89,7 @@ struct DeepAnalysisBottomSheet: View {
                         }
                         .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     }
+                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     .padding(.bottom, 12)
                 }
                 
@@ -160,6 +161,7 @@ struct DeepAnalysisBottomSheet: View {
                         }
                         .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     }
+                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     .padding(.bottom, 12)
                 }
                 
@@ -245,6 +247,7 @@ struct DeepAnalysisBottomSheet: View {
                         }
                         .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     }
+                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                     .padding(.bottom, 12)
                     
                     // Biography text if available
