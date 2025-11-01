@@ -16,7 +16,7 @@ struct DeepAnalysisBottomSheet: View {
         selectedLanguage == .farsi ? (poem.tafseerFa ?? "") : (poem.tafseerEn ?? "")
     }
     
-    private var formattedTafseerText: Text {
+    private var formattedTafseerText: AttributedString {
         formatTafseerText(tafseerText, isEnglish: selectedLanguage == .english)
     }
     
@@ -134,7 +134,7 @@ struct DeepAnalysisBottomSheet: View {
                 
                 // Tafseer text
                 if !tafseerText.isEmpty {
-                    formattedTafseerText
+                    Text(formattedTafseerText)
                         .foregroundColor(colorScheme == .dark ? .white : .black)
                         .lineSpacing(8)
                         .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
@@ -292,33 +292,80 @@ struct FlowLayout: Layout {
 }
 
 // Format tafseer text with special styling
-private func formatTafseerText(_ text: String, isEnglish: Bool) -> Text {
-    guard !text.isEmpty else { return Text(text) }
+private func formatTafseerText(_ text: String, isEnglish: Bool) -> AttributedString {
+    guard !text.isEmpty else { return AttributedString(text) }
     
-    // Use NSMutableAttributedString for better control over attributes
+    // Use NSMutableAttributedString for better control
     let mutableString = NSMutableAttributedString(string: text)
     
     // Set base font to Palatino
     let baseFont = UIFont(name: "Palatino", size: 17) ?? UIFont.systemFont(ofSize: 17)
     mutableString.addAttribute(.font, value: baseFont, range: NSRange(location: 0, length: text.count))
     
-    // Find the first meaningful character and style for English only
+    // Process bold markers (**text**)
+    processBoldMarkers(in: mutableString, text: text)
+    
+    // Process first character styling for English
     if isEnglish {
-        for (index, char) in text.enumerated() {
-            if char.isLetter {
-                // Style first character to 32px for English
-                let largeFont = UIFont(name: "Palatino", size: 32) ?? UIFont.systemFont(ofSize: 32)
-                mutableString.addAttribute(.font, value: largeFont, range: NSRange(location: index, length: 1))
-                break
-            }
-        }
+        processFirstChar(in: mutableString, text: text)
     }
     
     // Convert to AttributedString for SwiftUI
     if let attributedString = try? AttributedString(mutableString, including: AttributeScopes.UIKitAttributes.self) {
-        return Text(attributedString)
+        return attributedString
     } else {
-        return Text(text)
-            .font(.custom("Palatino", size: 17))
+        return AttributedString(text)
+    }
+}
+
+// Process bold markers (**text**)
+private func processBoldMarkers(in mutableString: NSMutableAttributedString, text: String) {
+    var searchRange = NSRange(location: 0, length: text.count)
+    var offset = 0 // Track cumulative offset from deletions
+    
+    while searchRange.location < text.count {
+        // Find opening **
+        let openingRange = (text as NSString).range(of: "**", range: searchRange)
+        if openingRange.location != NSNotFound {
+            // Find closing **
+            let afterOpening = NSRange(location: openingRange.location + openingRange.length, length: text.count - (openingRange.location + openingRange.length))
+            let closingRange = (text as NSString).range(of: "**", range: afterOpening)
+            if closingRange.location != NSNotFound {
+                // Found a bold section
+                let boldContentRange = NSRange(location: openingRange.location + openingRange.length, length: closingRange.location - (openingRange.location + openingRange.length))
+                
+                // Remove ** markers (need to adjust for previous deletions)
+                let adjustedClosingRange = NSRange(location: closingRange.location - offset, length: 2)
+                let adjustedOpeningRange = NSRange(location: openingRange.location - offset, length: 2)
+                
+                mutableString.deleteCharacters(in: adjustedClosingRange)
+                mutableString.deleteCharacters(in: adjustedOpeningRange)
+                
+                // Apply bold to the content
+                let adjustedBoldRange = NSRange(location: boldContentRange.location - offset - 2, length: boldContentRange.length)
+                let boldFont = UIFont(name: "Palatino-Bold", size: 17) ?? UIFont.boldSystemFont(ofSize: 17)
+                mutableString.addAttribute(.font, value: boldFont, range: adjustedBoldRange)
+                
+                // Update offset and search range
+                offset += 4 // Removed 2 markers of 2 chars each
+                searchRange = NSRange(location: closingRange.location + closingRange.length, length: text.count - (closingRange.location + closingRange.length))
+            } else {
+                break
+            }
+        } else {
+            break
+        }
+    }
+}
+
+// Process first character for English
+private func processFirstChar(in mutableString: NSMutableAttributedString, text: String) {
+    for (index, char) in text.enumerated() {
+        if char.isLetter {
+            // Style first character to 32px for English
+            let largeFont = UIFont(name: "Palatino", size: 32) ?? UIFont.systemFont(ofSize: 32)
+            mutableString.addAttribute(.font, value: largeFont, range: NSRange(location: index, length: 1))
+            break
+        }
     }
 }
