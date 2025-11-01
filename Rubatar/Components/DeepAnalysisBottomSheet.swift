@@ -294,7 +294,7 @@ struct MetadataRow: View {
             // Tag-detail with glass effect
             HStack(spacing: 10) {
                 if alignment == .trailing {
-                    // Farsi: Text on left, icon on right
+                    // Farsi: Text first, icon second (will be reversed by RTL)
                     Text(tagDetail)
                         .font(.custom("Palatino", size: 14))
                         .foregroundColor(colorScheme == .dark ? .white : .black)
@@ -302,7 +302,7 @@ struct MetadataRow: View {
                         .font(.system(size: 14))
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
                 } else {
-                    // English: Icon on left, text on right
+                    // English: Icon first, text second
                     Image(systemName: icon)
                         .font(.system(size: 14))
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
@@ -311,7 +311,6 @@ struct MetadataRow: View {
                         .foregroundColor(colorScheme == .dark ? .white : .black)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: alignment == .trailing ? .trailing : .leading)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background {
