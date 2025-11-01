@@ -1122,7 +1122,9 @@ struct PoemCardView: View {
     
     @ViewBuilder
     private func buildPageContent(poemData: PoemData, pageIndex: Int, beytsPerPage: Int) -> some View {
-        VStack(alignment: .center, spacing: 0) {
+        let vStackAlignment: HorizontalAlignment = showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center
+        
+        VStack(alignment: vStackAlignment, spacing: 0) {
             let startBeytIndex = pageIndex * beytsPerPage
             let endBeytIndex = min(startBeytIndex + beytsPerPage, poemData.verses.count)
             let triggerKey = "\(poemData.id)-\(pageIndex)-\(cardIndex)"
@@ -1136,7 +1138,7 @@ struct PoemCardView: View {
                     // Line 1 of Beyt 2 = (text1.length + text2.length) * 0.05 + 0.4, etc.
                     let lineIndex = beytOffset * 2
                     
-                    VStack(alignment: .center, spacing: 10) {
+                    VStack(alignment: vStackAlignment, spacing: 10) {
                         // First line of beyt
                         if beyt.count > 0 {
                             if displayMode == .typewriter {
@@ -1159,6 +1161,7 @@ struct PoemCardView: View {
                                         }
                                     }
                                 )
+                                .frame(maxWidth: .infinity, alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
                                 .id("\(triggerKey)-\(beytIndex)-0-\(typewriterTrigger[triggerKey] ?? 0)")
                             } else {
                                 Text(beyt[0])
@@ -1169,6 +1172,7 @@ struct PoemCardView: View {
                                     .lineLimit(nil)
                                     .fixedSize(horizontal: false, vertical: true)
                                     .multilineTextAlignment(showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
+                                    .frame(maxWidth: .infinity, alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
                             }
                             
                             // Show explanation for line 1 if enabled
@@ -1183,6 +1187,7 @@ struct PoemCardView: View {
                                                     .font(.custom("Palatino", size: selectedLanguage == .farsi ? 14 : 13))
                                                     .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                                                     .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
+                                                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                                                     .padding(.horizontal, 16)
                                                     .padding(.top, 8)
                                                     .transition(.asymmetric(
@@ -1219,6 +1224,7 @@ struct PoemCardView: View {
                                         }
                                     }
                                 )
+                                .frame(maxWidth: .infinity, alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
                                 .id("\(triggerKey)-\(beytIndex)-1-\(typewriterTrigger[triggerKey] ?? 0)")
                             } else {
                                 Text(beyt[1])
@@ -1229,6 +1235,7 @@ struct PoemCardView: View {
                                     .lineLimit(nil)
                                     .fixedSize(horizontal: false, vertical: true)
                                     .multilineTextAlignment(showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
+                                    .frame(maxWidth: .infinity, alignment: showExplanations ? (selectedLanguage == .farsi ? .trailing : .leading) : .center)
                             }
                             
                             // Show explanation for line 2 if enabled
@@ -1243,6 +1250,7 @@ struct PoemCardView: View {
                                                     .font(.custom("Palatino", size: selectedLanguage == .farsi ? 14 : 13))
                                                     .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                                                     .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
+                                                    .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                                                     .padding(.horizontal, 16)
                                                     .padding(.top, 8)
                                                     .transition(.asymmetric(
