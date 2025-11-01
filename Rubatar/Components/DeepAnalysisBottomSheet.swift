@@ -11,6 +11,7 @@ struct DeepAnalysisBottomSheet: View {
     let poem: PoemData
     let selectedLanguage: AppLanguage
     @Environment(\.colorScheme) var colorScheme
+    @Environment(\.dismiss) var dismiss
     
     private var tafseerText: String {
         selectedLanguage == .farsi ? (poem.tafseerFa ?? "") : (poem.tafseerEn ?? "")
@@ -27,20 +28,72 @@ struct DeepAnalysisBottomSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: selectedLanguage.horizontalAlignment, spacing: 20) {
-                // Title and Subtitle section
-                VStack(alignment: selectedLanguage.horizontalAlignment, spacing: 8) {
-                    // Title: "Underlying Meaning"
-                    Text(selectedLanguage.deepAnalysisTitle)
-                        .font(.custom("Palatino", size: 16))
-                        .fontWeight(.semibold)
-                        .foregroundColor(colorScheme == .dark ? .white : .black)
-                        .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
-                    
-                    // Subtitle: Poem name
-                    Text(poemName)
-                        .font(.custom("Palatino", size: 16))
-                        .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.6))
-                        .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
+                // Title and Subtitle section with glass effect container
+                HStack(spacing: 0) {
+                    // English: Exit button on right, content on left
+                    if selectedLanguage == .english {
+                        // Content (centered)
+                        VStack(alignment: selectedLanguage.horizontalAlignment, spacing: 8) {
+                            // Title: "Underlying Meaning"
+                            Text(selectedLanguage.deepAnalysisTitle)
+                                .font(.custom("Palatino", size: 16))
+                                .fontWeight(.semibold)
+                                .foregroundColor(colorScheme == .dark ? .white : .black)
+                                .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
+                            
+                            // Subtitle: Poem name
+                            Text(poemName)
+                                .font(.custom("Palatino", size: 16))
+                                .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.6))
+                                .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
+                        }
+                        .frame(maxWidth: .infinity)
+                        
+                        Spacer()
+                        
+                        // Exit button on right
+                        Button(action: { dismiss() }) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(colorScheme == .dark ? .white : .black)
+                                .frame(width: 32, height: 32)
+                        }
+                    } else {
+                        // Farsi: Exit button on left, content on right
+                        // Exit button on left
+                        Button(action: { dismiss() }) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(colorScheme == .dark ? .white : .black)
+                                .frame(width: 32, height: 32)
+                        }
+                        
+                        Spacer()
+                        
+                        // Content (centered)
+                        VStack(alignment: selectedLanguage.horizontalAlignment, spacing: 8) {
+                            // Title: "Underlying Meaning"
+                            Text(selectedLanguage.deepAnalysisTitle)
+                                .font(.custom("Palatino", size: 16))
+                                .fontWeight(.semibold)
+                                .foregroundColor(colorScheme == .dark ? .white : .black)
+                                .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
+                            
+                            // Subtitle: Poem name
+                            Text(poemName)
+                                .font(.custom("Palatino", size: 16))
+                                .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.6))
+                                .frame(maxWidth: .infinity, alignment: selectedLanguage.frameAlignment)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.clear)
+                        .glassEffect(in: RoundedRectangle(cornerRadius: 12))
                 }
                 .padding(.bottom, 8)
                 
