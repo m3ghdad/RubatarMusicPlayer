@@ -301,9 +301,8 @@ private func formatTafseerText(_ text: String, isEnglish: Bool) -> Text {
     let baseFont = UIFont(name: "Palatino", size: 17) ?? UIFont.systemFont(ofSize: 17)
     mutableString.addAttribute(.font, value: baseFont, range: NSRange(location: 0, length: text.count))
     
-    // Only apply large first letter for English to preserve Farsi ligatures
     if isEnglish {
-        // Find the first meaningful character
+        // Find the first meaningful character and style to 32px
         for (index, char) in text.enumerated() {
             if char.isLetter {
                 // Style first character to 32px
@@ -311,6 +310,13 @@ private func formatTafseerText(_ text: String, isEnglish: Bool) -> Text {
                 mutableString.addAttribute(.font, value: largeFont, range: NSRange(location: index, length: 1))
                 break
             }
+        }
+    } else {
+        // For Farsi: make first word 32px and bold
+        let firstWordRange = findFirstWordRange(in: text)
+        if let range = firstWordRange {
+            let largeFont = UIFont(name: "Palatino-Bold", size: 32) ?? UIFont.boldSystemFont(ofSize: 32)
+            mutableString.addAttribute(.font, value: largeFont, range: range)
         }
     }
     
@@ -321,4 +327,26 @@ private func formatTafseerText(_ text: String, isEnglish: Bool) -> Text {
         return Text(text)
             .font(.custom("Palatino", size: 17))
     }
+}
+
+// Helper function to find the first word range for Farsi
+private func findFirstWordRange(in text: String) -> NSRange? {
+    // Find first non-whitespace character
+    guard let firstCharIndex = text.firstIndex(where: { !$0.isWhitespace }) else { return nil }
+    
+    // Find the end of the first word (first whitespace or punctuation after first char)
+    let remainingText = text[firstCharIndex...]
+    var wordEndIndex = firstCharIndex
+    
+    for char in remainingText {
+        if char.isWhitespace || (char.isPunctuation && char != "،" && char != "؛") {
+            break
+        }
+        wordEndIndex = text.index(after: wordEndIndex)
+    }
+    
+    let startPos = text.distance(from: text.startIndex, to: firstCharIndex)
+    let endPos = text.distance(from: text.startIndex, to: wordEndIndex)
+    
+    return NSRange(location: startPos, length: endPos - startPos)
 }
