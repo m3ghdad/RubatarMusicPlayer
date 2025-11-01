@@ -1196,8 +1196,8 @@ struct PoemCardView: View {
                                                 if beytIndex * 2 < tafseer.count {
                                                     let explanation = tafseer[beytIndex * 2].explanation
                                                     if !explanation.isEmpty {
-                                                        Text(explanation)
-                                                            .font(.custom("Palatino", size: selectedLanguage == .farsi ? 14 : 13))
+                                                        let fontSize = selectedLanguage == .farsi ? 14.0 : 13.0
+                                                        Text(formatLineByLineExplanation(explanation, fontSize: fontSize))
                                                             .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                                                             .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
                                                             .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
@@ -1313,8 +1313,8 @@ struct PoemCardView: View {
                                                 if beytIndex * 2 + 1 < tafseer.count {
                                                     let explanation = tafseer[beytIndex * 2 + 1].explanation
                                                     if !explanation.isEmpty {
-                                                        Text(explanation)
-                                                            .font(.custom("Palatino", size: selectedLanguage == .farsi ? 14 : 13))
+                                                        let fontSize = selectedLanguage == .farsi ? 14.0 : 13.0
+                                                        Text(formatLineByLineExplanation(explanation, fontSize: fontSize))
                                                             .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                                                             .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
                                                             .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)

@@ -677,3 +677,66 @@ private func formatBiographyText(_ text: String, isEnglish: Bool) -> AttributedS
         return AttributedString(text)
     }
 }
+
+// MARK: - Public formatting functions for reuse in other views
+
+// Format line-by-line explanation text with bold markers (public for use in ProfileView)
+func formatLineByLineExplanation(_ text: String, fontSize: CGFloat) -> AttributedString {
+    guard !text.isEmpty else { return AttributedString(text) }
+    
+    var processedText = text
+    // Replace literal newline markers with actual newlines
+    processedText = processedText.replacingOccurrences(of: "\\n\\n", with: "\n\n")
+    processedText = processedText.replacingOccurrences(of: "\\n", with: "\n")
+    
+    let mutableString = NSMutableAttributedString(string: processedText)
+    
+    // Set base font to Palatino
+    let baseFont = UIFont(name: "Palatino", size: fontSize) ?? UIFont.systemFont(ofSize: fontSize)
+    mutableString.addAttribute(.font, value: baseFont, range: NSRange(location: 0, length: processedText.count))
+    
+    // Process bold markers (**text**)
+    processLineByLineBoldMarkers(in: mutableString, text: text, fontSize: fontSize)
+    
+    // Convert to AttributedString for SwiftUI
+    if let attributedString = try? AttributedString(mutableString, including: AttributeScopes.UIKitAttributes.self) {
+        return attributedString
+    } else {
+        return AttributedString(text)
+    }
+}
+
+// Process bold markers with custom font size for line-by-line explanations
+private func processLineByLineBoldMarkers(in mutableString: NSMutableAttributedString, text: String, fontSize: CGFloat) {
+    let text = mutableString.string
+    var searchRange = NSRange(location: 0, length: text.count)
+    var offset = 0
+    
+    while searchRange.location < text.count {
+        let openingRange = (text as NSString).range(of: "**", range: searchRange)
+        if openingRange.location != NSNotFound {
+            let afterOpening = NSRange(location: openingRange.location + openingRange.length, length: text.count - (openingRange.location + openingRange.length))
+            let closingRange = (text as NSString).range(of: "**", range: afterOpening)
+            if closingRange.location != NSNotFound {
+                let boldContentRange = NSRange(location: openingRange.location + openingRange.length, length: closingRange.location - (openingRange.location + openingRange.length))
+                
+                let adjustedClosingRange = NSRange(location: closingRange.location - offset, length: 2)
+                let adjustedOpeningRange = NSRange(location: openingRange.location - offset, length: 2)
+                
+                mutableString.deleteCharacters(in: adjustedClosingRange)
+                mutableString.deleteCharacters(in: adjustedOpeningRange)
+                
+                let adjustedBoldRange = NSRange(location: boldContentRange.location - offset - 2, length: boldContentRange.length)
+                let boldFont = UIFont(name: "Palatino-Bold", size: fontSize) ?? UIFont.boldSystemFont(ofSize: fontSize)
+                mutableString.addAttribute(.font, value: boldFont, range: adjustedBoldRange)
+                
+                offset += 4
+                searchRange = NSRange(location: closingRange.location + closingRange.length, length: text.count - (closingRange.location + closingRange.length))
+            } else {
+                break
+            }
+        } else {
+            break
+        }
+    }
+}
