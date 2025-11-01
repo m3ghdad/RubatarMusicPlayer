@@ -30,7 +30,7 @@ struct DeepAnalysisBottomSheet: View {
                 if hasForm || hasBook {
                     // Section title
                     Text(selectedLanguage == .farsi ? "طبقه‌بندی" : "Classification")
-                        .font(.custom("Palatino", size: 12))
+                        .font(.custom("Palatino", size: 14))
                         .fontWeight(.semibold)
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                         .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
@@ -104,7 +104,7 @@ struct DeepAnalysisBottomSheet: View {
                 
                 // Title
                 Text(selectedLanguage == .farsi ? "معنای کلی" : "Overall Meaning")
-                    .font(.custom("Palatino", size: 12))
+                    .font(.custom("Palatino", size: 14))
                     .fontWeight(.semibold)
                     .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                     .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
@@ -204,7 +204,7 @@ struct DeepAnalysisBottomSheet: View {
                     
                     // Section title
                     Text(selectedLanguage == .farsi ? "درباره شاعر" : "About the Poet")
-                        .font(.custom("Palatino", size: 12))
+                        .font(.custom("Palatino", size: 14))
                         .fontWeight(.semibold)
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                         .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
@@ -310,17 +310,17 @@ struct MetadataRow: View {
             HStack(spacing: 10) {
                 if alignment == .trailing {
                     Text(tagDetail)
-                        .font(.custom("Palatino", size: 12))
+                        .font(.custom("Palatino", size: 14))
                         .foregroundColor(colorScheme == .dark ? .white : .black)
                     Image(systemName: icon)
-                        .font(.system(size: 12))
+                        .font(.system(size: 14))
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
                 } else {
                     Image(systemName: icon)
-                        .font(.system(size: 12))
+                        .font(.system(size: 14))
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
                     Text(tagDetail)
-                        .font(.custom("Palatino", size: 12))
+                        .font(.custom("Palatino", size: 14))
                         .foregroundColor(colorScheme == .dark ? .white : .black)
                 }
             }
