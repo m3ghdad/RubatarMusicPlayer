@@ -102,7 +102,6 @@ struct DeepAnalysisBottomSheet: View {
                             .padding(.leading, 12)
                     }
                 }
-                .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .padding(.bottom, 8)
                 
