@@ -125,7 +125,7 @@ struct DeepAnalysisBottomSheet: View {
                     .background(colorScheme == .dark ? Color.white.opacity(0.2) : Color.black.opacity(0.2))
                 
                 // Title
-                Text(selectedLanguage == .farsi ? "تفسیر" : "Interpretation")
+                Text(selectedLanguage == .farsi ? "معنی" : "Meaning")
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundColor(colorScheme == .dark ? .white : .black)
                     .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
@@ -139,7 +139,7 @@ struct DeepAnalysisBottomSheet: View {
                         .multilineTextAlignment(selectedLanguage == .farsi ? .trailing : .leading)
                         .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
                 } else {
-                    Text(selectedLanguage == .farsi ? "تفسیر در دسترس نیست" : "No interpretation available")
+                    Text(selectedLanguage == .farsi ? "معنی در دسترس نیست" : "No meaning available")
                         .font(.system(size: 15))
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                         .italic()
