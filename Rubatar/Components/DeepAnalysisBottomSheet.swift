@@ -23,11 +23,11 @@ struct DeepAnalysisBottomSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: selectedLanguage == .farsi ? .trailing : .leading, spacing: 20) {
-                // Metadata in horizontal scrollable format
+                // Form and Book metadata in horizontal scrollable format
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(alignment: .top, spacing: 8) {
                         if selectedLanguage == .farsi {
-                            // Farsi order (RTL): Form | Book | Mood | Topic
+                            // Farsi order (RTL): Form | Book
                             // Form
                             if let form = poem.formFa, !form.isEmpty {
                                 MetadataRow(
@@ -49,52 +49,8 @@ struct DeepAnalysisBottomSheet: View {
                                     showDivider: true
                                 )
                             }
-                            
-                            // Mood
-                            if let mood = poem.mood, !mood.isEmpty {
-                                MetadataRow(
-                                    icon: "leaf.fill",
-                                    tagHeader: "حال",
-                                    tagDetail: mood,
-                                    alignment: .trailing,
-                                    showDivider: true
-                                )
-                            }
-                            
-                            // Topic
-                            if let topic = poem.topic, !topic.isEmpty {
-                                MetadataRow(
-                                    icon: "tag.fill",
-                                    tagHeader: "موضوع",
-                                    tagDetail: topic,
-                                    alignment: .trailing,
-                                    showDivider: true
-                                )
-                            }
                         } else {
-                            // English order (LTR): Topic | Mood | Book | Form
-                            // Topic
-                            if let topic = poem.topic, !topic.isEmpty {
-                                MetadataRow(
-                                    icon: "tag.fill",
-                                    tagHeader: "Topic",
-                                    tagDetail: topic,
-                                    alignment: .leading,
-                                    showDivider: true
-                                )
-                            }
-                            
-                            // Mood
-                            if let mood = poem.mood, !mood.isEmpty {
-                                MetadataRow(
-                                    icon: "leaf.fill",
-                                    tagHeader: "Mood",
-                                    tagDetail: mood,
-                                    alignment: .leading,
-                                    showDivider: true
-                                )
-                            }
-                            
+                            // English order (LTR): Book | Form
                             // Book
                             if let bookName = poem.bookNameEn, !bookName.isEmpty {
                                 MetadataRow(
@@ -119,6 +75,75 @@ struct DeepAnalysisBottomSheet: View {
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                }
+                
+                // Themes section (Topic and Mood)
+                let hasTopic = poem.topic != nil && !poem.topic!.isEmpty
+                let hasMood = poem.mood != nil && !poem.mood!.isEmpty
+                
+                if hasTopic || hasMood {
+                    // Section title
+                    Text(selectedLanguage == .farsi ? "درون‌مایه‌ها" : "Themes")
+                        .font(.custom("Palatino", size: 24))
+                        .fontWeight(.semibold)
+                        .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                        .padding(.bottom, 8)
+                    
+                    // Topic and Mood tags
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(alignment: .top, spacing: 8) {
+                            if selectedLanguage == .farsi {
+                                // Farsi order (RTL): Mood | Topic
+                                // Mood
+                                if hasMood {
+                                    MetadataRow(
+                                        icon: "leaf.fill",
+                                        tagHeader: "حال",
+                                        tagDetail: poem.mood!,
+                                        alignment: .trailing,
+                                        showDivider: true
+                                    )
+                                }
+                                
+                                // Topic
+                                if hasTopic {
+                                    MetadataRow(
+                                        icon: "tag.fill",
+                                        tagHeader: "موضوع",
+                                        tagDetail: poem.topic!,
+                                        alignment: .trailing,
+                                        showDivider: true
+                                    )
+                                }
+                            } else {
+                                // English order (LTR): Topic | Mood
+                                // Topic
+                                if hasTopic {
+                                    MetadataRow(
+                                        icon: "tag.fill",
+                                        tagHeader: "Topic",
+                                        tagDetail: poem.topic!,
+                                        alignment: .leading,
+                                        showDivider: true
+                                    )
+                                }
+                                
+                                // Mood
+                                if hasMood {
+                                    MetadataRow(
+                                        icon: "leaf.fill",
+                                        tagHeader: "Mood",
+                                        tagDetail: poem.mood!,
+                                        alignment: .leading,
+                                        showDivider: true
+                                    )
+                                }
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
+                    }
+                    .padding(.bottom, 12)
                 }
                 
                 Divider()
