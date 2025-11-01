@@ -179,7 +179,6 @@ struct MetadataRow: View {
                 if alignment == .trailing {
                     Text(tagDetail)
                         .font(.custom("Palatino", size: 16))
-                        .fontWeight(.medium)
                         .foregroundColor(colorScheme == .dark ? .white : .black)
                     Image(systemName: icon)
                         .font(.system(size: 16))
@@ -190,7 +189,6 @@ struct MetadataRow: View {
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.7))
                     Text(tagDetail)
                         .font(.custom("Palatino", size: 16))
-                        .fontWeight(.medium)
                         .foregroundColor(colorScheme == .dark ? .white : .black)
                 }
             }
