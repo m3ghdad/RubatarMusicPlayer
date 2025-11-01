@@ -271,8 +271,8 @@ struct DeepAnalysisBottomSheet: View {
                     
                     // Biography text if available
                     if hasBiography {
-                        Text(biography!)
-                            .font(.custom("Palatino", size: 16))
+                        let formattedBiography = formatBiographyText(biography!, isEnglish: selectedLanguage == .english)
+                        Text(formattedBiography)
                             .foregroundColor(colorScheme == .dark ? .white : .black)
                             .lineSpacing(8)
                             .multilineTextAlignment(selectedLanguage.textAlignment)
@@ -521,5 +521,44 @@ private func processFirstChar(in mutableString: NSMutableAttributedString, text:
             mutableString.addAttribute(.font, value: largeFont, range: NSRange(location: index, length: 1))
             break
         }
+    }
+}
+
+// Format biography text with special styling
+private func formatBiographyText(_ text: String, isEnglish: Bool) -> AttributedString {
+    guard !text.isEmpty else { return AttributedString(text) }
+    
+    // Replace \n\n with paragraph breaks and ensure \n works properly
+    var processedText = text
+    processedText = processedText.replacingOccurrences(of: "\\n\\n", with: "\n\n")
+    processedText = processedText.replacingOccurrences(of: "\\n", with: "\n")
+    
+    // Use NSMutableAttributedString for better control
+    let mutableString = NSMutableAttributedString(string: processedText)
+    
+    // Set base font to Palatino
+    let baseFont = UIFont(name: "Palatino", size: 16) ?? UIFont.systemFont(ofSize: 16)
+    mutableString.addAttribute(.font, value: baseFont, range: NSRange(location: 0, length: processedText.count))
+    
+    // Process bold markers (**text**)
+    processBoldMarkers(in: mutableString, text: text)
+    
+    // Process first character styling for English (32px and bold)
+    if isEnglish {
+        for (index, char) in processedText.enumerated() {
+            if char.isLetter {
+                // Style first character to 32px and bold for English
+                let largeBoldFont = UIFont(name: "Palatino-Bold", size: 32) ?? UIFont.boldSystemFont(ofSize: 32)
+                mutableString.addAttribute(.font, value: largeBoldFont, range: NSRange(location: index, length: 1))
+                break
+            }
+        }
+    }
+    
+    // Convert to AttributedString for SwiftUI
+    if let attributedString = try? AttributedString(mutableString, including: AttributeScopes.UIKitAttributes.self) {
+        return attributedString
+    } else {
+        return AttributedString(text)
     }
 }
