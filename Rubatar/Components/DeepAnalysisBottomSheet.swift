@@ -33,11 +33,18 @@ struct DeepAnalysisBottomSheet: View {
                     // English: Exit button on right, content on left
                     if selectedLanguage == .english {
                         // Glass effect square on left
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.clear)
-                            .frame(width: 40, height: 40)
-                            .glassEffect(in: RoundedRectangle(cornerRadius: 12))
-                            .padding(.trailing, 12)
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.clear)
+                                .frame(width: 48, height: 48)
+                                .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+                            
+                            Image("Meaning")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 32, height: 32)
+                        }
+                        .padding(.trailing, 12)
                         
                         // Content (title + subtitle)
                         VStack(alignment: selectedLanguage.horizontalAlignment, spacing: 8) {
@@ -109,11 +116,18 @@ struct DeepAnalysisBottomSheet: View {
                         .frame(maxWidth: .infinity)
                         
                         // Glass effect square on right (for Farsi)
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.clear)
-                            .frame(width: 40, height: 40)
-                            .glassEffect(in: RoundedRectangle(cornerRadius: 12))
-                            .padding(.leading, 12)
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.clear)
+                                .frame(width: 48, height: 48)
+                                .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+                            
+                            Image("Meaning")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 32, height: 32)
+                        }
+                        .padding(.leading, 12)
                     }
                 }
                 .padding(.vertical, 12)
