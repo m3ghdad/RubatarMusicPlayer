@@ -296,17 +296,14 @@ private func formatTafseerText(_ text: String, isEnglish: Bool) -> Text {
     
     var resultText = Text("")
     
-    // First letter styling (32px) - English only
-    if isEnglish {
-        let firstChar = text.prefix(1)
-        let remainingText = String(text.dropFirst())
-        
-        if let firstCharUnwrapped = firstChar.first, firstCharUnwrapped.isLetter {
-            resultText = Text(String(firstCharUnwrapped))
-                .font(.custom("Palatino", size: 32))
-        } else {
-            resultText = Text(firstChar)
-        }
+    // First letter styling (32px) for both English and Farsi
+    let firstChar = text.prefix(1)
+    let remainingText = String(text.dropFirst())
+    
+    // Check if first character is a letter (English) or any non-space character (Farsi)
+    if let firstCharUnwrapped = firstChar.first, (isEnglish ? firstCharUnwrapped.isLetter : !firstCharUnwrapped.isWhitespace) {
+        resultText = Text(String(firstCharUnwrapped))
+            .font(.custom("Palatino", size: 32))
         
         // Add remaining text
         resultText = resultText + Text(remainingText)
