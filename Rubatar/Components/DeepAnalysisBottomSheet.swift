@@ -34,7 +34,7 @@ struct DeepAnalysisBottomSheet: View {
                         .fontWeight(.semibold)
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                         .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
-                        .padding(.bottom, 8)
+                        .padding(.bottom, 4)
                     
                     // Form and Book metadata in horizontal scrollable format
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -101,7 +101,7 @@ struct DeepAnalysisBottomSheet: View {
                     .fontWeight(.semibold)
                     .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                     .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, 4)
                 
                 // Topic and Mood tags
                 let hasTopic = poem.topic != nil && !poem.topic!.isEmpty
@@ -194,7 +194,7 @@ struct DeepAnalysisBottomSheet: View {
                         .fontWeight(.semibold)
                         .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                         .frame(maxWidth: .infinity, alignment: selectedLanguage == .farsi ? .trailing : .leading)
-                        .padding(.bottom, 8)
+                        .padding(.bottom, 4)
                     
                     // Poet name and era tags
                     ScrollView(.horizontal, showsIndicators: false) {
