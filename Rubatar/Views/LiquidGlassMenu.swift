@@ -130,16 +130,16 @@ struct LiquidGlassMenu: View {
                 .frame(height: 21)
                 .padding(.horizontal, 24)
                 
-                // Simply Explained
+                // Simple Explanation
                 MenuItemView(
                     id: "simplyexplained",
                     icon: "lightbulb",
-                    title: "Simply Explained",
+                    title: "Simple Explanation",
                     isHovered: hoveredItem == "simplyexplained",
                     isSelected: showExplanations
                 )
                 
-                // Underlying Meaning
+                // Deeper Message
                 MenuItemView(
                     id: "deepanalysis",
                     icon: "book.pages",

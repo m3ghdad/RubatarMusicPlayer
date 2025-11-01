@@ -56,9 +56,9 @@ enum AppLanguage: String {
     var deepAnalysisTitle: String {
         switch self {
         case .farsi:
-            return "معنای زیرین" // Underlying Meaning in Farsi
+            return "تفسیر" // Tafseer in Farsi
         case .english:
-            return "Underlying Meaning"
+            return "Deeper Message"
         }
     }
 }

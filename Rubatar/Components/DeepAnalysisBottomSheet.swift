@@ -48,7 +48,7 @@ struct DeepAnalysisBottomSheet: View {
                         
                         // Content (title + subtitle)
                         VStack(alignment: selectedLanguage.horizontalAlignment, spacing: 8) {
-                            // Title: "Underlying Meaning"
+                            // Title: "Deeper Message" or "تفسیر"
                             Text(selectedLanguage.deepAnalysisTitle)
                                 .font(.custom("Palatino", size: 16))
                                 .fontWeight(.semibold)
@@ -100,7 +100,7 @@ struct DeepAnalysisBottomSheet: View {
                         
                         // Content (title + subtitle)
                         VStack(alignment: selectedLanguage.horizontalAlignment, spacing: 8) {
-                            // Title: "Underlying Meaning"
+                            // Title: "Deeper Message" or "تفسیر"
                             Text(selectedLanguage.deepAnalysisTitle)
                                 .font(.custom("Palatino", size: 16))
                                 .fontWeight(.semibold)
