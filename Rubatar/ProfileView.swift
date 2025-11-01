@@ -280,7 +280,8 @@ struct ProfileView: View {
                             showExplanations: Binding(
                                 get: { showExplanations[index] ?? false },
                                 set: { showExplanations[index] = $0 }
-                            )
+                            ),
+                            showDeepAnalysisSheet: $showDeepAnalysisSheet
                         )
                         .id("\(selectedDisplayMode.rawValue)-\(index)")
                     }, currentPage: $currentPage)
@@ -310,7 +311,8 @@ struct ProfileView: View {
                             showExplanations: Binding(
                                 get: { showExplanations[farsiPoemsList[index].id] ?? false },
                                 set: { showExplanations[farsiPoemsList[index].id] = $0 }
-                            )
+                            ),
+                            showDeepAnalysisSheet: $showDeepAnalysisSheet
                         )
                         .id("\(selectedDisplayMode.rawValue)-\(index)")
                     }, currentPage: $currentPage, onLoadMore: {
@@ -340,7 +342,8 @@ struct ProfileView: View {
                                 showExplanations: Binding(
                                     get: { showExplanations[englishPoemsList[index].id] ?? false },
                                     set: { showExplanations[englishPoemsList[index].id] = $0 }
-                                )
+                                ),
+                                showDeepAnalysisSheet: $showDeepAnalysisSheet
                             )
                             .id("\(selectedDisplayMode.rawValue)-\(index)")
                         }, currentPage: $currentPage, onLoadMore: {
@@ -364,8 +367,9 @@ struct ProfileView: View {
                                 showExplanations: Binding(
                                     get: { showExplanations[displayedPoems[index].id] ?? false },
                                     set: { showExplanations[displayedPoems[index].id] = $0 }
+                                ),
+                                showDeepAnalysisSheet: $showDeepAnalysisSheet
                             )
-                        )
                             .id("\(selectedDisplayMode.rawValue)-\(index)")
                         }, currentPage: $currentPage, onLoadMore: {
                             loadNextSet()
@@ -905,6 +909,7 @@ struct PoemCardView: View {
     var menuNamespace: Namespace.ID // For zoom animation
     var cardIndex: Int // Unique index for each card
     @Binding var showExplanations: Bool // Show line-by-line explanations
+    @Binding var showDeepAnalysisSheet: Bool // Control Deep Analysis bottom sheet
     
     @State private var versePage = 0 // Current verse page within the poem
     @Environment(\.colorScheme) var colorScheme
@@ -971,6 +976,20 @@ struct PoemCardView: View {
                                     Image(systemName: "lightbulb.fill")
                                         .font(.system(size: 18, weight: .medium))
                                         .foregroundColor(showExplanations ? .yellow : .primary)
+                                        .frame(width: 32, height: 32)
+                                        .contentShape(Circle())
+                                }
+                                .buttonStyle(CircularButtonStyle())
+                                
+                                // Uncover Meaning icon - opens deep analysis bottom sheet
+                                Button(action: {
+                                    withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                        showDeepAnalysisSheet = true
+                                    }
+                                }) {
+                                    Image(systemName: "book.pages")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(.primary)
                                         .frame(width: 32, height: 32)
                                         .contentShape(Circle())
                                 }
@@ -1049,6 +1068,20 @@ struct PoemCardView: View {
                                     Image(systemName: "lightbulb.fill")
                                         .font(.system(size: 18, weight: .medium))
                                         .foregroundColor(showExplanations ? .yellow : .primary)
+                                        .frame(width: 32, height: 32)
+                                        .contentShape(Circle())
+                                }
+                                .buttonStyle(CircularButtonStyle())
+                                
+                                // Uncover Meaning icon - opens deep analysis bottom sheet
+                                Button(action: {
+                                    withAnimation(.snappy(duration: 0.3, extraBounce: 0)) {
+                                        showDeepAnalysisSheet = true
+                                    }
+                                }) {
+                                    Image(systemName: "book.pages")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(.primary)
                                         .frame(width: 32, height: 32)
                                         .contentShape(Circle())
                                 }
