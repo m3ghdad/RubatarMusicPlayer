@@ -301,16 +301,20 @@ private func formatTafseerText(_ text: String, isEnglish: Bool) -> Text {
     let baseFont = UIFont(name: "Palatino", size: 17) ?? UIFont.systemFont(ofSize: 17)
     mutableString.addAttribute(.font, value: baseFont, range: NSRange(location: 0, length: text.count))
     
-    // Only apply large first letter for English to preserve Farsi ligatures
-    if isEnglish {
-        // Find the first meaningful character
-        for (index, char) in text.enumerated() {
-            if char.isLetter {
-                // Style first character to 32px
+    // Find the first meaningful character
+    for (index, char) in text.enumerated() {
+        let isValidFirstChar = isEnglish ? char.isLetter : !char.isWhitespace
+        if isValidFirstChar {
+            if isEnglish {
+                // Style first character to 32px for English
                 let largeFont = UIFont(name: "Palatino", size: 32) ?? UIFont.systemFont(ofSize: 32)
                 mutableString.addAttribute(.font, value: largeFont, range: NSRange(location: index, length: 1))
-                break
+            } else {
+                // Style first character to bold for Farsi
+                let boldFont = UIFont(name: "Palatino-Bold", size: 17) ?? UIFont.boldSystemFont(ofSize: 17)
+                mutableString.addAttribute(.font, value: boldFont, range: NSRange(location: index, length: 1))
             }
+            break
         }
     }
     
