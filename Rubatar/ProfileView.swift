@@ -665,6 +665,13 @@ struct ProfileView: View {
                 // Poems already loaded - user is just switching back to this tab
                 // Position is preserved automatically via @State
                 print("📖 Returning to saved position: \(currentPage)")
+                
+                // Still save current poem to widget for widget updates
+                if currentPage < displayedPoems.count {
+                    let currentPoem = displayedPoems[currentPage]
+                    let displayData = PoemDisplayData.from(currentPoem, language: "English")
+                    WidgetDataManager.shared.saveDailyPoem(displayData)
+                }
             }
         }
         .onChange(of: currentPage) { _, newPage in
