@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import WidgetKit
 
 class WidgetDataManager {
     static let shared = WidgetDataManager()
@@ -84,7 +85,3 @@ struct PoemDisplayData: Codable {
         )
     }
 }
-
-// Import WidgetKit for timeline reload
-import WidgetKit
-
