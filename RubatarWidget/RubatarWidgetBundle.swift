@@ -11,8 +11,6 @@ import SwiftUI
 @main
 struct RubatarWidgetBundle: WidgetBundle {
     var body: some Widget {
-        RubatarWidget()
-        RubatarWidgetControl()
-        RubatarWidgetLiveActivity()
+        DailyPoemWidget()
     }
 }

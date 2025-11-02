@@ -651,6 +651,12 @@ struct ProfileView: View {
                         currentPage = 0
                         print("🔀 Loaded and shuffled \(shuffledPoems.count) fresh poems")
                         
+                        // Save first poem to widget (default to English for widget)
+                        if let firstPoem = shuffledPoems.first {
+                            let displayData = PoemDisplayData.from(firstPoem, language: "English")
+                            WidgetDataManager.shared.saveDailyPoem(displayData)
+                        }
+                        
                         // Automatic translation disabled
                         // translatePoemsIfNeeded()
                     }

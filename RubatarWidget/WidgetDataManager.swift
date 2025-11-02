@@ -57,24 +57,3 @@ class WidgetDataManager {
         return hoursSinceUpdate >= 24
     }
 }
-
-// MARK: - Extension to convert PoemData to PoemDisplayData
-extension PoemDisplayData {
-    static func from(_ poemData: PoemData, language: String = "English") -> PoemDisplayData {
-        // Convert verses array to simple text
-        let content = poemData.verses.flatMap { $0 }.joined(separator: "\n")
-        
-        return PoemDisplayData(
-            title: language == "Farsi" ? poemData.title : (poemData.poem_name_en ?? poemData.title),
-            content: content,
-            poetName: poemData.poet.fullName,
-            language: language,
-            topic: poemData.topic,
-            mood: poemData.mood
-        )
-    }
-}
-
-// MARK: - Note: This needs to be defined in both app and widget
-// Moving PoemDisplayData here so it's available in widget bundle
-

@@ -21,7 +21,9 @@ struct DailyPoemEntry: TimelineEntry {
                 title: "Sample Poem",
                 content: "This is a sample poem\nFor demonstration purposes",
                 poetName: "Sample Poet",
-                language: "English"
+                language: "English",
+                topic: "Wisdom",
+                mood: "Contemplative"
             ),
             error: nil
         )
