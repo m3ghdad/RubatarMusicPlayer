@@ -18,21 +18,31 @@ class WidgetDataManager {
     
     // Save daily poem to shared storage
     func saveDailyPoem(_ poem: PoemDisplayData) {
+        print("📝 App: Attempting to save poem '\(poem.title)' to widget...")
         guard let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
-            print("❌ Failed to access shared UserDefaults")
+            print("❌ App: Failed to access shared UserDefaults with suiteName: \(appGroupIdentifier)")
             return
         }
         
+        print("✅ App: Successfully accessed shared UserDefaults")
         let encoder = JSONEncoder()
         if let encoded = try? encoder.encode(poem) {
             sharedDefaults.set(encoded, forKey: "dailyPoem")
             sharedDefaults.set(Date(), forKey: "lastUpdated")
-            print("✅ Saved daily poem to shared storage")
+            print("✅ App: Saved daily poem '\(poem.title)' to shared storage (\(encoded.count) bytes)")
+            
+            // Verify it was saved
+            if let savedData = sharedDefaults.data(forKey: "dailyPoem") {
+                print("✅ App: Verified poem data saved (read back \(savedData.count) bytes)")
+            } else {
+                print("❌ App: Poem data not found after saving!")
+            }
             
             // Notify widget to reload
             WidgetCenter.shared.reloadAllTimelines()
+            print("✅ App: Notified widget to reload timelines")
         } else {
-            print("❌ Failed to encode poem data")
+            print("❌ App: Failed to encode poem data")
         }
     }
     

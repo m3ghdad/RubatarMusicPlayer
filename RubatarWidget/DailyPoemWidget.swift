@@ -86,15 +86,23 @@ struct DailyPoemProvider: TimelineProvider {
     // Load from shared UserDefaults
     private func loadDailyPoemFromSharedStorage() -> PoemDisplayData? {
         guard let sharedDefaults = UserDefaults(suiteName: "group.com.meghdad.Rubatar") else {
+            print("❌ Widget: Failed to access shared UserDefaults")
             return nil
         }
         
         guard let data = sharedDefaults.data(forKey: "dailyPoem") else {
+            print("❌ Widget: No poem data found in shared storage")
             return nil
         }
         
         let decoder = JSONDecoder()
-        return try? decoder.decode(PoemDisplayData.self, from: data)
+        if let poem = try? decoder.decode(PoemDisplayData.self, from: data) {
+            print("✅ Widget: Successfully loaded poem: \(poem.title)")
+            return poem
+        } else {
+            print("❌ Widget: Failed to decode poem data")
+            return nil
+        }
     }
     
     // Fetch from API (simplified, would need access to PoetryService or direct API call)
