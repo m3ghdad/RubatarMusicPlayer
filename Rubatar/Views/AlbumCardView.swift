@@ -126,6 +126,15 @@ struct PlaylistCardView: View {
     let customCuratorName: String?
     let customDescription: String?
     @Environment(\.colorScheme) var colorScheme
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    
+    var isIPad: Bool {
+        horizontalSizeClass == .regular
+    }
+    
+    var cardImageHeight: CGFloat {
+        isIPad ? 568 : 400 // 400 + 168px (48px + 48px + 48px + 24px) for iPad
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -193,7 +202,7 @@ struct PlaylistCardView: View {
                     // Paper texture layer (middle)
                     Image("paperTextureFolded")
                         .resizable()
-                        .frame(maxWidth: .infinity, maxHeight: 400)
+                        .frame(maxWidth: .infinity, maxHeight: cardImageHeight)
                         .clipped()
                         .opacity(colorScheme == .dark ? 0.2 : 0.5)
                     
@@ -202,20 +211,20 @@ struct PlaylistCardView: View {
                         CachedAsyncImage(url: URL(string: customImageName)) { image in
                             image
                                 .resizable()
-                                .frame(maxWidth: .infinity, maxHeight: 400)
+                                .frame(maxWidth: .infinity, maxHeight: cardImageHeight)
                                 .clipped()
                                 .opacity(0.6)
                         } placeholder: {
                             Image("Setaar")
                                 .resizable()
-                                .frame(maxWidth: .infinity, maxHeight: 400)
+                                .frame(maxWidth: .infinity, maxHeight: cardImageHeight)
                                 .clipped()
                                 .opacity(0.6)
                         }
                     } else {
                         Image(customImageName)
                             .resizable()
-                            .frame(maxWidth: .infinity, maxHeight: 400)
+                            .frame(maxWidth: .infinity, maxHeight: cardImageHeight)
                             .clipped()
                             .opacity(0.6)
                     }
@@ -270,7 +279,7 @@ struct PlaylistCardView: View {
                     .blur(radius: 25)
                     .blendMode(.overlay)
                 }
-                .frame(maxWidth: .infinity, maxHeight: 400)
+                .frame(maxWidth: .infinity, maxHeight: cardImageHeight)
                 .clipped()
                 .clipShape(
                     .rect(

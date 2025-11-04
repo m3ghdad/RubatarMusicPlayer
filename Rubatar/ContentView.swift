@@ -137,7 +137,16 @@ struct ContentView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showWelcomeModal) {
+            .sheet(isPresented: Binding(
+                get: { showWelcomeModal && horizontalSizeClass != .regular },
+                set: { showWelcomeModal = $0 }
+            )) {
+                welcomeModalView
+            }
+            .fullScreenCover(isPresented: Binding(
+                get: { showWelcomeModal && horizontalSizeClass == .regular },
+                set: { showWelcomeModal = $0 }
+            )) {
                 welcomeModalView
             }
             
@@ -196,7 +205,10 @@ struct ContentView: View {
                 .presentationDragIndicator(.hidden)
                 .presentationCornerRadius(16)
         }
-        .sheet(isPresented: $showLearnMore) {
+        .sheet(isPresented: Binding(
+            get: { showLearnMore && horizontalSizeClass != .regular },
+            set: { showLearnMore = $0 }
+        )) {
             AboutRubatarModalView(
                 isDarkMode: isDarkMode,
                 onButtonDismiss: { showLearnMore = false },
@@ -205,6 +217,17 @@ struct ContentView: View {
             .presentationDetents([.large])
             .presentationDragIndicator(.hidden)
             .presentationCornerRadius(16)
+            .interactiveDismissDisabled(false)
+        }
+        .fullScreenCover(isPresented: Binding(
+            get: { showLearnMore && horizontalSizeClass == .regular },
+            set: { showLearnMore = $0 }
+        )) {
+            AboutRubatarModalView(
+                isDarkMode: isDarkMode,
+                onButtonDismiss: { showLearnMore = false },
+                skipFirstPage: true
+            )
         }
         
     }
@@ -238,19 +261,39 @@ struct ContentView: View {
         }
     }
     
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    
+    var isIPad: Bool {
+        horizontalSizeClass == .regular
+    }
+    
     @ViewBuilder
     private var welcomeModalView: some View {
-            AboutRubatarModalView(
-                isDarkMode: (systemColorScheme == .dark),
-            onButtonDismiss: {
-                showWelcomeModal = false
-            },
-            skipFirstPage: false
-        )
-        .presentationDetents([.large])
-        .presentationDragIndicator(.hidden)
-        .presentationCornerRadius(16)
-        .interactiveDismissDisabled(false)
+        Group {
+            if isIPad {
+                // iPad: Full screen modal (no presentation modifiers needed for fullScreenCover)
+                AboutRubatarModalView(
+                    isDarkMode: (systemColorScheme == .dark),
+                    onButtonDismiss: {
+                        showWelcomeModal = false
+                    },
+                    skipFirstPage: false
+                )
+            } else {
+                // iPhone: Bottom sheet
+                AboutRubatarModalView(
+                    isDarkMode: (systemColorScheme == .dark),
+                    onButtonDismiss: {
+                        showWelcomeModal = false
+                    },
+                    skipFirstPage: false
+                )
+                .presentationDetents([.large])
+                .presentationDragIndicator(.hidden)
+                .presentationCornerRadius(16)
+                .interactiveDismissDisabled(false)
+            }
+        }
         .onAppear {
             showMiniPlayer = false
             showCard = false

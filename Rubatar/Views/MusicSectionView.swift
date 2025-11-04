@@ -25,8 +25,14 @@ struct MusicSectionView: View {
     // Preloading support
     var isPreloading: Bool = false
     
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    
+    var isIPad: Bool {
+        horizontalSizeClass == .regular
+    }
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 32) {
+        VStack(alignment: .leading, spacing: isIPad ? 40 : 32) {
             // // Section Header
             // HStack {
             //     Spacer()
@@ -367,17 +373,27 @@ struct DynamicSectionView: View {
     let onMusicSelected: (String, String, URL) -> Void
     let onPlaylistSelected: (String, String, String, URL?) -> Void
     
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    
+    var isIPad: Bool {
+        horizontalSizeClass == .regular
+    }
+    
+    var horizontalPadding: CGFloat {
+        isIPad ? 60 : 16
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(section.title)
-                .font(.custom("Palatino", size: section.type == "albums" ? 17 : 16))
+                .font(.custom("Palatino", size: isIPad ? (section.type == "albums" ? 20 : 19) : (section.type == "albums" ? 17 : 16)))
                 .foregroundColor(.primary)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, horizontalPadding)
             
             if section.layoutType == "horizontal" {
                 // Horizontal layout (ScrollView) - for albums or playlists
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 16) {
+                    HStack(spacing: isIPad ? 24 : 16) {
                         if section.type == "albums" {
                             // Albums in horizontal layout
                             ForEach(getAlbumsForSection()) { featuredAlbum in
@@ -417,7 +433,7 @@ struct DynamicSectionView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, horizontalPadding)
                 }
             } else {
                 // Vertical layout (VStack) - for playlists
@@ -449,7 +465,7 @@ struct DynamicSectionView: View {
                             customCuratorName: featuredPlaylist.customCurator,
                             customDescription: featuredPlaylist.customDescription
                         )
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, horizontalPadding)
                     }
                 }
             }
